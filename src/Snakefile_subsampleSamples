@@ -1,0 +1,86 @@
+
+#######################################
+# General stuff to make things easier #
+#######################################
+
+# Make the output nicer and easier to follow
+ruleDisplayMessage = "\n\n########################\n# START EXECUTING RULE #\n########################\n"
+
+############################################
+# Libraries, versions, authors and license #
+############################################
+
+from snakemake.utils import min_version
+import subprocess
+import os
+
+# Enforce a minimum Snakemake version because of various features
+min_version("3.12")
+
+__author__  = "Christian Arnold"
+__license__ = "MIT"
+
+
+############################################
+# Working directory and configuration file #
+############################################
+
+# Not needed, will be provided via the command line in Snakemake
+
+
+###########################################
+# Onstart, onsuccess and onerror handlers #
+###########################################
+
+# The onsuccess handler is executed if the workflow finished without error.
+onsuccess:
+    print("\n\n###############################\n# Workflow finished, no error #\n###############################\n\n")
+
+# Else, the onerror handler is executed.
+onerror:
+    print("\n\n#####################\n# An error occurred #\n#####################\n\n")
+    #shell("mail -s "an error occurred" carnold@embl.de < {log}")
+
+
+#############################
+# DIRECTORIES AND VARIABLES #
+#############################
+
+threadsMax = 16
+
+ROOT_DIR  = config["par_general"]["outdir"]
+OUTPUT_DIR = ROOT_DIR + "/output/FINAL_OUTPUT/extension100/subsamplingSamples"
+
+repetitionsMax = 50
+replicatesNo = range(1, repetitionsMax + 1)
+
+#########
+# RULES #
+#########
+
+localrules: all
+
+rule all:
+    input:
+        stats = expand('{dir}/CLL.subsample{nSamplesRare}_{replicate}.StatsAllTF.tsv', dir = OUTPUT_DIR, nSamplesRare = [3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30], replicate = replicatesNo),
+        stats2 = expand('{dir}/CLL.subsample{nSamplesRare}_{replicate}.StatsAllTF.tsv', dir = OUTPUT_DIR, nSamplesRare = [34], replicate = 1)
+
+rule runSubsample:
+    output:
+        stats    = expand('{dir}/CLL.subsample{{nSamplesRare}}_{{replicate}}.StatsAllTF.tsv', dir = OUTPUT_DIR)
+    message: "{ruleDisplayMessage}Run R script for {wildcards.nSamplesRare}_{wildcards.replicate}"
+    threads: 1
+    params:
+        scriptName    = "/g/scb2/zaugg/carnold/Projects/PWM_Ivan/src/R/subsample.R",
+        rootFolder    = ROOT_DIR,
+        outputFolder  = OUTPUT_DIR,
+        subsampleName = lambda wildcards: str(wildcards.nSamplesRare) + "_" + str(wildcards.replicate),
+        repetitionsMax= repetitionsMax
+    shell:
+        """sh -c '
+            Rscript {params.scriptName:q} \
+                {params.rootFolder:q} \
+                {params.outputFolder:q} \
+                {params.subsampleName} \
+                {params.repetitionsMax}
+        '"""

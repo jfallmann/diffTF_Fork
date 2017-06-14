@@ -1,0 +1,135 @@
+
+#######################################
+# General stuff to make things easier #
+#######################################
+
+# Make the output nicer and easier to follow
+ruleDisplayMessage = "\n\n########################\n# START EXECUTING RULE #\n########################\n"
+
+############################################
+# Libraries, versions, authors and license #
+############################################
+
+from snakemake.utils import min_version
+import subprocess
+import os
+import pandas
+import numpy
+import random
+
+# Enforce a minimum Snakemake version because of various features
+min_version("3.12")
+
+__author__  = "Christian Arnold"
+__license__ = "MIT"
+
+
+############################################
+# Working directory and configuration file #
+############################################
+
+# Not needed, will be provided via the command line in Snakemake
+
+
+###########################################
+# Onstart, onsuccess and onerror handlers #
+###########################################
+
+# The onsuccess handler is executed if the workflow finished without error.
+onsuccess:
+    print("\n\n###############################\n# Workflow finished, no error #\n###############################\n\n")
+
+# Else, the onerror handler is executed.
+onerror:
+    print("\n\n#####################\n# An error occurred #\n#####################\n\n")
+    #shell("mail -s "an error occurred" carnold@embl.de < {log}")
+
+# onstart handler will be executed before the workflow starts. Note that dry-runs do not trigger any of the handlers
+onstart:
+    print("Reading samples and metadata....\n")
+    print ("Running workflow for the following BAM files:\n " + ' \n '.join(map(str, allBamFiles)))
+
+
+
+def read_samplesTable(samplesSummaryFile):
+    """text"""
+
+    data = pandas.read_table(samplesSummaryFile)
+
+    # Expect a particular number of columns, do a sanity check here
+
+    if not {'bamReads', 'conditionSummary'}.issubset(data.columns.values):
+        raise KeyError("The samples file must contain at least the following named columns (TAB separated!): 'bamReads', 'conditionSummary'")
+
+    return data
+
+
+
+#############################
+# DIRECTORIES AND VARIABLES #
+#############################
+
+threadsMax = 16
+
+OUTPUT_DIR  = config["par_general"]["outdir"]
+INPUT_DIR   = "/scratch/carnold/CLL/TF_act/input/bam"
+LOG_BENCHMARK_DIR = OUTPUT_DIR + "/Logs_and_Benchmarks"
+
+global samplesData
+samplesData = read_samplesTable(config["samples"]["summaryFile"])
+allBamFiles  = samplesData.loc[:,"bamReads"]
+
+allBamFilesBasename = []
+for fileCur in allBamFiles:
+    if not os.path.isfile(fileCur):
+        raise IOError("File " + fileCur + " (defined in ", config["samples"]["summaryFile"], ") not found.")
+    if not os.path.isfile(fileCur + ".bai"):
+        raise IOError("File " + fileCur + " (defined in ", config["samples"]["summaryFile"], ") does not have an index (corresponding *.bam.bai). All BAM files must be indexed (e.g., use samtools index)")
+    basename = os.path.splitext(os.path.basename(fileCur))[0]
+    allBamFilesBasename.append(basename)
+
+allBamFilesBasename=allBamFilesBasename
+
+if not os.path.isfile(config["executables"]["PICARD_jar"]):
+        raise IOError("File " + config["executables"]["PICARD_jar"] + " not found.")
+
+minMemoryJavaGB  = 5
+maxMemoryJavaGB  = 50
+picard_command = config["executables"]["java"] + " -Xms" + str(minMemoryJavaGB) + "g -Xmx" + str(maxMemoryJavaGB) + "g -jar " + config["executables"]["PICARD_jar"]
+
+#########
+# RULES #
+#########
+
+localrules: all
+
+rule all:
+    input:
+        bam = expand('{dir}/{sample}.downsample{fraction}.bam', dir = OUTPUT_DIR, sample = allBamFilesBasename, fraction = ["0.75","0.50","0.25","0.125", "0.06", "0.02", "0.01", "0.001"])
+
+def generateRandomNumber(wildcards):
+    """text"""
+    seed = random.seed()
+    return random.randrange(1,100000000)
+
+rule Picard_subsampleBAM:
+    input:
+        bam = expand('{dir}/{{sample}}.bam', dir = INPUT_DIR)
+    output:
+        bam   = expand('{dir}/{{sample}}.downsample{{fraction}}.bam', dir = OUTPUT_DIR),
+        index = expand('{dir}/{{sample}}.downsample{{fraction}}.bai', dir = OUTPUT_DIR)
+    log: LOG_BENCHMARK_DIR + "/Picard_subsampleBAM.{sample}.{fraction}.log"
+    message:
+        "{ruleDisplayMessage}Subsample {input:q} to produce file {output.bam:q} ..."
+    threads: 1
+    conda: "/g/scb2/zaugg/zaugg_shared/Programs/Snakemake/environmentsYAML/picard_samtools.yaml"
+    params:
+        randomNumber = lambda wildcards: generateRandomNumber(wildcards)
+    shell:
+            """{picard_command} DownsampleSam \
+            I={input.bam:q} \
+            O={output.bam:q} \
+            CREATE_INDEX=true \
+            RANDOM_SEED={params.randomNumber} \
+            PROBABILITY={wildcards.fraction} \
+            2> {log:q}"""

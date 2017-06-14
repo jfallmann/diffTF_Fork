@@ -1,0 +1,676 @@
+
+#######################################
+# General stuff to make things easier #
+#######################################
+
+# move 0.Input to logs aand becnahcmakjrs
+# link input files : /g/scb2/zaugg/carnold/Projects/PWM_Ivan/output/0.Input
+
+# Make the output nicer and easier to follow
+ruleDisplayMessage = "\n\n########################\n# START EXECUTING RULE #\n########################\n"
+
+############################################
+# Libraries, versions, authors and license #
+############################################
+
+from snakemake.utils import min_version
+import subprocess
+import os
+import pandas
+import numpy
+
+# Enforce a minimum Snakemake version because of various features
+min_version("3.11.2")
+
+__author__  = "Ivan Berest & Christian Arnold"
+__license__ = "MIT"
+
+
+############################################
+# Working directory and configuration file #
+############################################
+
+# Not needed, will be provided via the command line in Snakemake
+
+
+###########################################
+# Onstart, onsuccess and onerror handlers #
+###########################################
+
+# Sometimes, it is necessary to specify code that shall be executed when the workflow execution is finished (e.g. cleanup, or notification of the user).
+
+# The onsuccess handler is executed if the workflow finished without error.
+onsuccess:
+    print("\n\n###############################\n# Workflow finished, no error #\n###############################\n\n")
+
+# Else, the onerror handler is executed.
+onerror:
+    print("\n\n#####################\n# An error occurred #\n#####################\n\n")
+    #shell("mail -s "an error occurred" carnold@embl.de < {log}")
+
+# onstart handler will be executed before the workflow starts. Note that dry-runs do not trigger any of the handlers
+onstart:
+    print("Reading samples and metadata....\n")
+    print ("Running workflow for the following " + str(len(allTF)) + " TF (potentially restricted by the \"limit_nTF_to\" parameter):\n " + ' \n '.join(map(str, allTF)))
+    print ("Running workflow for the following BAM files:\n " + ' \n '.join(map(str, allBamFiles)))
+
+
+
+def read_samplesTable(samplesSummaryFile):
+    """text"""
+
+    data = pandas.read_table(samplesSummaryFile)
+
+    # Expect a particular number of columns, do a sanity check here
+
+    if not {'bamReads', 'conditionSummary'}.issubset(data.columns.values):
+        raise KeyError("The samples file must contain at least the following named columns (TAB separated!): 'bamReads', 'conditionSummary'")
+
+    return data
+
+
+
+#############################
+# DIRECTORIES AND VARIABLES #
+#############################
+
+# Maximum number of cores per rule. This value will never be achieved because the minimum of this value and the --cores parameter will define the number of CPUs per rule in the end.
+threadsMax = 16
+
+# Input files
+samplesSummaryFile = config["samples"]["summaryFile"]
+extensionDir = "extension" + str(config["par_general"]["regionExtension"])
+
+ROOT_DIR            = config["par_general"]["outdir"]
+INPUT_DIR           = ROOT_DIR + "/0.Input"
+FINAL_DIR           = ROOT_DIR + "/FINAL_OUTPUT/" + extensionDir
+TF_DIR              = ROOT_DIR + "/TF-SPECIFIC"
+PEAKS_DIR           = ROOT_DIR + "/PEAKS"
+LOG_BENCHMARK_DIR   = ROOT_DIR + "/Logs_and_Benchmarks"
+TEMP_DIR            = ROOT_DIR + "/TEMP"
+TEMP_EXTENSION_DIR  = ROOT_DIR + "/TEMP/"  + extensionDir
+
+global samplesData
+samplesData = read_samplesTable(config["samples"]["summaryFile"])
+
+allBamFiles  = samplesData.loc[:,"bamReads"]
+allPeakFiles = samplesData.loc[:,"Peaks"]
+
+allBamFilesBasename = []
+for fileCur in allBamFiles:
+    if not os.path.isfile(fileCur):
+        raise IOError("File " + fileCur + " (defined in ", config["samples"]["summaryFile"], ") not found.")
+    if not os.path.isfile(fileCur + ".bai"):
+        raise IOError("File " + fileCur + " (defined in ", config["samples"]["summaryFile"], ") does not have an index (corresponding *.bam.bai). All BAM files must be indexed (e.g., use samtools index)")
+    basename = os.path.splitext(os.path.basename(fileCur))[0]
+    allBamFilesBasename.append(basename)
+
+# Add new column
+samplesData = samplesData.assign(basename = allBamFilesBasename)
+
+
+
+# Check existance of all specified peak files
+for fileCur in allPeakFiles:
+    if not os.path.isfile(fileCur):
+        raise IOError("File " + fileCur + " (defined in ", config["samples"]["summaryFile"], ") not found.")
+
+
+# allTF = config["par_general"]["TF"].split(",")
+#
+# # Check existance of all required TF PWM files
+# for TFCur in allTF:
+#     fileCur = config["additionalInputFiles"]["dir_PWMScan"] + "/" + TFCur + "_pwmscan.bed"
+#     if not os.path.isfile(fileCur):
+#         raise IOError("File " + fileCur + " not found (the corresponding PWM for the TF " + TFCur + ").")
+
+
+regionExt = config["par_general"]["regionExtension"]
+
+if config["par_general"]["comparisonType"] != "":
+    comparisonType = config["par_general"]["comparisonType"] + "."
+else:
+    comparisonType = ""
+
+# Retrieve the latest subdirectory within INPUT_DIR where all parameters and input files are linked
+INPUT_DIR_MOST_RECENT = os.popen("ls -ltud " + INPUT_DIR + """/* | head -1 | awk '{print $9}'""").readlines()[0].replace('\n', '')
+
+
+#pandas.set_option('max_colwidth', 800)
+#print(samplesData.loc[:,"basename"])
+#print(samplesData.loc[:,"bamReads"])
+#print(comparisonType)
+PWM_FILES = os.popen("ls " + config["additionalInputFiles"]["dir_PWMScan"]).readlines()
+allTF = []
+for TFCur in PWM_FILES:
+    TFCurBasename = os.path.basename(TFCur.replace('\n', '').replace('_pwmscan.bed', ''))
+    #print("Found TF " + TFCurBasename)
+    allTF.append(TFCurBasename)
+
+#allTF = ["ZN350", "ZN740"]
+if config["par_general"]["limit_nTF_to"] > 0:
+    endIndex = config["par_general"]["limit_nTF_to"] - 1
+    allTF = allTF[0:endIndex]
+
+
+#print("Running the analysis with a total of " + str(len(allTF)) + " TFs.")
+
+#sys.exit(1)
+
+# Execuables
+
+if not os.path.isfile(config["executables"]["runTFAnalysis_script"]):
+        raise IOError("File " + config["executables"]["runTFAnalysis_script"] + " not found.")
+
+#if not os.path.isfile(config["executables"]["consensusPeaks_script"]):
+#        raise IOError("File " + config["executables"]["consensusPeaks_script"] + " not found.")
+
+if not os.path.isfile(config["executables"]["prepareData_script"]):
+        raise IOError("File " + config["executables"]["prepareData_script"] + " not found.")
+
+if not os.path.isfile(config["executables"]["volcanoPlot1_script"]):
+        raise IOError("File " + config["executables"]["volcanoPlot1_script"] + " not found.")
+
+if not os.path.isfile(config["executables"]["permutations_script"]):
+        raise IOError("File " + config["executables"]["permutations_script"] + " not found.")
+
+if not os.path.isfile(config["additionalInputFiles"]["refGenome_fasta"]):
+        raise IOError("File " + config["additionalInputFiles"]["refGenome_fasta"] + " not found.")
+
+if not os.path.isfile(config["additionalInputFiles"]["peaks_bed"]):
+        raise IOError("File " + config["additionalInputFiles"]["peaks_bed"] + " not found.")
+
+consensusPeaksBasename = os.path.basename(config["additionalInputFiles"]["peaks_bed"])
+
+###########################################################################
+# Get the versions of the used tools and script to record them rigorously #
+###########################################################################
+
+# Almost obselete due to the conda environments. Only record versions for scripts etc
+
+# For custom scripts, retrieve the modification date instead
+VERSION_createVolcanoPlot_script     = str(os.path.getmtime(config["executables"]["volcanoPlot1_script"])).replace('\n', ' ')
+VERSION_prepareData_script           = str(os.path.getmtime(config["executables"]["prepareData_script"])).replace('\n', ' ')
+VERSION_analyzeTF_script             = str(os.path.getmtime(config["executables"]["runTFAnalysis_script"])).replace('\n', ' ')
+VERSION_permutations_script          = str(os.path.getmtime(config["executables"]["permutations_script"])).replace('\n', ' ')
+VERSION_summarizePermutations_script = str(os.path.getmtime(config["executables"]["summarizePermutations_script"])).replace('\n', ' ')
+VERSION_preparePermutations_script   = str(os.path.getmtime(config["executables"]["preparePermutations_script"])).replace('\n', ' ')
+
+
+
+#########
+# RULES #
+#########
+
+
+# For cluster usage:  The keyword localrules allows to mark a rule as local, so that it is not submitted to the cluster and instead executed on the host node
+localrules: all, link_inputFiles
+
+rule all:
+    input:
+        linkInput = INPUT_DIR_MOST_RECENT + "/peaks.bed",
+        perm      = FINAL_DIR + "/" + comparisonType + "all.volcano.l2FC.removedCGbias.AR.pdf"
+
+
+
+rule link_inputFiles:
+    input:
+        peakFile        = config["additionalInputFiles"]["peaks_bed"],
+        sampleMetadata  = config["samples"]["summaryFile"],
+        refGenome_fasta = config["additionalInputFiles"]["refGenome_fasta"] ,
+        dir_PWMScan     = config["additionalInputFiles"]["dir_PWMScan"]
+    output:
+        peakFile        = INPUT_DIR_MOST_RECENT + "/peaks.bed",
+        sampleMetadata  = INPUT_DIR_MOST_RECENT + "/sampleData.csv",
+        refGenome_fasta = INPUT_DIR_MOST_RECENT + "/refGenome.fasta",
+        dir_PWMScan     = INPUT_DIR_MOST_RECENT + "/PWMScanDir"
+    log:
+    message: "{ruleDisplayMessage}Create symbolic links for the input files {input:q} in directory {INPUT_DIR:q}..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/link_inputFiles.benchmark"
+    resources:
+    params:
+    version:"NA"
+    shell:
+        """
+
+           ln -fs {input.peakFile:q} {output.peakFile:q}  &&
+           ln -fs {input.sampleMetadata:q} {output.sampleMetadata:q}  &&
+           ln -fs {input.refGenome_fasta:q} {output.refGenome_fasta:q}  &&
+           ln -fs {input.dir_PWMScan:q} {output.dir_PWMScan:q}  &&
+           touch -h {output.peakFile:q} &&
+           touch -h {output.sampleMetadata:q} &&
+           touch -h {output.refGenome_fasta:q} &&
+           touch -h {output.dir_PWMScan:q}
+        """
+
+rule produceConsensusPeaks:
+    input:
+        sampleData = config["samples"]["summaryFile"],
+        peaks = allPeakFiles
+    output:
+        consensusPeaks_bed = ROOT_DIR + "/consensusPeaks.bed",
+    log: expand('{dir}/produceConsensusPeaks.log', dir = LOG_BENCHMARK_DIR)
+    message: "{ruleDisplayMessage}Run R script calcConsensusPeaks.R for all peak files ..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/produceConsensusPeaks.benchmark"
+    resources:
+    #version: VERSION_consensusPeaks_script
+    params:
+        scriptName          = config["executables"]["consensusPeaks_script"],
+        outputDir           = ROOT_DIR,
+    shell:
+        """sh -c '
+            Rscript {params.scriptName:q} \
+                {input.sampleData:q} \
+                {params.outputDir:q} \
+                {log:q}
+        '"""
+
+
+peakFileEndingPattern = ".overlapPeaks.bed"
+
+rule sortPeaks:
+    input:
+        consensusPeaks       = config["additionalInputFiles"]["peaks_bed"]
+    output:
+        consensusPeaksSorted = TEMP_DIR + "/sorted." + consensusPeaksBasename
+    log:
+    message: "{ruleDisplayMessage} Sort bed file {input.consensusPeaks}..."
+    threads: 1
+    priority: 1
+    resources: maxMemGB=20
+    #benchmark: LOG_BENCHMARK_DIR + "/sortPeaks.benchmark"
+    shell:
+        """sh -c 'sort -k1,1 -k2,2n {input.consensusPeaks} > {output.consensusPeaksSorted}'"""
+
+
+
+
+rule sortPWM:
+    input:
+        bed      = config["additionalInputFiles"]["dir_PWMScan"] + "/{TF}_pwmscan.bed"
+    output:
+        bedSorted = TEMP_DIR + "/{TF}_pwmscan.sorted.bed"
+    log:
+    message: "{ruleDisplayMessage} Sort bed file {input.bed}..."
+    threads: 1
+    priority: 1
+    resources: maxMemGB=20
+    #benchmark: LOG_BENCHMARK_DIR + "/sortPWM.{TF}.benchmark"
+    shell:
+        """sh -c 'sort -k1,1 -k2,2n {input.bed} > {output.bedSorted}'"""
+
+
+
+def getBamFileFromBasename(basename):
+    """text"""
+    hit = numpy.asarray(samplesData.loc[samplesData["basename"] == basename, "bamReads"])
+    if len(hit) != 1:
+        raise KeyError("Could not uniquely retrieve the BAM file for the basename \"" + basename + "\" from the file " + config["samples"]["summaryFile"])
+    return hit
+
+
+rule idxstatsBam:
+    input:
+        bam        = lambda wildcards: getBamFileFromBasename(wildcards.basename)
+    output:
+        idxoutput    = temp(TEMP_DIR + "/{basename}.idxstats"),
+        genomeFile   = TEMP_DIR + "/{basename}.chrOrder1",
+        genomeFile2  = TEMP_DIR + "/{basename}.chrOrder2"
+    log:
+    message: "{ruleDisplayMessage} Run idxstats for file {input.bam}..."
+    threads: 1
+    priority: 1
+    resources: maxMemGB=20
+    #benchmark: LOG_BENCHMARK_DIR + "/idxstatsBam.{basename}.benchmark"
+    params:
+    conda: "/g/scb2/zaugg/zaugg_shared/Programs/Snakemake/environmentsYAML/samtools.yaml"
+    shell:
+        """
+            samtools idxstats {input.bam} > {output.idxoutput} &&
+            cat {output.idxoutput} | grep -v "^*" |awk '{{print $1"\\t"$2}}' >{output.genomeFile} &&
+            cat {output.idxoutput} | grep -v "^*" |awk '{{print $1}}' >{output.genomeFile2}
+        """
+
+
+
+rule intersectPeaksAndBAM:
+    input:
+        consensusPeaks = rules.sortPeaks.output.consensusPeaksSorted,
+        genomeFile   = rules.idxstatsBam.output.genomeFile,
+        genomeFile2  = rules.idxstatsBam.output.genomeFile2,
+        bam        = lambda wildcards: getBamFileFromBasename(wildcards.basename)
+    output:
+        peaksOverlap = PEAKS_DIR + '/{basename}' + peakFileEndingPattern,
+        resortedBed  = TEMP_DIR + "/{basename}.resorted"
+    log:
+    message: "{ruleDisplayMessage} Run intersect and count for file {input.consensusPeaks} with {input.bam}..."
+    threads: 1
+    priority: 1
+    resources: maxMemGB=20
+    #benchmark: LOG_BENCHMARK_DIR + "/intersectPeaksAndBAM.{basename}.benchmark"
+    params:
+    conda: "/g/scb2/zaugg/zaugg_shared/Programs/Snakemake/environmentsYAML/bedtools.yaml"
+    shell:
+        """ bedtools sort -faidx {input.genomeFile2} -i {input.consensusPeaks} > {output.resortedBed} &&
+            bedtools intersect \
+                -a {output.resortedBed} \
+                -b {input.bam} \
+                -c \
+                -sorted -g {input.genomeFile} \
+                > {output.peaksOverlap}
+        """
+
+
+# TF-specific part:
+
+
+rule intersectPeaksAndPWM:
+    input:
+        consensusPeaks = rules.sortPeaks.output.consensusPeaksSorted,
+        pwmScanTF      = rules.sortPWM.output.bedSorted
+    output:
+        TFBSinPeaks_bed    = temp(expand('{dir}/{{TF}}/{{TF}}.peaks.bed', dir = TF_DIR)),
+        TFBSinPeaksMod_bed = expand('{dir}/{{TF}}/{extension}/{{TF}}.peaks.corr.bed', dir = TF_DIR, extension = extensionDir)
+    log:
+    message: "{ruleDisplayMessage} Obtain binding sites from peaks for TF {wildcards.TF}: Intersect files {input.pwmScanTF} and {input.consensusPeaks}..."
+    threads: 1
+    priority: 1
+    resources: maxMemGB=20
+    #benchmark: LOG_BENCHMARK_DIR + "/intersectPeaksAndPWM.benchmark"
+    params:
+        extension = config["par_general"]["regionExtension"]
+    conda: "/g/scb2/zaugg/zaugg_shared/Programs/Snakemake/environmentsYAML/bedtools.yaml"
+    shell:
+        """bedtools intersect \
+                -a {input.consensusPeaks} \
+                -b {input.pwmScanTF} \
+                -wa -wb \
+                -sorted \
+                > {output.TFBSinPeaks_bed} &&
+            cat {output.TFBSinPeaks_bed} | cut -f4,5,6,7,8,11 | uniq  | awk '{{OFS="\\t"}};{{ print $3, $4-{params.extension}, $5+{params.extension},$1,$2,$6}}' > {output.TFBSinPeaksMod_bed}
+        """
+
+
+
+rule intersectBAM2:
+    input:
+        TFBSinPeaksMod_bed = rules.intersectPeaksAndPWM.output.TFBSinPeaksMod_bed,
+        bam                = lambda wildcards: getBamFileFromBasename(wildcards.basename),
+        genomeFile         = rules.idxstatsBam.output.genomeFile,
+        genomeFile2        = rules.idxstatsBam.output.genomeFile2
+    output:
+        peaksOverlap   = expand('{dir}/{{TF}}/{extension}/{{TF}}.{comparisonType}{{basename}}{peakFileEndingPattern}', dir = TF_DIR, extension = extensionDir, comparisonType = comparisonType, peakFileEndingPattern = peakFileEndingPattern),
+        resortedBed    = TEMP_EXTENSION_DIR + "/{TF}__{basename}.resorted"
+    log:
+    message: "{ruleDisplayMessage} Run bedtools intersect for file {input.TFBSinPeaksMod_bed}..."
+    threads: 1
+    priority: 1
+    resources: maxMemGB=20
+    #benchmark: LOG_BENCHMARK_DIR + "/intersectBAM2.benchmark"
+    params:
+    conda: "/g/scb2/zaugg/zaugg_shared/Programs/Snakemake/environmentsYAML/bedtools.yaml"
+    shell:
+        """ bedtools sort -faidx {input.genomeFile2} -i {input.TFBSinPeaksMod_bed} > {output.resortedBed} &&
+            bedtools intersect \
+                -a {output.resortedBed} \
+                -b {input.bam} \
+                -c \
+                -sorted -g {input.genomeFile} \
+                > {output.peaksOverlap}
+        """
+
+rule prepareData:
+    input:
+        sampleData = config["samples"]["summaryFile"],
+        peaks = expand('{dir}/{basenameBAM}{peakFileEndingPattern}', dir = PEAKS_DIR, basenameBAM = allBamFilesBasename, peakFileEndingPattern = peakFileEndingPattern)
+    output:
+        sampleDataR    = PEAKS_DIR + "/" + comparisonType + "sampleMetadata.rds",
+        peakFile       = PEAKS_DIR + "/" + comparisonType + "peaks.rds",
+        peaks_tsv      = PEAKS_DIR + "/" + comparisonType + "peaks.tsv",
+        condComp       = TEMP_EXTENSION_DIR  + "/" + "conditionComparison.rds",
+        normFacs       = PEAKS_DIR + "/" + comparisonType + "normFacs.rds",
+        plot_MA        = PEAKS_DIR + "/" + comparisonType + "MAplot.peaks.pdf",
+        plot_meanSD    = PEAKS_DIR + "/" + comparisonType + "meanSD.peaks.pdf"
+    log: expand('{dir}/prepareData.R.log', dir = LOG_BENCHMARK_DIR)
+    message: "{ruleDisplayMessage}Run R script prepareData for ..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/prepareData.benchmark"
+    resources:
+    version: VERSION_prepareData_script
+    params:
+        scriptName          = config["executables"]["prepareData_script"],
+        peakDir             = PEAKS_DIR,
+        patternpeaks        = peakFileEndingPattern,
+        conditionComparison = config["par_general"]["conditionComparison"],
+        designContrast      = config["par_general"]["designContrast"],
+
+    shell:
+        """sh -c '
+            Rscript {params.scriptName:q} \
+                {input.sampleData:q} \
+                {output.sampleDataR:q} \
+                {output.peakFile} \
+                {output.peaks_tsv} \
+                {output.condComp} \
+                {output.normFacs} \
+                {output.plot_MA} \
+                {output.plot_meanSD} \
+                {params.peakDir:q} \
+                {params.patternpeaks} \
+                "{params.conditionComparison}" \
+                "{params.designContrast}" \
+                {log:q}
+        '"""
+
+name_outputTSV = "output.tsv"
+
+
+rule analyzeTF:
+    input:
+        overlapFiles       = expand('{dir}/{{TF}}/{extension}/{{TF}}.{comparisonType}{basename}{peakFileEndingPattern}', dir = TF_DIR, extension = extensionDir, comparisonType = comparisonType, basename = allBamFilesBasename, peakFileEndingPattern = peakFileEndingPattern),
+        sampleDataR        = rules.prepareData.output.sampleDataR,
+        peakFile           = rules.prepareData.output.peakFile,
+        peakFile2          = rules.prepareData.output.peaks_tsv,
+        normFacs           = rules.prepareData.output.normFacs
+    output:
+        outputTSV      = TF_DIR + "/{TF}/" + extensionDir + "/{TF}." + comparisonType + name_outputTSV,
+        outputRDS      = TF_DIR + "/{TF}/" + extensionDir + "/{TF}." + comparisonType + "summary.rds",
+        plot_MA        = TF_DIR + "/{TF}/" + extensionDir + "/{TF}." + comparisonType + "MA.realcounts.pdf",
+        plot_meanSD    = TF_DIR + "/{TF}/" + extensionDir + "/{TF}." + comparisonType + "meanSD.pdf",
+        plot_dens      = TF_DIR + "/{TF}/" + extensionDir + "/{TF}." + comparisonType + "log2.dens.pdf",
+        plot_ecdf      = TF_DIR + "/{TF}/" + extensionDir + "/{TF}." + comparisonType + "ECDF.pdf"
+    log: expand('{dir}/analyzeTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
+    message: "{ruleDisplayMessage}Run analyzeTF.R script for TF {wildcards.TF}..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/analyzeTF.{TF}.benchmark"
+    resources:
+    version: VERSION_analyzeTF_script
+    params:
+        scriptName          = config["executables"]["runTFAnalysis_script"],
+        TF                  = lambda wildcards: wildcards.TF,
+        designContrast      = config["par_general"]["designContrast"]
+    run:
+      filenamesAll = ",".join(input.overlapFiles)
+      shell("""sh -c '
+            Rscript {params.scriptName:q} \
+                    {input.sampleDataR:q} \
+                    {input.normFacs:q} \
+                    {input.peakFile:q} \
+                    {input.peakFile2:q} \
+                    "{filenamesAll}" \
+                    {output.outputTSV:q} \
+                    {output.outputRDS:q} \
+                    {output.plot_MA:q} \
+                    {output.plot_meanSD:q} \
+                    {output.plot_dens:q} \
+                    {output.plot_ecdf:q} \
+                    "{params.TF}" \
+                    "{params.designContrast}" \
+                    {log:q}
+        '""")
+
+rule createVolcanoPlot:
+    input:
+        peaks = rules.prepareData.output.peaks_tsv,
+        TF    = expand('{dir}/{TF}/{extension}/{TF}.{comparisonType}summary.rds', dir = TF_DIR, TF = allTF, extension = extensionDir, comparisonType = comparisonType)
+    output:
+        volcanoPlot = FINAL_DIR + "/" + comparisonType + "TF_vs_peak_distribution.pdf",
+        outputTable = FINAL_DIR + "/" + comparisonType + "TF_vs_peak_distribution.tsv"
+    log: expand('{dir}/createVolcanoPlot.R.log', dir = LOG_BENCHMARK_DIR)
+    message: "{ruleDisplayMessage}Run R script createVolcanoPlot.R ..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/stats.benchmark"
+    resources:
+    version: VERSION_createVolcanoPlot_script
+    params:
+        scriptName      = config["executables"]["volcanoPlot1_script"],
+        TFs             = ",".join(allTF)
+    run:
+      filenamesAll = ",".join(input.TF)
+      shell("""sh -c '
+            Rscript {params.scriptName:q} \
+                {input.peaks:q} \
+                {filenamesAll} \
+                {output.volcanoPlot:q} \
+                {output.outputTable:q} \
+                "{params.TFs}" \
+                {log:q}
+        '""")
+
+
+rule concatenateMotifs:
+    input:
+        diagnosticPlots = rules.createVolcanoPlot.output,
+        TFMotifes = expand('{dir}/{TF}/{extension}/{TF}.{comparisonType}{patternTSV}', dir = TF_DIR, TF = allTF, extension = extensionDir, comparisonType = comparisonType, patternTSV = name_outputTSV)
+    output: allMotifs_tsv = FINAL_DIR + "/" + comparisonType + "allMotifs.tsv"
+    log:
+    message: "{ruleDisplayMessage}Concatenate all motifs for file {input.TFMotifes}..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/concatenateMotifs.benchmark"
+    resources:
+    version: "NA"
+    params:
+        folder  = TF_DIR,
+        pattern = "*" + extensionDir + "/*." + comparisonType + name_outputTSV
+    shell:
+      """
+        find {params.folder} -type f -path "{params.pattern}" -exec  awk 'NR==1 || FNR!=1' {{}} +  > {output.allMotifs_tsv}
+      """
+
+rule calculcateNucleotideContent:
+    input:
+        motifsBed = rules.concatenateMotifs.output.allMotifs_tsv
+    output:
+        bedTemp = TEMP_EXTENSION_DIR + "/" + comparisonType + "motifs.coord.bed",
+        bed     = TEMP_EXTENSION_DIR + "/" + comparisonType + "motifs.coord.nucContent.bed"
+    log:
+    message: "{ruleDisplayMessage}Calculate nucleotide content via bedtools nuc for file {input} ..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/calculcateNucleotideContent.benchmark"
+    resources:
+    conda: "/g/scb2/zaugg/zaugg_shared/Programs/Snakemake/environmentsYAML/bedtools.yaml"
+    params: refGenome = config["additionalInputFiles"]["refGenome_fasta"]
+    shell:
+      """
+            cat {input.motifsBed} | awk '{{OFS="\\t"}};NR>1{{print $2,$3,$4,$5,$1}}' > {output.bedTemp} &&
+            bedtools nuc -fi {params.refGenome} -bed {output.bedTemp}  > {output.bed}
+        """
+
+
+rule preparePermutations:
+    input:
+        nucContent = rules.calculcateNucleotideContent.output.bed,
+        motifes    = rules.concatenateMotifs.output.allMotifs_tsv
+    output:
+        allTFData       = TEMP_EXTENSION_DIR + "/" + comparisonType + "allTFData_processedForPermutations.rds",
+        allTFUniqueData = TEMP_EXTENSION_DIR + "/" + comparisonType + "allTFUniqueData_processedForPermutations.rds"
+    log: expand('{dir}/preparePermutations.log', dir = LOG_BENCHMARK_DIR)
+    message: "{ruleDisplayMessage}Run R script preparePermutations.R ..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/preparePermutations.benchmark"
+    resources:
+    version: VERSION_preparePermutations_script
+    params:
+        scriptName          = config["executables"]["preparePermutations_script"]
+    shell:
+      """sh -c '
+            Rscript {params.scriptName:q} \
+                {input.motifes:q} \
+                {input.nucContent:q} \
+                {output.allTFData:q} \
+                {output.allTFUniqueData:q} \
+                {log:q}
+        '"""
+
+rule doPermutations:
+    input:
+        nucContent      = rules.calculcateNucleotideContent.output.bed,
+        motifes         = rules.concatenateMotifs.output.allMotifs_tsv,
+        allTFData       = rules.preparePermutations.output.allTFData,
+        allTFUniqueData = rules.preparePermutations.output.allTFUniqueData
+    output:
+        permResults  = expand('{dir}/{{TF}}/{extension}/{{TF}}.{comparisonType}permutationResults.rds', dir = TF_DIR, extension = extensionDir, comparisonType = comparisonType),
+        summary      = expand('{dir}/{{TF}}/{extension}/{{TF}}.{comparisonType}permutationSummary.tsv', dir = TF_DIR, extension = extensionDir, comparisonType = comparisonType)
+    log: expand('{dir}/doPermutations.{{TF}}.log', dir = LOG_BENCHMARK_DIR)
+    message: "{ruleDisplayMessage}Run R script permutations.R ..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/doPermutations.{TF}.benchmark"
+    resources:
+    version: VERSION_permutations_script
+    params:
+        scriptName          = config["executables"]["permutations_script"],
+        TF                  = lambda wildcards: wildcards.TF
+    shell:
+      """sh -c '
+            Rscript {params.scriptName:q} \
+                {input.allTFData:q} \
+                {input.allTFUniqueData:q} \
+                "{params.TF}" \
+                {output.permResults:q} \
+                {output.summary:q} \
+                {log:q}
+        '"""
+
+
+rule summarizePermutations:
+    input:
+        allPermutationResults = expand('{dir}/{TF}/{extension}/{TF}.{comparisonType}permutationSummary.tsv', dir = TF_DIR, TF = allTF, extension = extensionDir, comparisonType = comparisonType),
+        condComp   = rules.prepareData.output.condComp
+    output:
+    #    permResults  = FINAL_DIR + "/" + comparisonType + "permutationResults.l.rds",
+        summary      = FINAL_DIR + "/" + comparisonType + "all.volcano.l2FC.removedCGbias.AR.tsv",
+        volcanoPlot  = FINAL_DIR + "/" + comparisonType + "all.volcano.l2FC.removedCGbias.AR.pdf",
+        circularPlot = FINAL_DIR + "/" + comparisonType + "all.circular.l2FC.removedCGbias.AR.pdf"
+    log: expand('{dir}/summarizePermutations.R.log', dir = LOG_BENCHMARK_DIR)
+    message: "{ruleDisplayMessage}Run R script summarizePermutations.R ..."
+    threads: 1
+    priority: 1
+    #benchmark: LOG_BENCHMARK_DIR + "/summarizePermutations.benchmark"
+    resources:
+    version: VERSION_summarizePermutations_script
+    params:
+        scriptName          = config["executables"]["summarizePermutations_script"],
+        plotTFClassification = "FALSE"
+    run:
+        allPermResultsStr = ",".join(input.allPermutationResults)
+        shell("""sh -c '
+            Rscript {params.scriptName:q} \
+                "{allPermResultsStr}" \
+                {input.condComp:q} \
+                {output.summary:q} \
+                {output.volcanoPlot:q} \
+                {output.circularPlot:q} \
+                {params.plotTFClassification} \
+                {log:q}
+                '""")
