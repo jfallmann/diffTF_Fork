@@ -1,0 +1,20 @@
+{
+    "__default__" :
+    {
+        "queue"     : "medium_priority",
+        "nCPUs"     : "16",
+        "memory"    : 20000,
+        "resources" : "\"select[mem>20000] rusage[mem=20000] span[hosts=1]\"",
+        "name"      : "{rule}.{wildcards}",
+        "output"    : "/scratch/carnold/CLL/TF_act_downsampling0.01/output/Logs_and_Benchmarks/{rule}.{wildcards}.out",
+        "error"     : "/scratch/carnold/CLL/TF_act_downsampling0.01/output/Logs_and_Benchmarks/{rule}.{wildcards}.err"
+    },
+
+    "intersectBAM2":
+    {
+        "memory"    : 1000,
+        "resources" : "\"select[mem>1000] rusage[mem=1000] span[hosts=1]\""
+    }
+
+
+}
