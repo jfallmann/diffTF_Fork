@@ -1,0 +1,42 @@
+{
+  "par_general":
+  {
+  "outdir"              : "output",
+  "regionExtension"     : 100,
+  "comparisonType"      : "GMPvsMPP",
+  "designContrast"      : "~ conditionSummary",
+  "designVariableTypes" : "conditionSummary:factor",
+  "nPermutations"       : 3,
+  "nBootstraps"         : 0,
+  "nCGBins"             : 10,
+  "TFs"                 : "all",
+  "dir_scripts"         : "../../src/R",
+  "RNASeqIntegration"   : true
+ },
+
+ "samples":
+  {
+  "summaryFile"      : "sampleData.tsv"
+  },
+
+
+"peaks":
+ {
+  "consensusPeaks" : "",
+  "peakType"       : "narrow",
+  "minOverlap"     : 2
+ },
+
+  "additionalInputFiles":
+  {
+  "refGenome_fasta"      : "referenceGenome/mm10.fa",
+  "dir_PWMScan"          : "PWMscan",
+  "RNASeqCounts"         : "RNA-Seq/RNA.counts.tsv",
+  "HOCOMOCO_mapping"     : "../../src/HOCOMOCO/translationTable_mouse.csv"
+  }
+
+
+
+
+
+}

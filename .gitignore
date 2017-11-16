@@ -1,0 +1,7 @@
+example/input/data/
+example/input/PWMScan/
+example/input/referenceGenome/
+doc/Documentation.odt
+*/.snakemake/
+example/output/
+example/input/output/
