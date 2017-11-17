@@ -1,6 +1,5 @@
-<p align="center">
 ![logo|small](/doc/logo.png "diffTF logo")
-</p>
+
 
 
 Genome-wide quantification of differential transcription factor activity: diffTF         
