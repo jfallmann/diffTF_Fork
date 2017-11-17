@@ -1,5 +1,4 @@
-
-![logo](https://git.embl.de/carnold/diffTF/blob/master/doc/logo.png)
+![logo](https://git.embl.de/carnold/diffTF/blob/master/doc/logo.png "foo")
 
 Genome-wide quantification of differential transcription factor activity: diffTF         
 =====================================================
