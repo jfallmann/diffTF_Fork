@@ -1,4 +1,7 @@
+<p align="center">
 ![logo|small](/doc/logo.png "diffTF logo")
+</p>
+
 
 Genome-wide quantification of differential transcription factor activity: diffTF         
 =====================================================
@@ -22,22 +25,12 @@ Installation
 First, clone the Github repository:
 * ``git clone https://git.embl.de/carnold/diffTF``
 
-Follow the steps described in the documentation(https://git.embl.de/carnold/diffTF/blob/master/doc/Documentation.pdf) thereafter.
+Follow the steps described in the [Documentation](https://git.embl.de/carnold/diffTF/blob/master/doc/Documentation.pdf) thereafter.
 
 Instructions to run the example analysis
 -----------
-  * Clone the Github repository (see above)
-  * Change into the example/input directory within the Git repository
-    * ``cd diffTF/example/input``
-  * Download the data via the download script
-    * ``sh downloadAllData.sh``
-  * Start a dryrun via the helper script
-    * ``sh startAnalysis.sh``
 
-  * Once the dryrun is successful, change the startAnalysis.sh script and remove the dryrun directive to start the analysis and restart the script.
-    * ``{EDIT THE FILE}``
-    * ``sh startAnalysis.sh``
-
+See the Documentation.
 
 
 Citation
