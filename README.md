@@ -1,4 +1,4 @@
-![logo](/doc/logo.png "diffTF logo") | width=150
+![logo|small](/doc/logo.png "diffTF logo")
 
 Genome-wide quantification of differential transcription factor activity: diffTF         
 =====================================================
