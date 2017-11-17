@@ -1,7 +1,7 @@
 {
   "par_general":
   {
-  "outdir"              : "output",
+  "outdir"              : "../output",
   "regionExtension"     : 100,
   "comparisonType"      : "GMPvsMPP",
   "designContrast"      : "~ conditionSummary",
