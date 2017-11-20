@@ -16,15 +16,15 @@ Documentation
 
 A detailed Documentation is available here:
 
-[Documentation](https://git.embl.de/carnold/diffTF/blob/master/doc/Documentation.pdf)
+[Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf)
 
 Installation
 -------
 
 First, clone the Github repository:
-* ``git clone https://git.embl.de/carnold/diffTF``
+* ``git clone https://git.embl.de/grp-zaugg/diffTF``
 
-Follow the steps described in the [Documentation](https://git.embl.de/carnold/diffTF/blob/master/doc/Documentation.pdf) thereafter.
+Follow the steps described in the [Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf) thereafter.
 
 Instructions to run the example analysis
 -----------
