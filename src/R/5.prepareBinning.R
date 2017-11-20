@@ -127,14 +127,16 @@ for (permutationCur in 0:par.l$nPermutations) {
   fileCur = par.l$files_input_nucContentGenome[permutationCur+1]
   TF.motifs.CG.cur  = read_tsv(fileCur, col_names = TRUE, col_types = cols())
   
+  colnames(TF.motifs.CG.cur) = c("chr","MSS","MES","strand","TF","AT","CG","A","C","G","T","N","other_nucl","length")
+  
   nRowsNA = length(which(is.na(TF.motifs.CG.cur$CG)))
   if (nRowsNA > 0) {
-    message <- paste0("The file ", fileCur, " contains ", nRowsNA, " rows out of ", nrow(TF.motifs.CG.cur), " with a missing value for the CG content, which most likely results from an assembly discordance between the BAM files and the specified fasta file. The first 10 are printed with their first 3 columns here for debugging purposes:") 
+    message <- paste0("The file ", fileCur, " contains ", nRowsNA, " rows out of ", nrow(TF.motifs.CG.cur), " with a missing value for the CG content, which most likely results from an assembly discordance between the BAM files and the specified fasta file. These regions will be removed in subsequent steps. The first 10 are printed with their first 3 columns here for debugging purposes:") 
     message = paste0(message, paste0(unlist(TF.motifs.CG.cur[1:10,"chr"]), ":", unlist(TF.motifs.CG.cur[1:10,"MSS"]), "-", unlist(TF.motifs.CG.cur[1:10,"MES"]), collapse = ", "))
     checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    TF.motifs.CG.cur = TF.motifs.CG.cur[-nRowsNA,]
   }
   
-  colnames(TF.motifs.CG.cur) = c("chr","MSS","MES","strand","TF","AT","CG","A","C","G","T","N","other_nucl","length")
   TF.motifs.CG.cur$permutation = permutationCur
   
   
@@ -145,13 +147,6 @@ for (permutationCur in 0:par.l$nPermutations) {
     TF.motifs.CG = rbind(TF.motifs.CG, TF.motifs.CG.cur)
   }
   
-}
-
-# Check for NA values in the CG column, indicating some kind of assembly problem with the fasta file.
-if () {
-  message = paste0("The file ", par.l$files_input_nucContentGenome[permutationCur+1], " is empty. Something went wrong before. Make sure the previous steps succeeded.")
-  flog.fatal(message)
-  stop(message)
 }
 
 
