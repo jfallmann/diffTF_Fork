@@ -2,6 +2,7 @@
 
 
 
+
 Genome-wide quantification of differential transcription factor activity: diffTF         
 =====================================================
 
@@ -14,25 +15,39 @@ Transcription factor (TF) activity constitutes an important readout of cellular 
 Documentation
 -------
 
-A detailed Documentation is available here:
+[A detailed Documentation is available here](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf)
 
-[Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf)
-
-Installation
+Installation and Quick Start
 -------
 
-First, clone the Github repository:
-* ``git clone https://git.embl.de/grp-zaugg/diffTF``
+The following quick start briefly summarizes the necessary steps to use our pipelines.
 
-Follow the steps described in the [Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf) thereafter.
+1. Install the necessary tools (Snakemake, samtools, and bedtools)
 
-Instructions to run the example analysis
------------
+2. Clone the Git repository: ``git clone https://git.embl.de/grp-zaugg/diffTF``
 
-See the Documentation.
+3. To run the example analysis, simply perform the following steps::
+  * Change into the *example/input* directory within the Git repository
+  
+      ``cd diffTF/example/input``
+      
+  * Download the data via the download script
+  
+       ``sh downloadAllData.sh``
+    
+  * To test if the setup is correct, start a dryrun via the first helper script
+  
+      ``sh startAnalysisDryRun.sh``
+    
+  * Once the dryrun is successful, start the analysis via the second helper script
+  
+      ``sh startAnalysis.sh``
+    
+4. Modify the example analysis to run your own analysis. See Section 3 and 4 in the [Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf) for further details if you run into troubles or questions.
 
 
 Citation
 --------
 *Please cite the following article if you use diffTF in your research*:
-  * Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Kasper Rassmussen & Judith B. Zaugg. Genome-wide quantification of differential transcription factor activity: diffTF. 2017. submitted.
+
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Kasper Rassmussen & Judith B. Zaugg. Genome-wide quantification of differential transcription factor activity: diffTF. 2017. submitted.
