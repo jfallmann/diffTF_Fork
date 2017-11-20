@@ -1,4 +1,4 @@
-
+![logo|small](/doc/logo.png "diffTF logo")
 
 
 
@@ -27,12 +27,16 @@ The following quick start briefly summarizes the necessary steps to use our pipe
     ``git clone https://git.embl.de/grp-zaugg/diffTF``
 3. To run the example analysis, simply perform the following steps:
   * Change into the *example/input* directory within the Git repository
+  
     ``cd diffTF/example/input``
   * Download the data via the download script
+  
     ``sh downloadAllData.sh``
   * To test if the setup is correct, start a dryrun via the first helper script
+  
     ``sh startAnalysisDryRun.sh``
   * Once the dryrun is successful, start the analysis via the second helper script
+  
     ``sh startAnalysis.sh``
 4. Modify the example analysis to run your own analysis. See Section 3 and 4 in the [Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf) for further details if you run into troubles or questions.
 
