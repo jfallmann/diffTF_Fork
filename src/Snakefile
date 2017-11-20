@@ -280,7 +280,7 @@ rule intersectPeaksAndBAM:
         genomeFile2  = rules.idxstatsBAM.output.genomeFile2,
         bam        = lambda wildcards: getBamFileFromBasename(wildcards.basename)
     output:
-        peaksOverlap = PEAKS_DIR + '/' + compType + '{basename}.' + peakFileEndingPattern,
+        peaksOverlap = PEAKS_DIR + '/' + compType + '{basename}' + peakFileEndingPattern,
         resortedBed  = TEMP_DIR  + '/' + compType + '{basename}.' + "resorted.gz"
     log:
     message: "{ruleDisplayMessage} Run intersect and count for file {input.consensusPeaks} with {input.bam}..."
