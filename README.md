@@ -31,7 +31,7 @@ The following quick start briefly summarizes the necessary steps to use our pipe
         ``cd diffTF/example/input``
   * Download the data via the download script
   
-    ``sh downloadAllData.sh``
+        ``sh downloadAllData.sh``
   * To test if the setup is correct, start a dryrun via the first helper script
   
         ``sh startAnalysisDryRun.sh``
