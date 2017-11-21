@@ -24,10 +24,11 @@ The following quick start briefly summarizes the necessary steps to use our pipe
 
 1. Install the necessary tools (Snakemake, samtools, and bedtools). We recommend installing them via conda, in which case the installation is as easy as 
 
-  ``conda install -c bioconda snakemake bedtools samtools``
+    ``conda install -c bioconda snakemake bedtools samtools``
 
-  If conda is not yet installed, follow the [installation instructions](https://conda.io/docs/user-guide/install/index.html). If you want to install the tools manually and outside of the conda framework, see the following instuctiions: [snakemake](https://snakemake.readthedocs.io), [samtools](http://www.htslib.org/download/), [bedtools](http://bedtools.readthedocs.io/en/latest/content/installation.html).
+    If conda is not yet installed, follow the [installation instructions](https://conda.io/docs/user-guide/install/index.html). If you want to install the tools manually and outside of the conda framework, see the following instructions for each of the tools: [snakemake](https://snakemake.readthedocs.io), [samtools](http://www.htslib.org/download/), [bedtools](http://bedtools.readthedocs.io/en/latest/content/installation.html).
 2. Clone the Git repository: 
+
     ``git clone https://git.embl.de/grp-zaugg/diffTF``
 3. To run the example analysis, simply perform the following steps:
   * Change into the *example/input* directory within the Git repository
