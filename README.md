@@ -22,7 +22,11 @@ Installation and Quick Start
 
 The following quick start briefly summarizes the necessary steps to use our pipelines.
 
-1. Install the necessary tools (Snakemake, samtools, and bedtools)
+1. Install the necessary tools (Snakemake, samtools, and bedtools). We recommend installing them via conda, in which case the installation is as easy as 
+
+  ``conda install -c bioconda snakemake bedtools samtools``
+
+  If conda is not yet installed, follow the [installation instructions](https://conda.io/docs/user-guide/install/index.html). If you want to install the tools manually and outside of the conda framework, see the following instuctiions: [snakemake](https://snakemake.readthedocs.io), [samtools](http://www.htslib.org/download/), [bedtools](http://bedtools.readthedocs.io/en/latest/content/installation.html).
 2. Clone the Git repository: 
     ``git clone https://git.embl.de/grp-zaugg/diffTF``
 3. To run the example analysis, simply perform the following steps:
@@ -38,7 +42,7 @@ The following quick start briefly summarizes the necessary steps to use our pipe
   * Once the dryrun is successful, start the analysis via the second helper script
   
         ``sh startAnalysis.sh``
-4. Modify the example analysis to run your own analysis. See Section 3 and 4 in the [Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf) for further details if you run into troubles or questions.
+4. To run your own analysis, modify the files config.json and sampleData.tsv. See the instructions in Section 3 in the [Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf) for more details.
 
 
 Citation
