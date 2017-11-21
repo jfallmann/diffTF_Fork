@@ -4,8 +4,6 @@
 Genome-wide quantification of differential transcription factor activity: diffTF         
 =====================================================
 
-Thank you
--------
 Thank you for the interest in diffTF! If you have questions or comments, feel free to contact us. We will be happy to answer any questions related to this project as well as questions related to the software implementation. 
 
 Summary

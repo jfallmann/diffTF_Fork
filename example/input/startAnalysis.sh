@@ -9,7 +9,12 @@ echo "#    as well as questions related to the software implementation.  #"
 echo "####################################################################"
 
 
-echo "\nThis wrapper script calls Snakemake to start diffTF. Modify the Snakemake call to your needs.\n"
+echo "\nThis wrapper script executes Snakemake to start diffTF. Modify the Snakemake call to your needs.\n"
+
+echo "#########################################################"
+echo "#   NOTE THAT THIS ANALYSIS MAY TAKE A WHILE TO FINISH  #"
+echo "# INCREASING THE NUMBER OF CORES SPEEDS UP THE ANALYSIS #"
+echo "#########################################################"
 
 # Real run, using 2 cores
 snakemake --snakefile ../../src/Snakefile --cores 2 --configfile config.json --timestamp --directory .

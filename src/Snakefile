@@ -415,9 +415,7 @@ rule analyzeTF:
         outputRDS            = TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}." + "summary.rds",
         plot_diagnostic      = name_plotsDiag,
         plot_TFSummary       = name_TFSummary,
-        #plot_diagnosticPerm  = dynamic(TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}." + "diagnosticPlots_permutation{perm}.pdf"),
-        plot_diagnosticPerm  = expand('{dir}/{{TF}}/{ext}/{compType}{{TF}}.diagnosticPlots_permutation{perm}.pdf', dir = TF_DIR, ext = extDir, compType = compType, perm = range(1, nPerm + 1, 1)),
-        DESeqObj       = TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}." + "DESeq.object.rds"
+        DESeqObj             = TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}." + "DESeq.object.rds"
     log: expand('{dir}/3.analyzeTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_analyzeTF} for TF {wildcards.TF}..."
     threads: 1

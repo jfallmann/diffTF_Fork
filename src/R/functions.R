@@ -509,7 +509,7 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
   # TODO: dd2 <- lfcShrink(dds, contrast=c("dex","trt","untrt"), res=res)
   # vary alpha from 0.01 to 0.2
   for (alphaCur in c(0.001, 0.01, 0.05, 0.1, 0.2)) {
-    DESeq2::plotMA(dd, alpha = alphaCur, main = paste0("MA plot for alpha = ", alphaCur))
+      suppressWarnings(DESeq2::plotMA(dd, alpha = alphaCur, main = paste0("MA plot for alpha = ", alphaCur)))
   }
   
   # Another useful diagnostic plot is the histogram of the p values (figure below). 
@@ -552,7 +552,7 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
 
   if (nrow(MA.idx) > maxPairwiseComparisons) {
     
-    warning("The number of pairwise comparisons to plot exceeds the current maximum of ", maxPairwiseComparisons, ". Only ", maxPairwiseComparisons, " pairwise comparisons will be shown in the PDF.")
+    flog.info("The number of pairwise comparisons to plot exceeds the current maximum of ", maxPairwiseComparisons, ". Only ", maxPairwiseComparisons, " pairwise comparisons will be shown in the PDF.")
     MA.idx.filt = MA.idx[1:maxPairwiseComparisons,, drop = FALSE]
 
   } else {
@@ -563,7 +563,7 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
     
     
     label = paste0(colnames(dd)[MA.idx.filt[i,1]], " vs ", colnames(dd)[MA.idx.filt[i,2]])
-    print(myMAPlot(counts(dd, normalized = TRUE), c(MA.idx[i,1], MA.idx.filt[i,2]), main =  label))
+    suppressWarnings(print(myMAPlot(counts(dd, normalized = TRUE), c(MA.idx[i,1], MA.idx.filt[i,2]), main =  label)))
   }
   
   if (nrow(MA.idx) > nrow(MA.idx.filt)) {
@@ -578,7 +578,7 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
   # 4. Mean SD plot: Plot row standard deviations versus row means
   notAllZeroPeaks <- (rowSums(counts(dd)) > 0)
   
-  meanSdPlot(assay(dd[notAllZeroPeaks,]))
+  suppressWarnings(meanSdPlot(assay(dd[notAllZeroPeaks,])))
   
   if (!is.null(filename)) {
     dev.off()
@@ -590,7 +590,7 @@ createDebugFile <- function(snakemake) {
     checkAndLoadPackages(c("checkmate", "tools"), verbose = FALSE)
     
     if (!testClass(snakemake, "Snakemake")) {
-        warning("Could not find snakemake object, therefore not saving anyting.")
+        flog.warn(paste0("Could not find snakemake object, therefore not saving anyting."))
         return()
     }
     
@@ -600,7 +600,7 @@ createDebugFile <- function(snakemake) {
     
     filename = paste0(tools::file_path_sans_ext(logfile), ".rds")
     
-    cat(paste0("Saved snakemake object in file ", filename, "\n"))
+    flog.info(paste0("Saved Snakemake object for manually rerunning the R script to ", filename))
     
     saveRDS(snakemake, filename)
     
@@ -675,7 +675,7 @@ createDebugFile <- function(snakemake) {
     nCores = multicoreWorkers()
   }
   
-  if (verbose) message(" Finished execution using ",nCores," cores. TOTAL RUNNING TIME: ", round(end.time - start.time, 1), " ", units(end.time - start.time),"\n")
+  flog.info(paste0(" Finished execution using ",nCores," cores. TOTAL RUNNING TIME: ", round(end.time - start.time, 1), " ", units(end.time - start.time),"\n"))
   
   
   if (!returnAsList) {
@@ -691,10 +691,10 @@ createDebugFile <- function(snakemake) {
 }
 
 
-.printExecutionTime <- function(startTime, verbose = TRUE) {
+.printExecutionTime <- function(startTime) {
   
   endTime  <-  Sys.time()
-  if (verbose) message(" Execution time: ", round(endTime - startTime, 1), " ", units(endTime - startTime))
+  flog.info(paste0("Script finished sucessfully. Execution time: ", round(endTime - startTime, 1), " ", units(endTime - startTime)))
 }
 
 

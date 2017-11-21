@@ -287,7 +287,7 @@ for (permutationCur in 0:par.l$nPermutations) {
     # Run the local fit first, if that throws an error try the default fit type
     
     res_DESeq = tryCatch( {
-      DESeq(TF.cds.filt,fitType = 'local')
+        suppressMessages(DESeq(TF.cds.filt,fitType = 'local'))
       
     }, error = function(e) {
       message = "Could not run DESeq with local fitting, retry with default fitting type..."
@@ -434,9 +434,10 @@ for (permutationCur in 0:par.l$nPermutations) {
     if (permutationCur > 0) {
       
       filenameCurSummary = paste0(file_path_sans_ext(par.l$file_output_plot_TFSummary) , "_permutation", permutationCur, ".pdf")
-      filenameCurDiag    = paste0(file_path_sans_ext(par.l$file_output_plot_diagnostic), "_permutation", permutationCur, ".pdf")
-      
-      computeDESeqDiagnosticPlots(res_DESeq, filenameCurDiag, maxPairwiseComparisons = par.l$maxPairwiseComparisonsDiagnosticPermutations)
+
+      # Disabled for now
+      # filenameCurDiag    = paste0(file_path_sans_ext(par.l$file_output_plot_diagnostic), "_permutation", permutationCur, ".pdf")
+      # computeDESeqDiagnosticPlots(res_DESeq, filenameCurDiag, maxPairwiseComparisons = par.l$maxPairwiseComparisonsDiagnosticPermutations)
       
     } else {
       computeDESeqDiagnosticPlots(res_DESeq, filenameCurDiag)
