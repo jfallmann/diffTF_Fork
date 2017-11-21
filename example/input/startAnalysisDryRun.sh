@@ -1,6 +1,14 @@
 # Modify this Snakemake call to your needs.
 # If you run the analysis on a cluster, we recommend using a cluster configuration via --cluster-config
 
-echo "Starting Snakemake (dry run only, not actually executing anything)\n"
+echo "####################################################################"
+echo "#              Thank you for the interest in diffTF!               #"
+echo "#    If you have questions or comments, feel free to contact us.   #"
+echo "# We will be happy to answer any questions related to this project #"
+echo "#    as well as questions related to the software implementation.  #"
+echo "####################################################################"
+
+
+echo "\nThis wrapper script calls Snakemake in dryrun mode to start diffTF. Nothing will actually be executed.\n"
 # Dryrun, using 2 cores
 snakemake --snakefile ../../src/Snakefile --dryrun --cores 2 --configfile config.json

@@ -15,7 +15,7 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 ########################################################################
 
 # snakemake=readRDS("/scratch/carnold/TET2.GMPMPP.noCG/output/Logs_and_Benchmarks/2.DESeqPeaks.R.rds")
-createDebugFile(snakemake, "2.DESeqPeaks.R")
+createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
 checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "csaw", "checkmate", "limma", "tools", "EDASeq", "geneplotter", "RColorBrewer", "BiocParallel", "rlist"), verbose = FALSE)

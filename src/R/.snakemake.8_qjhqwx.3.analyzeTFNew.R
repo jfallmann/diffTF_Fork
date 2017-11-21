@@ -1,3 +1,32 @@
+
+######## Snakemake header ########
+library(methods)
+Snakemake <- setClass(
+    "Snakemake",
+    slots = c(
+        input = "list",
+        output = "list",
+        params = "list",
+        wildcards = "list",
+        threads = "numeric",
+        log = "list",
+        resources = "list",
+        config = "list",
+        rule = "character"
+    )
+)
+snakemake <- Snakemake(
+    input = list('../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.overlapPeaks.bed.gz', '../output/PEAKS/GMPvsMPP.peaks.rds', '../output/PEAKS/GMPvsMPP.normFacs.rds', '../output/PEAKS/GMPvsMPP.peaks.tsv', '../output/PEAKS/GMPvsMPP.sampleMetadata.rds', '../output/PEAKS/GMPvsMPP.diagnosticPlots.peaks_permutation1.pdf', '../output/PEAKS/GMPvsMPP.diagnosticPlots.peaks_permutation2.pdf', '../output/PEAKS/GMPvsMPP.diagnosticPlots.peaks_permutation3.pdf', "overlapFile" = c('../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.overlapPeaks.bed.gz'), "peakFile" = '../output/PEAKS/GMPvsMPP.peaks.rds', "normFacs" = '../output/PEAKS/GMPvsMPP.normFacs.rds', "peakFile2" = '../output/PEAKS/GMPvsMPP.peaks.tsv', "sampleDataR" = '../output/PEAKS/GMPvsMPP.sampleMetadata.rds', "plotsPerm" = c('../output/PEAKS/GMPvsMPP.diagnosticPlots.peaks_permutation1.pdf', '../output/PEAKS/GMPvsMPP.diagnosticPlots.peaks_permutation2.pdf', '../output/PEAKS/GMPvsMPP.diagnosticPlots.peaks_permutation3.pdf')),
+    output = list('../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.diagnosticPlots_permutation1.pdf', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.diagnosticPlots_permutation2.pdf', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.diagnosticPlots_permutation3.pdf', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.DESeq.object.rds', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.summary.rds', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.diagnosticPlots.pdf', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.summaryPlots.pdf', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.output.tsv', "plot_diagnosticPerm" = c('../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.diagnosticPlots_permutation1.pdf', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.diagnosticPlots_permutation2.pdf', '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.diagnosticPlots_permutation3.pdf'), "DESeqObj" = '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.DESeq.object.rds', "outputRDS" = '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.summary.rds', "plot_diagnostic" = '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.diagnosticPlots.pdf', "plot_TFSummary" = '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.summaryPlots.pdf', "outputTSV" = '../output/TF-SPECIFIC/SP1.S/extension100/GMPvsMPP.SP1.S.output.tsv'),
+    params = list('true', c('data/bam/GMP.WT.1.final.sort.CGcorr.chr1.bam', 'data/bam/GMP.WT.2.final.sort.CGcorr.chr1.bam', 'data/bam/GMP.WT.3.final.sort.CGcorr.chr1.bam', 'data/bam/GMP.WT.4.final.sort.CGcorr.chr1.bam', 'data/bam/MPP.WT.1.final.sort.CGcorr.chr1.bam', 'data/bam/MPP.WT.2.final.sort.CGcorr.chr1.bam', 'data/bam/MPP.WT.3.final.sort.CGcorr.chr1.bam', 'data/bam/MPP.WT.4.final.sort.CGcorr.chr1.bam'), "doCyclicLoess" = 'true', "allBAMS" = c('data/bam/GMP.WT.1.final.sort.CGcorr.chr1.bam', 'data/bam/GMP.WT.2.final.sort.CGcorr.chr1.bam', 'data/bam/GMP.WT.3.final.sort.CGcorr.chr1.bam', 'data/bam/GMP.WT.4.final.sort.CGcorr.chr1.bam', 'data/bam/MPP.WT.1.final.sort.CGcorr.chr1.bam', 'data/bam/MPP.WT.2.final.sort.CGcorr.chr1.bam', 'data/bam/MPP.WT.3.final.sort.CGcorr.chr1.bam', 'data/bam/MPP.WT.4.final.sort.CGcorr.chr1.bam')),
+    wildcards = list('SP1.S', "TF" = 'SP1.S'),
+    threads = 1,
+    log = list('../output/LOGS_AND_BENCHMARKS/3.analyzeTF.SP1.S.R.log'),
+    resources = list(),
+    config = list("additionalInputFiles" = list("refGenome_fasta" = 'referenceGenome/mm10.fa', "dir_PWMScan" = 'PWMscan', "RNASeqCounts" = 'data/RNA-Seq/RNA.counts.tsv', "HOCOMOCO_mapping" = '../../src/HOCOMOCO/translationTable_mouse.csv'), "par_general" = list("outdir" = '../output', "regionExtension" = 100, "comparisonType" = 'GMPvsMPP', "designContrast" = '~ conditionSummary', "designVariableTypes" = 'conditionSummary:factor', "nPermutations" = 3, "nBootstraps" = 0, "nCGBins" = 10, "TFs" = 'all', "dir_scripts" = '../../src/R', "RNASeqIntegration" = TRUE), "samples" = list("summaryFile" = 'sampleData.tsv'), "peaks" = list("consensusPeaks" = '', "peakType" = 'narrow', "minOverlap" = 2)),
+    rule = 'analyzeTF'
+)
+######## Original script #########
 start.time  <-  Sys.time()
 
 

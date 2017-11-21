@@ -19,7 +19,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "DiffBind", "checkmate", "s
 ########################################################################
 
 # snakemake=readRDS("/scratch/carnold/TET2.GMPMPP.noCGNew/output/Logs_and_Benchmarks/1.createConsensusPeaks.R.rds")
-createDebugFile(snakemake, "1.createConsensusPeaks.R")
+createDebugFile(snakemake)
 
 ###################
 #### PARAMETERS ###

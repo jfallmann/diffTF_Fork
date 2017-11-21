@@ -19,7 +19,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "meth
 # SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
 ########################################################################
 # snakemake=readRDS("/scratch/carnold/CLL/TF_act_noGCBias/output/Logs_and_Benchmarks/preparePermutations.R.rds")
-createDebugFile(snakemake, "5.prepareBinning.R")
+createDebugFile(snakemake)
 
 ###################
 #### PARAMETERS ###

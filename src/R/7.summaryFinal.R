@@ -13,7 +13,7 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 ########################################################################
 
 # snakemake=readRDS("/scratch/carnold/CLL/TF_act_noGCBias/output/Logs_and_Benchmarks/7.summaryFinal.R.rds")
-createDebugFile(snakemake, "7.summaryFinal.R")
+createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
 checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "dplyr", "ggrepel", "checkmate", "tools", "locfdr", "DESeq2"), verbose = FALSE)

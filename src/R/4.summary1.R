@@ -16,7 +16,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "modeest", "checkmate", "gg
 # SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
 ########################################################################
 
-createDebugFile(snakemake, "4.summary1.R")
+createDebugFile(snakemake)
 
 ###################
 #### PARAMETERS ###

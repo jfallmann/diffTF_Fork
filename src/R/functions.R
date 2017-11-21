@@ -585,36 +585,25 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
   }
 }
 
-createDebugFile <- function(snakemake, scriptName, dirname = "Rscript_debugInfo") {
-  
-  library("checkmate")
-  if (!testClass(snakemake, "Snakemake")) {
-    warning("Could not find snakemake object, return.")
-    return()
-  }
-  
-  outdir = snakemake@config$par_general$outdir
-  
-  if (!is.null(outdir)) {
-    dirname = paste0(outdir, "/Logs_and_Benchmarks")
-  }
-  
-  if (!dir.exists( dirname)) dir.create( dirname)
-  
-  namesAll = names(snakemake@wildcards)
-  namesAll = namesAll[-which(namesAll == "")]
-  
-  wildcardStr = ""
-  for (wildcardCur in namesAll) {
-    wildcardStr = paste0(wildcardStr, "_", wildcardCur, "=", snakemake@wildcards[[wildcardCur]])
-  }
-  
-  filename = paste0(dirname, "/", scriptName, wildcardStr, ".rds")
-  
- cat(paste0("Saved snakemake object in file ", filename, "\n"))
-  
-  saveRDS(snakemake, filename)
-  
+createDebugFile <- function(snakemake) {
+    
+    checkAndLoadPackages(c("checkmate", "tools"), verbose = FALSE)
+    
+    if (!testClass(snakemake, "Snakemake")) {
+        warning("Could not find snakemake object, therefore not saving anyting.")
+        return()
+    }
+    
+    logfile = snakemake@log[[1]][1]
+    
+    assertCharacter(logfile, any.missing = FALSE)
+    
+    filename = paste0(tools::file_path_sans_ext(logfile), ".rds")
+    
+    cat(paste0("Saved snakemake object in file ", filename, "\n"))
+    
+    saveRDS(snakemake, filename)
+    
 }
 
 #' @importFrom BiocParallel multicoreWorkers MulticoreParam

@@ -1,12 +1,12 @@
 ![logo|small](/doc/logo.png "diffTF logo")
 
 
-
-
 Genome-wide quantification of differential transcription factor activity: diffTF         
 =====================================================
 
-
+Thank you
+-------
+Thank you for the interest in diffTF! If you have questions or comments, feel free to contact us. We will be happy to answer any questions related to this project as well as questions related to the software implementation. 
 
 Summary
 -------
@@ -44,6 +44,7 @@ The following quick start briefly summarizes the necessary steps to use our pipe
   
         ``sh startAnalysis.sh``
 4. To run your own analysis, modify the files config.json and sampleData.tsv. See the instructions in Section 3 in the [Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf) for more details.
+5. If your analysis finished successfully, take a look into the *FINAL_OUTPUT* folder within your specified output directory, which contains the summary tables and visualization of your analysis. If you received an error, take a look into Section 4 in the [Documentation](https://git.embl.de/grp-zaugg/diffTF/blob/master/doc/Documentation.pdf) to troubleshoot.
 
 
 Citation

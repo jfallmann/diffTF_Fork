@@ -11,17 +11,10 @@ import socket
 
 
 # Enforce a minimum Snakemake version because of various features
-min_version("4.3")
+min_version("4.0")
 
 __author__  = "Christian Arnold & Ivan Berest"
 __license__ = "MIT"
-
-
-############################################
-# Working directory and configuration file #
-############################################
-
-# Not needed, will be provided via the command line in Snakemake
 
 
 ########
@@ -67,6 +60,49 @@ def read_samplesTable(samplesSummaryFile, consensusPeaks):
             raise KeyError("The samples file must contain at least the following named columns (TAB separated!): 'SampleID', 'bamReads', 'conditionSummary'")
 
     return data
+
+###############################################
+# Check if all parameters have been specified #
+###############################################
+
+requiredSections = ["samples", "par_general", "peaks", "additionalInputFiles"]
+for sectionCur in requiredSections:
+    if not sectionCur in config:
+        raise KeyError("Could not find section \"" + sectionCur + "\" in the config file or no config file has been specified.")
+
+# 1. Section par_general
+missingParameters = []
+requiredPar = ["outdir", "regionExtension", "comparisonType", "designContrast", "designVariableTypes", "nPermutations", "nBootstraps", "nCGBins", "TFs", "dir_scripts", "RNASeqIntegration"]
+
+for parCur in requiredPar:
+    if not parCur in config["par_general"]:
+        missingParameters.append(parCur)
+
+if len(missingParameters) > 0:
+    missingParStr = ",".join(missingParameters)
+    raise KeyError("Could not find parameter(s) \"" + missingParStr + "\" in section \"par_general\" in the config file.")
+
+# 2. Section par_general
+if not "summaryFile" in config["samples"]:
+    raise KeyError("Could not find parameter \"summaryFile\" in section \"samples\" in the config file.")
+
+# 3. Section peaks
+if not "consensusPeaks" in config["peaks"]:
+    raise KeyError("Could not find parameter \"consensusPeaks\" in section \"peaks\" in the config file.")
+if not "peakType" in config["peaks"]:
+    raise KeyError("Could not find parameter \"peakType\" in section \"peaks\" in the config file.")
+if not "minOverlap" in config["peaks"]:
+    raise KeyError("Could not find parameter \"minOverlap\" in section \"peaks\" in the config file.")
+
+# 4. Section additionalInputFiles
+if not "refGenome_fasta" in config["additionalInputFiles"]:
+    raise KeyError("Could not find parameter \"refGenome_fasta\" in section \"additionalInputFiles\" in the config file.")
+if not "dir_PWMScan" in config["additionalInputFiles"]:
+    raise KeyError("Could not find parameter \"dir_PWMScan\" in section \"additionalInputFiles\" in the config file.")
+if not "RNASeqCounts" in config["additionalInputFiles"]:
+    raise KeyError("Could not find parameter \"RNASeqCounts\" in section \"additionalInputFiles\" in the config file.")
+if not "HOCOMOCO_mapping" in config["additionalInputFiles"]:
+    raise KeyError("Could not find parameter \"HOCOMOCO_mapping\" in section \"additionalInputFiles\" in the config file.")
 
 
 #############################

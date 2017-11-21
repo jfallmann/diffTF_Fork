@@ -19,7 +19,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmat
 ########################################################################
 
 # snakemake = readRDS("/scratch/carnold/Git/output/Logs_and_Benchmarks/permutations.R_TF=CTCF.rds")
-createDebugFile(snakemake, "6.binningTF.R")
+createDebugFile(snakemake)
 
 ###################
 #### PARAMETERS ###
