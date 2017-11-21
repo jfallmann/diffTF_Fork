@@ -4,5 +4,4 @@
 echo "Starting Snakemake\n"
 
 # Real run, using 2 cores
-snakemake --snakefile ../../src/Snakefile --cores 2 --configfile config.json --directory .
-echo "Finished.\n"
+snakemake --snakefile ../../src/Snakefile --cores 2 --configfile config.json --timestamp --directory .

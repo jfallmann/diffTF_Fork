@@ -31,7 +31,7 @@
   {
   "refGenome_fasta"      : "referenceGenome/mm10.fa",
   "dir_PWMScan"          : "PWMscan",
-  "RNASeqCounts"         : "RNA-Seq/RNA.counts.tsv",
+  "RNASeqCounts"         : "data/RNA-Seq/RNA.counts.tsv",
   "HOCOMOCO_mapping"     : "../../src/HOCOMOCO/translationTable_mouse.csv"
   }
 

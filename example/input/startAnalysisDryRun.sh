@@ -4,4 +4,3 @@
 echo "Starting Snakemake (dry run only, not actually executing anything)\n"
 # Dryrun, using 2 cores
 snakemake --snakefile ../../src/Snakefile --dryrun --cores 2 --configfile config.json
-echo "Finished.\n"

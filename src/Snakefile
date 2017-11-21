@@ -103,6 +103,8 @@ for fileCur in allBamFiles:
     basename = os.path.splitext(os.path.basename(fileCur))[0]
     allBamFilesBasename.append(basename)
 
+#print(allBamFilesBasename)
+
 # Add new column
 samplesData = samplesData.assign(basename = allBamFilesBasename)
 
@@ -171,20 +173,17 @@ if config["peaks"]["consensusPeaks"]:
         raise AssertionError("File " + config["peaks"]["consensusPeaks"] + " contains at least one line with the scientific notation (e+). This will cause errors in subsequent steps. Check the file and transform all \"e+\" coordinates.")
 
 
-dir_scripts = config["par_general"]["dir_scripts"]
+# Default directory for R scripts, specified relative to the Snakefile
+# Not to be confused with the dir_scripts directory, which is only used to load the correct functions.R file in all R scripts
+dir_scripts = "R/"
 
-script_createConsensusPeaks = dir_scripts + "/1.createConsensusPeaks.R"
-script_DESeqPeaks           = dir_scripts + "/2.DESeqPeaks.R"
-script_analyzeTF            = dir_scripts + "/3.analyzeTFNew.R"
-script_summary1             = dir_scripts + "/4.summary1.R"
-script_prepareBinning       = dir_scripts + "/5.prepareBinning.R"
-script_binningTF            = dir_scripts + "/6.binningTF.R"
-script_summaryFinal         = dir_scripts + "/7.summaryFinal.R"
-
-for scriptNameCur in [script_createConsensusPeaks, script_DESeqPeaks, script_analyzeTF, script_summary1, script_prepareBinning, script_binningTF, script_summaryFinal]:
-    if not os.path.isfile(scriptNameCur):
-        raise IOError("File " + scriptNameCur + " not found.")
-
+script_createConsensusPeaks = "1.createConsensusPeaks.R"
+script_DESeqPeaks           = "2.DESeqPeaks.R"
+script_analyzeTF            = "3.analyzeTFNew.R"
+script_summary1             = "4.summary1.R"
+script_prepareBinning       = "5.prepareBinning.R"
+script_binningTF            = "6.binningTF.R"
+script_summaryFinal         = "7.summaryFinal.R"
 
 #########
 # RULES #
@@ -210,7 +209,7 @@ rule produceConsensusPeaks:
     message: "{ruleDisplayMessage}Calculate consensus peaks for all peak files with the script {script_createConsensusPeaks}..."
     threads: 1
     params:
-    script: script_createConsensusPeaks
+    script: dir_scripts + script_createConsensusPeaks
 
 # Forces the execution of the rule above just when the user did not provide a consensus peak file
 def retrieveConsensusPeakFile (par_consensusPeaks):
@@ -234,7 +233,7 @@ rule filterSexChromosomesAndSortPeaks:
            """
 
 
-peakFileEndingPattern = ".overlapPeaks.bed.gz"
+peakFileEndingPattern = "overlapPeaks.bed.gz"
 
 rule sortPWM:
     input:
@@ -280,7 +279,7 @@ rule intersectPeaksAndBAM:
         genomeFile2  = rules.idxstatsBAM.output.genomeFile2,
         bam        = lambda wildcards: getBamFileFromBasename(wildcards.basename)
     output:
-        peaksOverlap = PEAKS_DIR + '/' + compType + '{basename}' + peakFileEndingPattern,
+        peaksOverlap = PEAKS_DIR + '/' + compType + '{basename}.' + peakFileEndingPattern,
         resortedBed  = TEMP_DIR  + '/' + compType + '{basename}.' + "resorted.gz"
     log:
     message: "{ruleDisplayMessage} Run intersect and count for file {input.consensusPeaks} with {input.bam}..."
@@ -326,7 +325,7 @@ rule intersectTFBSAndBAM:
         bed     = rules.intersectPeaksAndPWM.output.TFBSinPeaksMod_bed,
         allBAMs = allBamFiles
     output:
-        peaksOverlap   = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}{peakFileEndingPattern}', dir = TF_DIR, extension = extDir, compType = compType, peakFileEndingPattern = peakFileEndingPattern)
+        peaksOverlap   = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}.{peakFileEndingPattern}', dir = TF_DIR, extension = extDir, compType = compType, peakFileEndingPattern = peakFileEndingPattern)
     log:
     message: "{ruleDisplayMessage} Run bedtools intersect for file {input.bed} against all BAM files..."
     threads: 1
@@ -360,7 +359,7 @@ rule DESeqPeaks:
     threads: min(threadsMax, config["par_general"]["nPermutations"] + 1)
     params:
         doCyclicLoess = "true"
-    script: script_DESeqPeaks
+    script: dir_scripts + script_DESeqPeaks
 
 
 name_outputTSV = "output.tsv"
@@ -389,7 +388,7 @@ rule analyzeTF:
     params:
         doCyclicLoess = "true",
         allBAMS       = list(allBamFiles)
-    script: script_analyzeTF
+    script: dir_scripts + script_analyzeTF
 
 
 rule summary1:
@@ -401,7 +400,7 @@ rule summary1:
     log: expand('{dir}/4.summary1.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_summary1} ..."
     threads: 1
-    script: script_summary1
+    script: dir_scripts + script_summary1
 
 
 rule concatenateMotifs:
@@ -449,7 +448,7 @@ rule prepareBinning:
     threads: 1
     params:
         nCGBins    = nCGBins
-    script: script_prepareBinning
+    script: dir_scripts + script_prepareBinning
 
 
 rule binningTF:
@@ -465,7 +464,7 @@ rule binningTF:
     threads: 1
     params:
         nBootstraps = nBootstraps
-    script: script_binningTF
+    script: dir_scripts + script_binningTF
 
 rule summaryFinal:
     input:
@@ -480,7 +479,7 @@ rule summaryFinal:
     message: "{ruleDisplayMessage}Run R script {script_summaryFinal} ..."
     threads: 1
     params: TFs = ",".join(allTF)
-    script: script_summaryFinal
+    script: dir_scripts + script_summaryFinal
 
 
 
