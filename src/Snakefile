@@ -27,8 +27,8 @@ ruleDisplayMessage = "\n\n########################\n# START EXECUTING RULE #\n##
 
 # The onsuccess handler is executed if the workflow finished without error.
 onsuccess:
-    print("\n\n###############################\n# Workflow finished, no error #\n###############################\n\n")
-
+    print("\n\n#################################\n#  Workflow finished, no error  #\n")
+    print(                                       "# Check the FINAL_OUTPUT folder #\n#################################\n\n")
 # Else, the onerror handler is executed.
 onerror:
     print("\n\n#####################\n# An error occurred #\n#####################\n\n")
@@ -128,6 +128,7 @@ global samplesData
 samplesData = read_samplesTable(config["samples"]["summaryFile"], config["peaks"]["consensusPeaks"])
 
 allBamFiles  = samplesData.loc[:,"bamReads"]
+
 
 
 allBamFilesBasename = []

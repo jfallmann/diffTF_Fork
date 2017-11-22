@@ -82,7 +82,7 @@ testExistanceAndCreateDirectoriesRecursively(allDirs)
 ######################
 # FINAL PREPARATIONS #
 ######################
-startLogger(par.l$file_log, par.l$log_minlevel,  removeOldLog = TRUE)
+startLogger(par.l$file_log, par.l$log_minlevel, removeOldLog = TRUE)
 printParametersLog(par.l)
 
 ##########################

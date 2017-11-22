@@ -600,7 +600,7 @@ createDebugFile <- function(snakemake) {
     
     filename = paste0(tools::file_path_sans_ext(logfile), ".rds")
     
-    flog.info(paste0("Saved Snakemake object for manually rerunning the R script to ", filename))
+    # flog.info(paste0("Saved Snakemake object for manually rerunning the R script to ", filename))
     
     saveRDS(snakemake, filename)
     

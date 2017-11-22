@@ -31,7 +31,7 @@ par.l = list()
 par.l$verbose = TRUE
 par.l$FDR_threshold = c(0.001, 0.01, 0.05,0.1,0.2)
 par.l$probsThreshold = c(0.01, 0.99)
-#par.l$probsThreshold = c(0.05, 0.95)
+par.l$probsThreshold = c(0.05, 0.95)
 par.l$expressionThreshold = 2
 par.l$cohensDThreshold = 0.1
 par.l$classes_CohensD = c("small", "medium", "large", "very large")
@@ -140,7 +140,7 @@ assertCharacter(par.l$colorConditions, len = 2)
 ######################
 # FINAL PREPARATIONS #
 ######################
-startLogger(par.l$file_log, par.l$log_minlevel, appenderName = "file", removeOldLog = TRUE)
+startLogger(par.l$file_log, par.l$log_minlevel,  removeOldLog = TRUE)
 printParametersLog(par.l)
 
 conditionComparison = readRDS(par.l$file_input_condCompDeSeq)

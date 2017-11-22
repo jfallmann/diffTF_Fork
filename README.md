@@ -28,7 +28,7 @@ The following quick start briefly summarizes the necessary steps to use our pipe
 2. Clone the Git repository: 
 
     ``git clone https://git.embl.de/grp-zaugg/diffTF``
-3. To run the example analysis, simply perform the following steps:
+3. To run the example analysis for 50 TF, simply perform the following steps:
   * Change into the *example/input* directory within the Git repository
   
         ``cd diffTF/example/input``

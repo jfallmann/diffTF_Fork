@@ -264,7 +264,7 @@ nSamples = nrow(sampleData.df)
 if (datatypeVariableToPermute == "factor") {
   
   nSwaps = ceiling(nSamplesRareCondition / 2)
-  nPermutationsTotal = choose(nSamplesRareCondition,nSwaps ) * choose(nSamplesFrequentCondition,nSwaps)
+  nPermutationsTotal = choose(nSamplesRareCondition, nSwaps) * choose(nSamplesFrequentCondition, nSwaps)
 
 } else {
   
@@ -436,27 +436,6 @@ runPermutation <- function(permutationCur, sampleDataOrig.df, variableToPermute,
     # We now provide gene-specific normalization factors for each sample as a matrix, which will preempt sizeFactors
     normalizationFactors(cds.peaks) <- normFacs
     
-  }
-  
-  compareNormalizations = FALSE
-  
-  if (compareNormalizations) {
-    
-    # Compare:
-    # 2. Because size factors in DeSeq2 have a geometric mean of 1 and from normOffsets not, there needs to be another normalization with another geom_mean for the latter
-    # 1. Geometic mean of all columns from normOffsets
-    
-    # dds <- makeExampleDESeqDataSet(n=1000, m=4)
-    # TODO: An MA-plot here would be a good idea to test beforehand if a double normalization is needed
-    
-    # cds.peaks = dds
-    sizeFactors1 = apply(normFacs, 2, geometric.mean)
-    sizeFactors2 = sizeFactors1 / geometric.mean(sizeFactors1)
-    
-    # Compare with DeSeq2 size factors
-    cds.peaks <- estimateSizeFactors(cds.peaks)
-    sizeFactors(cds.peaks)
-    sizeFactors(cds.peaks) <- NULL
   }
   
   
