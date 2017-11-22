@@ -477,7 +477,7 @@ rule prepareBinning:
     output:
         allTFData       = TEMP_EXTENSION_DIR + "/" + compType + "allTFData_processedForPermutations.rds",
         allTFUniqueData = TEMP_EXTENSION_DIR + "/" + compType + "allTFUniqueData_processedForPermutations.rds"
-    log: expand('{dir}/5.prepareBinning.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/5.prepareBinning.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_prepareBinning} ..."
     threads: 1
     params:
@@ -493,7 +493,7 @@ rule binningTF:
         permResults  = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}.permutationResults.rds', dir = TF_DIR, extension = extDir, compType = compType),
         summary      = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}.permutationSummary.tsv', dir = TF_DIR, extension = extDir, compType = compType),
         covResults   = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}.covarianceResults.rds', dir = TF_DIR, extension = extDir, compType = compType)
-    log: expand('{dir}/6.binningTF.{{TF}}.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/6.binningTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_binningTF} ..."
     threads: 1
     params:

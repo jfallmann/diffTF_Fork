@@ -14,7 +14,9 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 # SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
 ########################################################################
 
-# snakemake=readRDS("/scratch/carnold/TET2.GMPMPP.noCG/output/Logs_and_Benchmarks/2.DESeqPeaks.R.rds")
+# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
+# Replace {outputFolder} correspondingly.
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/2.DESeqPeaks.R.rds")
 createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)

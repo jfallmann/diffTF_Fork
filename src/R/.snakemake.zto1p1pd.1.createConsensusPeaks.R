@@ -1,3 +1,32 @@
+
+######## Snakemake header ########
+library(methods)
+Snakemake <- setClass(
+    "Snakemake",
+    slots = c(
+        input = "list",
+        output = "list",
+        params = "list",
+        wildcards = "list",
+        threads = "numeric",
+        log = "list",
+        resources = "list",
+        config = "list",
+        rule = "character"
+    )
+)
+snakemake <- Snakemake(
+    input = list('data/peaks/GMP.WT.1.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/GMP.WT.2.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/GMP.WT.3.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/GMP.WT.4.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/MPP.WT.1.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/MPP.WT.2.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/MPP.WT.3.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/MPP.WT.4.final.sort.CGcorr_peaks.narrowPeak', "peaks" = c('data/peaks/GMP.WT.1.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/GMP.WT.2.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/GMP.WT.3.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/GMP.WT.4.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/MPP.WT.1.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/MPP.WT.2.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/MPP.WT.3.final.sort.CGcorr_peaks.narrowPeak', 'data/peaks/MPP.WT.4.final.sort.CGcorr_peaks.narrowPeak')),
+    output = list('../output/PEAKS/GMPvsMPP.consensusPeaks_lengthDistribution.pdf', '../output/PEAKS/GMPvsMPP.consensusPeaks.bed', "summaryPlot" = '../output/PEAKS/GMPvsMPP.consensusPeaks_lengthDistribution.pdf', "consensusPeaks_bed" = '../output/PEAKS/GMPvsMPP.consensusPeaks.bed'),
+    params = list(),
+    wildcards = list(),
+    threads = 1,
+    log = list('../output/LOGS_AND_BENCHMARKS/1.produceConsensusPeaks.R.log'),
+    resources = list(),
+    config = list("par_general" = list("outdir" = '../output', "regionExtension" = 100, "comparisonType" = 'GMPvsMPP', "designContrast" = '~ conditionSummary', "designVariableTypes" = 'conditionSummary:factor', "nPermutations" = 3, "nBootstraps" = 0, "nCGBins" = 10, "TFs" = 'CTCF,CEBPB,SNAI2,CEBPA,UBIP1,CEBPG,CEBPD,ZFX,AP2D,PAX5.S,SNAI1,ZEB1,SP4,MBD2,IRF1,MECP2,PAX5.D,SP3,NFIA.C,SP1.A,IRF7,MYF6, NRF1,DBP,MAZ,NKX28,DLX2,GATA1,P53,ZN143,AIRE,NR2C2,HMGA1,FUBP1,TEAD3,OVOL1,HXD4,KLF1,RXRG,HNF1B,ZIC3,HNF1A,NANOG.S,GFI1,PO3F1,NR2C1,ELF5,TF65.C,NFAC3,TEAD1', "dir_scripts" = '../../src/R', "RNASeqIntegration" = TRUE), "samples" = list("summaryFile" = 'sampleData.tsv'), "additionalInputFiles" = list("refGenome_fasta" = 'referenceGenome/mm10.fa', "dir_PWMScan" = 'PWMscan', "RNASeqCounts" = 'data/RNA-Seq/RNA.counts.tsv', "HOCOMOCO_mapping" = '../../src/HOCOMOCO/translationTable_mouse.csv'), "peaks" = list("consensusPeaks" = '', "peakType" = 'narrow', "minOverlap" = 2)),
+    rule = 'produceConsensusPeaks'
+)
+######## Original script #########
 start.time  <-  Sys.time()
 
 

@@ -587,7 +587,7 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
 
 createDebugFile <- function(snakemake) {
     
-    checkAndLoadPackages(c("checkmate", "tools"), verbose = FALSE)
+    checkAndLoadPackages(c("checkmate", "tools", "futile.logger"), verbose = FALSE)
     
     if (!testClass(snakemake, "Snakemake")) {
         flog.warn(paste0("Could not find snakemake object, therefore not saving anyting."))

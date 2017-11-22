@@ -12,7 +12,9 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 # SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
 ########################################################################
 
-# snakemake=readRDS("/scratch/carnold/CLL/TF_act_noGCBias/output/Logs_and_Benchmarks/7.summaryFinal.R.rds")
+# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
+# Replace {outputFolder} correspondingly.
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/7.summaryFinal.R.rds")
 createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
@@ -38,7 +40,7 @@ par.l$log_minlevel = "INFO"
 par.l$circularPlot_minDimensions  = 12
 par.l$corMethod = "pearson"
 
-par.l$extension_x_limits = 0.025 # TODO
+par.l$extension_x_limits = 0.025 
 par.l$extension_x_limits = 0.15 # 20 % x axis extension, regardless of the limits
 par.l$extension_y_limits = 1
 par.l$plot_grayColor = "grey50"
@@ -403,7 +405,6 @@ if (par.l$plotRNASeqClassification) {
     flog.info(paste0(length(sharedColumns), " samples are shared between the input data and RNA-Seq data"))
     
     #peak.counts.orig = peak.counts
-    # TODO: Should we discard samples here at all from the TF.counts.df ?
     peak.counts  = peak.counts [, which(colnames(peak.counts) %in% sharedColumns)]
     TF.counts.df = TF.counts.df[, which(colnames(TF.counts.df) %in% c(sharedColumns, "ENSEMBL"))]
 
@@ -833,8 +834,6 @@ for (includePermutationCur in permutationCategories) {
       
       
       # ggrepel function
-      
-      # TODO: Adjust by percentage and not absolute values the text
       
       if (par.l$plotRNASeqClassification) {
         p3 = p3 + scale_color_manual(values = colorCategoriesCur, guide = FALSE) + 

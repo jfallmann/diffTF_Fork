@@ -18,7 +18,11 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "meth
 ########################################################################
 # SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
 ########################################################################
-# snakemake=readRDS("/scratch/carnold/CLL/TF_act_noGCBias/output/Logs_and_Benchmarks/preparePermutations.R.rds")
+
+# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
+# Replace {outputFolder} correspondingly.
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/5.prepareBinning.R.rds")
+
 createDebugFile(snakemake)
 
 ###################
