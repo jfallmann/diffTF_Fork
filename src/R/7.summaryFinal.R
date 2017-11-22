@@ -30,8 +30,7 @@ par.l = list()
 # Hard-coded parameters
 par.l$verbose = TRUE
 par.l$FDR_threshold = c(0.001, 0.01, 0.05,0.1,0.2)
-par.l$probsThreshold = c(0.01, 0.99)
-par.l$probsThreshold = c(0.05, 0.95)
+par.l$probsThreshold = c(0, 1)
 par.l$expressionThreshold = 2
 par.l$cohensDThreshold = 0.1
 par.l$classes_CohensD = c("small", "medium", "large", "very large")
@@ -263,21 +262,6 @@ CME.delta = estimates[2]
 # The default option in locfdr is the MLE method, not central matching. Slight irregularities in the central histogram,
 # as seen in Figure 6.1a, can derail central matching. The MLE method is more stable, but pays the price of possibly increased bias.
 
-
-# 2. Should the variance associated with this weighted.mean T stat value be based on the variance of the T stat scores, the variance of the mean, or both?
-
-# 3. Why not estimate the SD of the distribution directly, without the need to provide manual variance estimations? Because then each weigted mean value
-# is treated as if it came from the same population? 
-
-# 4. library(Hmisc) -> wtd.var(x, weights)
-
-# 5 . Variance estimation  is based on before the centralization, is this correct? Yes, independent
-
-# 6. Is centralization actually correct at all since the scores come from a different population? Yes, if assumed they come from a normal distribution
-
-# NEW: Estimate variance of T score estimate with Welch corrected df (test$parameter)
-
-# READ http://genomicsclass.github.io/book/pages/t-tests_in_practice.html
 
 output.global.TFs$weighted_Tstat_centralized = output.global.TFs$weighted_Tstat - MLE.delta
 
