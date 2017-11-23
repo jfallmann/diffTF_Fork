@@ -154,9 +154,9 @@ mode_peaks = mlv(round(peaks.df$D2_l2FC, 2), method = "mfv", na.rm = TRUE)
 
 summary.df = summary.df %>%
               dplyr::mutate(
-                  adj_pvalue = p.adjust(Ttest_pval, method = "fdr"),
+                  pvalue_adj = p.adjust(pvalue_raw, method = "fdr"),
                   Diff_mean  = Mean_l2FC   - mean  (peaks.df$D2_l2FC, na.rm = TRUE), 
-                  DiffMedian = Median_l2FC - median(peaks.df$D2_l2FC, na.rm = TRUE),
+                  Diff_median = Median_l2FC - median(peaks.df$D2_l2FC, na.rm = TRUE),
                   Diff_mode  = Mode_l2FC - mode_peaks[[1]],    
                   Diff_skew  = Modeskewness - mode_peaks[[2]])  %>%
               na.omit(summary.df)
