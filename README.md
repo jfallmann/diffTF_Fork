@@ -20,11 +20,11 @@ Installation and Quick Start
 
 The following quick start briefly summarizes the necessary steps to use our pipeline:
 
-1. Install the necessary tools (Snakemake, samtools, and bedtools). We recommend installing them via conda, in which case the installation is as easy as 
+1. Install the necessary tools (Snakemake, samtools, bedtools, and Subread). We recommend installing them via conda, in which case the installation is as easy as 
 
-    ``conda install -c bioconda snakemake bedtools samtools``
+    ``conda install -c bioconda snakemake bedtools samtools subread``
 
-    If conda is not yet installed, follow the [installation instructions](https://conda.io/docs/user-guide/install/index.html). If you want to install the tools manually and outside of the conda framework, see the following instructions for each of the tools: [snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), [samtools](http://www.htslib.org/download/), [bedtools](http://bedtools.readthedocs.io/en/latest/content/installation.html).
+    If conda is not yet installed, follow the [installation instructions](https://conda.io/docs/user-guide/install/index.html). If you want to install the tools manually and outside of the conda framework, see the following instructions for each of the tools: [snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), [samtools](http://www.htslib.org/download/), [bedtools](http://bedtools.readthedocs.io/en/latest/content/installation.html), [Subread](http://subread.sourceforge.net/).
 2. Clone the Git repository: 
 
     ``git clone https://git.embl.de/grp-zaugg/diffTF``

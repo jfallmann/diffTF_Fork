@@ -154,65 +154,16 @@ mode_peaks = mlv(round(peaks.df$D2_l2FC, 2), method = "mfv", na.rm = TRUE)
 
 summary.df = summary.df %>%
               dplyr::mutate(
-                  pvalue_adj = p.adjust(pvalue_raw, method = "fdr"),
+                  adj_pvalue = p.adjust(Ttest_pval, method = "fdr"),
                   Diff_mean  = Mean_l2FC   - mean  (peaks.df$D2_l2FC, na.rm = TRUE), 
-                  Diff_median = Median_l2FC - median(peaks.df$D2_l2FC, na.rm = TRUE),
+                  DiffMedian = Median_l2FC - median(peaks.df$D2_l2FC, na.rm = TRUE),
                   Diff_mode  = Mode_l2FC - mode_peaks[[1]],    
                   Diff_skew  = Modeskewness - mode_peaks[[2]])  %>%
               na.omit(summary.df)
 
 
-# Loop through summary files and use the TFBS_num column
 
-
-
-
-# Automatically calculate the significance thresholds
-# Reverse Ivans heuristic approach earlier
-# TODO: Old code, how to make this up to date?
-# threshold1 = par.l$FDR_threshold / nTF
-# min_T_stat = qt(threshold1/2, median(summary.df$TFBS_num), lower.tail = FALSE)
-# 
-# 
-# 
-# # Filter rows
-# plot_thr.df = summary.df %>%
-#                 filter(Diff_mean > par.l$plot_min_diffMean | Diff_mean < -par.l$plot_min_diffMean)  %>%
-#                 filter(abs(T_statistic) > min_T_stat)
-# 
-# 
-# 
-# TF_volcano = ggplot() +
-#   geom_point(aes(x = summary.df$Diff_mean,
-#                  y = abs(summary.df$T_statistic),
-#                  label = summary.df$TF),size = 1)   +
-#   geom_vline(xintercept = 0, size = 0.7,
-#              linetype = "longdash", color = "blue") +
-#   geom_hline(yintercept = min_T_stat, size = 0.7,
-#              linetype = "longdash", color = "red") +
-#   geom_text_repel(aes(x = plot_thr.df$Diff_mean,
-#                       y = abs(plot_thr.df$T_statistic),
-#                       label = plot_thr.df$TF),size = 2.5,
-#                   segment.size = 0.5,box.padding = unit(0.05,"lines")) +
-#   ylab("Absolute T-statistic") +
-#   xlab(paste0("Mean(TF distr) - mean(peaks)")) +
-#   theme(axis.text.x = element_text(face = "bold", color = "black", size = 20),
-#         axis.text.y = element_text(face = "bold", color = "black", size = 20),
-#         axis.title.x = element_text(face = "bold", colour = "black", size = 24,margin = margin(25,0,0,0)),
-#         axis.title.y = element_text(face = "bold", colour = "black", size = 24,margin = margin(0,25,0,0)),
-#         axis.line.x = element_line(color = "black"), axis.line.y = element_line(color = "black"),
-#         panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank(),
-#         panel.border = element_blank(),
-#         panel.background = element_blank(),
-#         legend.position = c(0.1,0.9),
-#         legend.justification = "center",
-#         legend.title = element_blank())
-# 
-# ggsave(plot = TF_volcano, filename = par.l$file_output_volcanoPlot, width = 12, height = 8, useDingbats = FALSE, dpi = 600)
-
-
-write_tsv(summary.df, par.l$file_output_table) # TODO: check the dec = "." parameter
+write_tsv(summary.df, par.l$file_output_table) 
 
 .printExecutionTime(start.time)
 
