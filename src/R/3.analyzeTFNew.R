@@ -5,6 +5,11 @@ start.time  <-  Sys.time()
 # LIBRARY AND FUNCTIONS #
 #########################
 
+
+# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
+# Replace {outputFolder} and {TF} correspondingly.
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/3.analyzeTF.{TF}.R.rds")
+
 library("checkmate")
 assertClass(snakemake, "Snakemake")
 assertDirectoryExists(snakemake@config$par_general$dir_scripts)
@@ -17,10 +22,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "modeest",
 # SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
 ########################################################################
 
-# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
-# Replace {outputFolder} and {TF} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/3.analyzeTF.{TF}.R.rds")
-# snakemake = readRDS("/scratch/carnold/CLL/27ac_TF/output/Logs_and_Benchmarks/3.analyzeTF.R_TF=MAFK.S.rds")
+
 createDebugFile(snakemake)
 
 ###################
@@ -136,9 +138,10 @@ sampleData.l = readRDS(par.l$file_input_metadata)
 # Initiate data structures that are populated hereafter
 res_DESeq.l = list()
 
+# TODO: Remove one of the annotation columns
 TF_output.df = tribble(~permutation, ~TF, ~chr, ~MSS, ~MES, ~strand, ~PSS, ~PES, ~annotation, ~ID, ~identifier, ~baseMean, ~log2FoldChange, ~lfcSE, ~stat, ~pvalue, ~padj)
 
-outputSummary.df = tribble(~permutation, ~TF, ~Pos_l2FC, ~Mean_l2FC, ~Median_l2FC, ~Mode_l2FC, ~sd, ~Ttest_pval, ~Modeskewness, ~T_statistic, ~TFBS_num)
+outputSummary.df = tribble(~permutation, ~TF, ~Pos_l2FC, ~Mean_l2FC, ~Median_l2FC, ~Mode_l2FC, ~sd_l2FC, ~pvalue_raw, ~skewness_l2FC, ~T_statistic, ~TFBS_num)
 
 # TODO
 coverageAll.df = NULL
@@ -159,21 +162,26 @@ if (length(colnamesNew) != nrow(sampleData.df)) {
     message = "Could not grep sampleIDs from filenames."
     checkAndLogWarningsAndErrors(NULL,  message, isWarning = FALSE)
 }
-overlapsAll.df = read_tsv(par.l$file_input_peakTFOverlaps, col_names = FALSE, col_types = cols())
+overlapsAll.df = read_tsv(par.l$file_input_peakTFOverlaps, col_names = TRUE, col_types = cols(), comment = "#")
+
+
 
 if (nrow(problems(overlapsAll.df)) > 0) {
   flog.fatal(paste0("Parsing errors: "), problems(overlapsAll.df), capture = TRUE)
   stop("Error when parsing the file ", fileCur, ", see warnings")
 }
 
-colnames(overlapsAll.df) = c("chr","MSS","MES","annotation","ID","strand","fileOrigin", colnamesNew)
+
+colnames(overlapsAll.df) = c("annotation", "chr","MSS","MES", "strand","length", colnamesNew)
 
 
 overlapsAll.df = overlapsAll.df %>%
-                  dplyr::mutate(identifier = paste0(chr,":", MSS, "-",MES)) %>%
-                  dplyr::mutate(mean = apply(dplyr::select(overlapsAll.df, one_of(colnamesNew)), 1, mean))  %>%
-                  dplyr::distinct(identifier, .keep_all = TRUE) %>%
-                  dplyr::select(-one_of("fileOrigin"))
+                  dplyr::mutate(TFBSID = paste0(chr,":", MSS, "-",MES)) %>%
+                  dplyr::mutate(mean = apply(dplyr::select(overlapsAll.df, one_of(colnamesNew)), 1, mean), 
+                                peakID = sapply(strsplit(overlapsAll.df$annotation, split = "_", fixed = TRUE),"[[", 1))  %>%
+                  dplyr::distinct(TFBSID, .keep_all = TRUE) %>%
+                  dplyr::select(-one_of("length"))
+    
 
 
 if (nrow(overlapsAll.df) > 0) {
@@ -181,12 +189,12 @@ if (nrow(overlapsAll.df) > 0) {
   # Group by ID
   # take only the maximum row mean of all samples, sample with biggest coverage
   coverageAll_grouped.df = overlapsAll.df %>%
-    dplyr::group_by(ID) %>%
+    dplyr::group_by(peakID) %>%
     dplyr::slice(which.max(mean))
   
   TF.table.m = as.matrix(coverageAll_grouped.df[,sampleData.df$SampleID])
   colnames(TF.table.m) = sampleData.df$SampleID
-  rownames(TF.table.m) = coverageAll_grouped.df$identifier
+  rownames(TF.table.m) = coverageAll_grouped.df$TFBSID
   
   
   
@@ -258,22 +266,32 @@ for (permutationCur in 0:par.l$nPermutations) {
   normFacs = normFacs.l[[permutationName]]
   
   # Sanity check
-  if (length(which(!coverageAll_grouped.df$annotation %in% rownames(normFacs))) > 0) {
+  if (length(which(!coverageAll_grouped.df$peakID %in% rownames(normFacs))) > 0) {
     errorMessage <<- "Inconsistency detected between the normalization factor rownames and the object coverageAll_grouped.df"
-    checkAndLogWarningsAndErrors(NULL,  errorMessage, isWarning = TRUE)
+    checkAndLogWarningsAndErrors(NULL,  errorMessage, isWarning = FALSE)
   }
   
   if (!identical(colnames(TF.cds), colnames(normFacs))) {
-    errorMessage <<- "Column names differenht between TF.cds and normFacs"
-    checkAndLogWarningsAndErrors(NULL,  errorMessage, isWarning = TRUE)
+    errorMessage <<- "Column names different between TF.cds and normFacs"
+    checkAndLogWarningsAndErrors(NULL,  errorMessage, isWarning = FALSE)
   }
+  
+  if (!identical(coverageAll_grouped.df$TFBSID, rownames(TF.cds))) {
+      errorMessage <<- "Row names different between coverageAll_grouped.df and TF.cds"
+      checkAndLogWarningsAndErrors(NULL,  errorMessage, isWarning = FALSE)
+  }
+  
+ 
   
   # assertSubset(rownames(normFacs))
   if (par.l$doCyclicLoess) {
 
+    # coverageAll_grouped.df$TFBSID and rownames(TF.cds) are identical
+    matchingOrder = match(coverageAll_grouped.df$peakID,rownames(normFacs))
+    normalizationFactors(TF.cds) <- normFacs[matchingOrder,, drop = FALSE]
     
-    rownamesTFs = which(rownames(normFacs) %in% coverageAll_grouped.df$annotation)
-    normalizationFactors(TF.cds) <- normFacs[rownamesTFs,, drop = FALSE]
+    
+    
   } else {
     sizeFactors(TF.cds) = normFacs
   }
@@ -375,23 +393,24 @@ for (permutationCur in 0:par.l$nPermutations) {
     
     
     
-    
-    assertSubset(rownames(res_DESeq.df), overlapsAll.df$identifier)
+    assertSubset(rownames(res_DESeq.df), overlapsAll.df$TFBSID)
     
     # todo: check the coverage columns
-    rm_col = c("chr.y","annotation.y","identifier.y" )
-    order = c("permutation", "TF", "chr","MSS","MES","strand", "PSS","PES","annotation","ID", "identifier","baseMean", "log2FoldChange","lfcSE","stat", "pvalue","padj")
+    rm_col = c("chr.y")
+    # TODO
+    order = c("permutation", "TF", "chr","MSS","MES","TFBSID", "strand", "PSS","PES","peakID","baseMean", "log2FoldChange","lfcSE","stat", "pvalue","padj")
     
     # dplyr::mutate(TF = par.l$TF) gives the following weird error message: Error: Unsupported type NILSXP for column "TF"
     TFCur = par.l$TF
+
     
     
     TF_outputCur.df = res_DESeq.df %>%
-      rownames_to_column(var = "identifier") %>%
-      dplyr::full_join(overlapsAll.df,by = c("identifier")) %>%
-      dplyr::full_join(peaksFiltered.df, by = "ID") %>%
+      rownames_to_column(var = "TFBSID") %>%
+      dplyr::full_join(overlapsAll.df,by = c("TFBSID")) %>%
+      dplyr::full_join(peaksFiltered.df, by = c("peakID" = "annotation")) %>%
       dplyr::filter(!is.na(baseMean)) %>%
-      dplyr::rename(annotation = annotation.x, chr = chr.x, identifier = identifier.x) %>%
+      dplyr::rename(chr = chr.x) %>%
       dplyr::select(-one_of(rm_col)) %>%
       dplyr::mutate(TF = TFCur, permutation = permutationCur) %>%
       dplyr::select(one_of(order)) %>%
@@ -417,9 +436,9 @@ for (permutationCur in 0:par.l$nPermutations) {
                           Mean_l2FC       = mean(final.TF.df$D2_l2FC, na.rm = TRUE),
                           Median_l2FC     = median(final.TF.df$D2_l2FC, na.rm = TRUE),
                           Mode_l2FC       = modeNum[[1]],
-                          sd              = sd(final.TF.df$D2_l2FC, na.rm = TRUE),
-                          Ttest_pval      = Ttest$p.value,
-                          Modeskewness    = modeNum[[2]], 
+                          sd_l2FC         = sd(final.TF.df$D2_l2FC, na.rm = TRUE),
+                          pvalue_raw      = Ttest$p.value,
+                          skewness_l2FC   = modeNum[[2]], 
                           T_statistic     = Ttest$statistic[[1]], 
                           TFBS_num        = nrow(final.TF.df)
                         )

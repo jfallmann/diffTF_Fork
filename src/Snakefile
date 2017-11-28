@@ -8,6 +8,9 @@ import os
 import pandas
 import numpy
 import socket
+import time
+
+start = time.time()
 
 
 # Enforce a minimum Snakemake version because of various features
@@ -27,11 +30,13 @@ ruleDisplayMessage = "\n\n########################\n# START EXECUTING RULE #\n##
 
 # The onsuccess handler is executed if the workflow finished without error.
 onsuccess:
-    print("\n\n#################################\n#  Workflow finished, no error  #\n")
+    print("\n\n#################################\n#  Workflow finished, no error  #")
     print(                                       "# Check the FINAL_OUTPUT folder #\n#################################\n\n")
+    print("\nRunning time in minutes: %s\n" % round((time.time() - start)/60,1))
 # Else, the onerror handler is executed.
 onerror:
     print("\n\n#####################\n# An error occurred #\n#####################\n\n")
+    print("\nRunning time in minutes: %s\n" % round((time.time() - start)/60,1))
     #shell("mail -s "an error occurred" carnold@embl.de < {log}")
 
 # onstart handler will be executed before the workflow starts. Note that dry-runs do not trigger any of the handlers
@@ -97,8 +102,8 @@ if not "minOverlap" in config["peaks"]:
 # 4. Section additionalInputFiles
 if not "refGenome_fasta" in config["additionalInputFiles"]:
     raise KeyError("Could not find parameter \"refGenome_fasta\" in section \"additionalInputFiles\" in the config file.")
-if not "dir_PWMScan" in config["additionalInputFiles"]:
-    raise KeyError("Could not find parameter \"dir_PWMScan\" in section \"additionalInputFiles\" in the config file.")
+if not "dir_TFBS" in config["additionalInputFiles"]:
+    raise KeyError("Could not find parameter \"dir_TFBS\" in section \"additionalInputFiles\" in the config file.")
 if not "RNASeqCounts" in config["additionalInputFiles"]:
     raise KeyError("Could not find parameter \"RNASeqCounts\" in section \"additionalInputFiles\" in the config file.")
 if not "HOCOMOCO_mapping" in config["additionalInputFiles"]:
@@ -112,6 +117,9 @@ if not "HOCOMOCO_mapping" in config["additionalInputFiles"]:
 # Maximum number of cores per rule. This value will never be achieved because the minimum of this value and the --cores parameter will define the number of CPUs per rule in the end.
 threadsMax = 16
 
+# Increase ulimit -n for analysis with high number of TF and/or input files. The standard value of 1024 may not be enough.
+ulimitMax = 4096
+
 # Input files
 samplesSummaryFile = config["samples"]["summaryFile"]
 extDir = "extension" + str(config["par_general"]["regionExtension"])
@@ -123,6 +131,7 @@ PEAKS_DIR           = ROOT_DIR + "/PEAKS"
 LOG_BENCHMARK_DIR   = ROOT_DIR + "/LOGS_AND_BENCHMARKS"
 TEMP_DIR            = ROOT_DIR + "/TEMP"
 TEMP_EXTENSION_DIR  = ROOT_DIR + "/TEMP/"  + extDir
+TEMP_BAM_DIR        = ROOT_DIR + "/TEMP/"  + "sortedBAM"
 
 global samplesData
 samplesData = read_samplesTable(config["samples"]["summaryFile"], config["peaks"]["consensusPeaks"])
@@ -135,8 +144,8 @@ allBamFilesBasename = []
 for fileCur in allBamFiles:
     if not os.path.isfile(fileCur):
         raise IOError("File \"" + fileCur + "\" (defined in " + config["samples"]["summaryFile"] + ") not found.")
-    if not os.path.isfile(fileCur + ".bai"):
-        raise IOError("File \"" + fileCur + "\" (defined in " + config["samples"]["summaryFile"] + ") does not have an index (corresponding *.bam.bai). All BAM files must be indexed (e.g., use samtools index)")
+    # if not os.path.isfile(fileCur + ".bai"):
+    #     raise IOError("File \"" + fileCur + "\" (defined in " + config["samples"]["summaryFile"] + ") does not have an index (corresponding *.bam.bai). All BAM files must be indexed (e.g., use samtools index)")
     basename = os.path.splitext(os.path.basename(fileCur))[0]
     allBamFilesBasename.append(basename)
 
@@ -165,24 +174,26 @@ if config["par_general"]["comparisonType"] != "":
 else:
     compType = ""
 
-
+suffixTFBS = '_TFBS.bed'
 allTF = []
 
 if config["par_general"]["TFs"] == "all":
-    PWM_FILES = os.popen("ls " + config["additionalInputFiles"]["dir_PWMScan"]).readlines()
+    PWM_FILES = os.popen("ls " + config["additionalInputFiles"]["dir_TFBS"]).readlines()
     for TFCur in PWM_FILES:
-        TFCurBasename = os.path.basename(TFCur.replace('\n', '').replace('_pwmscan.bed', ''))
+        if not os.path.basename(TFCur.replace('\n', '')).endswith(suffixTFBS):
+            continue
+        TFCurBasename = os.path.basename(TFCur.replace('\n', '').replace(suffixTFBS, ''))
         allTF.append(TFCurBasename)
 else:
     TFArray = config["par_general"]["TFs"].replace(" ", "").split(',')
     for TFCur in TFArray:
-        fileCur = config["additionalInputFiles"]["dir_PWMScan"] + "/" + TFCur + "_pwmscan.bed"
+        fileCur = config["additionalInputFiles"]["dir_TFBS"] + "/" + TFCur + suffixTFBS
         if not os.path.isfile(fileCur):
-            raise IOError("The TF " + TFCur + " is in the list of TFs to process, but the file \"" + fileCur + "\" is missing. Check the folder " + config["additionalInputFiles"]["dir_PWMScan"] + " and \"par_general\": \"TFs\")")
+            raise IOError("The TF " + TFCur + " is in the list of TFs to process, but the file \"" + fileCur + "\" is missing. Check the folder " + config["additionalInputFiles"]["dir_TFBS"] + " and \"par_general\": \"TFs\")")
         allTF.append(TFCur)
 
 if len(allTF) == 0:
-    raise WorkflowError("The list of TFs is empty. Adjust the parameter \"par_general\": \"TFs\".")
+    raise WorkflowError("The list of TFs is empty. Adjust the parameter \"par_general\": \"TFs\" and verify that in the specified folder \"" + config["additionalInputFiles"]["dir_TFBS"] + "\", files with the pattern \"{TF}_TFBS.bed\" are present")
 
 
 if not os.path.isfile(config["additionalInputFiles"]["refGenome_fasta"]):
@@ -214,6 +225,7 @@ if config["peaks"]["consensusPeaks"]:
 # Not to be confused with the dir_scripts directory, which is only used to load the correct functions.R file in all R scripts
 dir_scripts = "R/"
 
+script_checkParValidity     = "0.checkParameters.R"
 script_createConsensusPeaks = "1.createConsensusPeaks.R"
 script_DESeqPeaks           = "2.DESeqPeaks.R"
 script_analyzeTF            = "3.analyzeTFNew.R"
@@ -236,12 +248,25 @@ rule all:
         summaryLogs = LOG_BENCHMARK_DIR + "/" + compType + "all.warnings.log"
 
 
+rule checkParameterValidity:
+    input:
+    output:
+        flag      = touch(TEMP_DIR  + "/" + compType + "checkParameterValidity.done"),
+        consPeaks = TEMP_DIR  + "/" + compType + "consensusPeaks.clean.bed",
+    log: expand('{dir}/0.checkParameters.R.log', dir = LOG_BENCHMARK_DIR)
+    message: "{ruleDisplayMessage}Check parameter validity {script_checkParValidity}..."
+    threads: 1
+    priority: 1
+    params:
+    script: dir_scripts + script_checkParValidity
+
 rule produceConsensusPeaks:
     input:
-        peaks = allPeakFiles
+        checkFlag = ancient(rules.checkParameterValidity.output.flag),
+        peaks     = allPeakFiles
     output:
-        consensusPeaks_bed = PEAKS_DIR + "/" + compType + "consensusPeaks.bed",
-        summaryPlot        = PEAKS_DIR + "/" + compType + "consensusPeaks_lengthDistribution.pdf"
+        consensusPeaks_bed = TEMP_DIR + "/" + compType + "consensusPeaks.bed",
+        summaryPlot        = TEMP_DIR + "/" + compType + "consensusPeaks_lengthDistribution.pdf"
     log: expand('{dir}/1.produceConsensusPeaks.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Calculate consensus peaks for all peak files with the script {script_createConsensusPeaks}..."
     threads: 1
@@ -254,7 +279,7 @@ def retrieveConsensusPeakFile (par_consensusPeaks):
     if not par_consensusPeaks:
         return rules.produceConsensusPeaks.output.consensusPeaks_bed
     else:
-        return config["peaks"]["consensusPeaks"]
+        return rules.checkParameterValidity.output.consPeaks
 
 rule filterSexChromosomesAndSortPeaks:
     input:
@@ -270,17 +295,20 @@ rule filterSexChromosomesAndSortPeaks:
            """
 
 
-peakFileEndingPattern = "overlapPeaks.bed.gz"
+overlapPattern = "overlaps.bed.gz"
 
 rule sortPWM:
     input:
-        bed      = config["additionalInputFiles"]["dir_PWMScan"] + "/{TF}_pwmscan.bed"
+        flag = ancient(rules.checkParameterValidity.output.flag),
+        bed  = config["additionalInputFiles"]["dir_TFBS"] + "/{TF}" + suffixTFBS
     output:
-        bedSorted = TEMP_DIR + "/" + compType + "{TF}_pwmscan.sorted.bed.gz"
+        #bedSorted = TEMP_DIR + "/" + compType + "{TF}_TFBS.sorted.bed.gz"
+        bedSorted = TEMP_DIR + "/" + compType + "{TF}_TFBS.sorted.bed"
     message: "{ruleDisplayMessage} Sort bed file {input.bed}..."
     threads: 1
     shell:
-        """sh -c 'sort -k1,1 -k2,2n {input.bed} | gzip > {output.bedSorted}'"""
+        #"""sh -c 'sort -k1,1 -k2,2n {input.bed} | gzip -f > {output.bedSorted}'"""
+        """sh -c 'sort -k1,1 -k2,2n {input.bed}  > {output.bedSorted}'"""
 
 
 def getBamFileFromBasename(basename):
@@ -291,45 +319,49 @@ def getBamFileFromBasename(basename):
     return hit
 
 
-rule idxstatsBAM:
+rule resortBAM:
     input:
-        bam        = lambda wildcards: getBamFileFromBasename(wildcards.basename)
+        flag = ancient(rules.checkParameterValidity.output.flag),
+        BAM = lambda wildcards: getBamFileFromBasename(wildcards.BAM)
     output:
-        idxoutput    = temp(TEMP_DIR + "/" + compType + "{basename}.idxstats"),
-        genomeFile   = TEMP_DIR + "/" + compType + "{basename}.chrOrder1",
-        genomeFile2  = TEMP_DIR + "/" + compType + "{basename}.chrOrder2"
-    log:
-    message: "{ruleDisplayMessage} Run idxstats for file {input.bam}..."
+        BAMSorted = TEMP_BAM_DIR + "/" + "{BAM}.bam"
+    message: "{ruleDisplayMessage} Sort BAM file {input.BAM}..."
     threads: 1
     params:
+        compression = "-c",
+        noSeqInf = "-t"
     shell:
-        """
-            samtools idxstats {input.bam} > {output.idxoutput} &&
-            cat {output.idxoutput} | grep -v "^*" |awk '{{print $1"\\t"$2}}' >{output.genomeFile} &&
-            cat {output.idxoutput} | grep -v "^*" |awk '{{print $1}}' >{output.genomeFile2}
-        """
+        """sh -c 'repair {params.compression} {params.noSeqInf} -i {input.BAM} -o {output.BAMSorted} '"""
+
 
 rule intersectPeaksAndBAM:
     input:
         consensusPeaks = rules.filterSexChromosomesAndSortPeaks.output.consensusPeaks_sorted,
-        genomeFile   = rules.idxstatsBAM.output.genomeFile,
-        genomeFile2  = rules.idxstatsBAM.output.genomeFile2,
-        bam        = lambda wildcards: getBamFileFromBasename(wildcards.basename)
+        allBAMs        = expand('{dir}/{allBasenamesBAM}.bam', dir = TEMP_BAM_DIR, allBasenamesBAM = allBamFilesBasename)
     output:
-        peaksOverlap = PEAKS_DIR + '/' + compType + '{basename}.' + peakFileEndingPattern,
-        resortedBed  = TEMP_DIR  + '/' + compType + '{basename}.' + "resorted.gz"
+        consensusPeaksSAF  = TEMP_DIR + "/" + compType + "consensusPeaks.filtered.sorted.saf",
+        peaksBamOverlapRaw = temp(PEAKS_DIR + '/' + compType + 'allBams.peaks.overlaps.bed'),
+        peaksBamOverlap    = PEAKS_DIR + '/' + compType + 'allBams.peaks.overlaps.bed.gz'
     log:
-    message: "{ruleDisplayMessage} Run intersect and count for file {input.consensusPeaks} with {input.bam}..."
-    threads: 1
+    message: "{ruleDisplayMessage} Intersect for file {input.consensusPeaks} with all BAM files..."
+    threads: threadsMax
     params:
+        pairedEnd     = "-p -B -d 0 -D 2000 -C",
+        readFiltering = "-Q 10",
+        ulimitMax = ulimitMax
     shell:
-        """ bedtools sort -faidx {input.genomeFile2} -i {input.consensusPeaks} | gzip > {output.resortedBed} &&
-            bedtools intersect \
-                -a {output.resortedBed} \
-                -b {input.bam} \
-                -c \
-                -sorted -g {input.genomeFile} \
-                | gzip > {output.peaksOverlap}
+        """ ulimit -n {params.ulimitMax}  &&
+            awk 'BEGIN {{ OFS = "\\t" }} {{print $4,$1,$2,$3,"+"}}' {input.consensusPeaks} >{output.consensusPeaksSAF} &&
+            featureCounts \
+            -F SAF \
+            -T {threads} \
+            {params.readFiltering} \
+            {params.pairedEnd} \
+            -s 0 \
+            -a {output.consensusPeaksSAF} \
+            -o {output.peaksBamOverlapRaw}  \
+            {input.allBAMs} &&
+            gzip -f < {output.peaksBamOverlapRaw} > {output.peaksBamOverlap}
         """
 
 # TF-specific part:
@@ -337,7 +369,8 @@ rule intersectPeaksAndBAM:
 rule intersectPeaksAndPWM:
     input:
         consensusPeaks = rules.filterSexChromosomesAndSortPeaks.output.consensusPeaks_sorted,
-        allPWMs        = expand('{dir}/{compType}{TF}_pwmscan.sorted.bed.gz', dir = TEMP_DIR, compType = compType, TF = allTF)
+        #allPWMs        = expand('{dir}/{compType}{TF}_TFBS.sorted.bed.gz', dir = TEMP_DIR, compType = compType, TF = allTF)
+        allPWMs        = expand('{dir}/{compType}{TF}_TFBS.sorted.bed', dir = TEMP_DIR, compType = compType, TF = allTF)
     output:
         TFBSinPeaks_bed    = expand('{dir}/{compType}allPWM.peaks.bed.gz', dir = TEMP_DIR, compType = compType),
         TFBSinPeaksMod_bed = expand('{dir}/{compType}allPWM.peaks.extension.bed.gz', dir = TEMP_EXTENSION_DIR, compType = compType)
@@ -345,34 +378,49 @@ rule intersectPeaksAndPWM:
     message: "{ruleDisplayMessage} Obtain binding sites from peaks: Intersect files {input.allPWMs} and {input.consensusPeaks}..."
     threads: 1
     params:
-        extension = config["par_general"]["regionExtension"]
+        extension = config["par_general"]["regionExtension"],
+        ulimitMax = ulimitMax
     shell:
-        """bedtools intersect \
+        """ ulimit -n {params.ulimitMax} &&
+            bedtools intersect \
                 -a {input.consensusPeaks} \
                 -b {input.allPWMs} \
                 -wa -wb \
                 -sorted \
                 -filenames \
-                | gzip > {output.TFBSinPeaks_bed} &&
-            zcat {output.TFBSinPeaks_bed} | cut -f4,5,6,7,8,9,12 | uniq  | awk '{{OFS="\\t"}};{{ print $4, $5-{params.extension}, $6+{params.extension},$1,$2,$7,$3}}' | gzip > {output.TFBSinPeaksMod_bed}
+                | gzip -f > {output.TFBSinPeaks_bed} &&
+            zcat {output.TFBSinPeaks_bed} | cut -f4,5,6,7,8,9,12 | uniq  | awk '{{OFS="\\t"}};{{ print $4, $5-{params.extension}, $6+{params.extension},$1,$2,$7,$3}}' | gzip -f > {output.TFBSinPeaksMod_bed}
         """
 
 rule intersectTFBSAndBAM:
     input:
         bed     = rules.intersectPeaksAndPWM.output.TFBSinPeaksMod_bed,
-        allBAMs = allBamFiles
+        allBAMs = expand('{dir}/{allBasenamesBAM}.bam', dir = TEMP_BAM_DIR, allBasenamesBAM = allBamFilesBasename)
     output:
-        peaksOverlap   = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}.{peakFileEndingPattern}', dir = TF_DIR, extension = extDir, compType = compType, peakFileEndingPattern = peakFileEndingPattern)
+        saf           = temp(expand('{dir}/{compType}{{TF}}.allPWM.peaks.extension.saf', dir = TEMP_EXTENSION_DIR, compType = compType)),
+        BAMOverlapRaw = temp(TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.allBAMs.overlaps.bed"),
+        BAMOverlap    =      TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.allBAMs.overlaps.bed.gz"
     log:
-    message: "{ruleDisplayMessage} Run bedtools intersect for file {input.bed} against all BAM files..."
-    threads: 1
+    message: "{ruleDisplayMessage} Intersect file {input.bed} against all BAM files..."
+    threads: 4
     params:
+        pairedEnd = "-p -B -d 0 -D 2000 -C",
+        readFiltering = "-Q 10",
+        ulimitMax = ulimitMax
     shell:
-        """ zgrep -P "{wildcards.TF}_pwmscan\.sorted" {input.bed} |
-            bedtools multicov \
-                -bed stdin \
-                -bams {input.allBAMs} \
-                | gzip > {output.peaksOverlap}
+        """ ulimit -n {params.ulimitMax} &&
+            zgrep -P "{wildcards.TF}_TFBS\.sorted" {input.bed} |
+            awk 'BEGIN {{ OFS = "\\t" }} {{print $4"_"$2"-"$3,$1,$2,$3,$6}}' | sort -u -k1,1  >{output.saf} &&
+            featureCounts \
+            -F SAF \
+            -T {threads} \
+            {params.readFiltering} \
+            {params.pairedEnd} \
+            -a {output.saf} \
+            -s 0 \
+            -o {output.BAMOverlapRaw}  \
+            {input.allBAMs} &&
+            gzip -f < {output.BAMOverlapRaw} > {output.BAMOverlap}
         """
 
 
@@ -381,7 +429,7 @@ name_plots = PEAKS_DIR + "/" + compType + "diagnosticPlots.peaks.pdf"
 rule DESeqPeaks:
     input:
         sampleData = config["samples"]["summaryFile"],
-        peaks = expand('{dir}/{compType}{basenameBAM}.{peakFileEndingPattern}', dir = PEAKS_DIR, basenameBAM = allBamFilesBasename, compType = compType, peakFileEndingPattern = peakFileEndingPattern)
+        BAMPeakoverlaps = rules.intersectPeaksAndBAM.output.peaksBamOverlap
     output:
         sampleDataR    = PEAKS_DIR + "/" + compType + "sampleMetadata.rds",
         peakFile       = PEAKS_DIR + "/" + compType + "peaks.rds",
@@ -405,7 +453,7 @@ name_TFSummary = TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}" + ".summar
 
 rule analyzeTF:
     input:
-        overlapFile        = rules.intersectTFBSAndBAM.output.peaksOverlap,
+        overlapFile        = rules.intersectTFBSAndBAM.output.BAMOverlap,
         sampleDataR        = rules.DESeqPeaks.output.sampleDataR,
         peakFile           = rules.DESeqPeaks.output.peakFile,
         peakFile2          = rules.DESeqPeaks.output.peaks_tsv,
@@ -451,7 +499,7 @@ rule concatenateMotifs:
         pattern = "*" + extDir + "/" + compType + "*." + name_outputTSV
     shell:
       """
-        find {params.folder} -type f -path "{params.pattern}" -exec  awk 'NR==1 || FNR!=1' {{}} +  | gzip > {output.allMotifs_tsv}
+        find {params.folder} -type f -path "{params.pattern}" -exec  awk 'NR==1 || FNR!=1' {{}} +  | gzip -f > {output.allMotifs_tsv}
       """
 
 
@@ -467,8 +515,8 @@ rule calcNucleotideContent:
     params: refGenome = config["additionalInputFiles"]["refGenome_fasta"]
     shell:
       """
-            zcat {input.motifsBed} | grep -P "^{wildcards.perm}\\t" | awk '{{OFS="\\t"}};{{print $3,$4,$5,$6,$2}}' | gzip > {output.bedTemp} &&
-            bedtools nuc -fi {params.refGenome} -bed {output.bedTemp}  | gzip > {output.bed}
+            zcat {input.motifsBed} | grep -P "^{wildcards.perm}\\t" | awk '{{OFS="\\t"}};{{print $3,$4,$5,$6,$2}}' | gzip -f > {output.bedTemp} &&
+            bedtools nuc -fi {params.refGenome} -bed {output.bedTemp}  | gzip -f > {output.bed}
         """
 
 rule prepareBinning:

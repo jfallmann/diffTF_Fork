@@ -710,7 +710,7 @@ checkAndLogWarningsAndErrors <- function(object, checkResult, isWarning = FALSE)
       objectPart = paste0("Assertion on variable \"", objectname, "\" failed: ")
     } 
     
-    lastPartError   = "# This is an unexpected error and should not happen. Please contact us with error details. You may also run the R script manually and troubleshoot. #\n"
+    lastPartError   = "# An error occurred. See details above. If you think this is a bug, please contact us. #\n"
     hashesStrError = paste0(paste0(rep("#", nchar(lastPartError) - 1), collapse = ""), "\n")
     messageError    = paste0(objectPart, checkResult, "\n\n", hashesStrError, lastPartError, hashesStrError)
     

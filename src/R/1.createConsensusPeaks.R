@@ -41,7 +41,7 @@ assertClass(snakemake, "Snakemake")
 
 ## INPUT ##
 assertList(snakemake@input, min.len = 1)
-assertSubset(names(snakemake@input), c("", "peaks"))
+assertSubset(names(snakemake@input), c("", "peaks", "checkFlag"))
 
 par.l$file_input_peaks = snakemake@input$peaks
 
@@ -120,12 +120,12 @@ g = ggplot(consensusPeaks.df) + geom_density(aes(x = length)) + scale_x_continuo
 ggsave(plot = g, filename = par.l$file_output_plot)
 
 
-consensusPeaks.df$name = paste0(consensusPeaks.df$chr, ":", consensusPeaks.df$start, "-", consensusPeaks.df$end)
-consensusPeaks.df$id = rownames(consensusPeaks.df)
+consensusPeaks.df$annotation = paste0(consensusPeaks.df$chr, ":", consensusPeaks.df$start, "-", consensusPeaks.df$end)
 
-# Delete columns we don't need
-consensusPeaks.df$pvalue = NULL
-consensusPeaks.df$length = NULL
+# Deactivated now
+# consensusPeaks.df$strand = "+"
+# Reorganize columns
+consensusPeaks.df = consensusPeaks.df[,c("chr", "start", "end", "annotation", "pvalue")]
 
 write_tsv(consensusPeaks.df, path = par.l$file_output_consensusPeaks, col_names = FALSE)
 

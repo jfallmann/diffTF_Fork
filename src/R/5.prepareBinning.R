@@ -106,13 +106,11 @@ if (nrow(TF.motifs.ori) == 0) {
   stop(message)
 }
 
-colnames(TF.motifs.ori) = c("permutation", "TF","chr","MSS","MES", "strand", "PSS","PES","annotation","ID","identifier","baseMean",
-                            "l2FC","lfcSE","stat","pval","padj") # ,"VST_diff")
 
 #Filter permutations in the original files that the user does not want anymore
 TF.motifs.ori = filter(TF.motifs.ori, permutation <= par.l$nPermutations)
 
-TF.motifs.ori$CG.identifier = paste0(TF.motifs.ori$TF,":",TF.motifs.ori$chr,":", TF.motifs.ori$MSS, "-", TF.motifs.ori$MES)
+TF.motifs.ori$CG.identifier = paste0(TF.motifs.ori$TF,":",TF.motifs.ori$TFBSID)
 
 #########################
 # READ ALL NUC CG FILES #
@@ -130,6 +128,11 @@ for (permutationCur in 0:par.l$nPermutations) {
   
   fileCur = par.l$files_input_nucContentGenome[permutationCur+1]
   TF.motifs.CG.cur  = read_tsv(fileCur, col_names = TRUE, col_types = cols())
+  
+  if (ncol(TF.motifs.CG.cur) != 14) {
+      error = paste0("Expected 14 columns in file ", fileCur, ", but found ", ncol(TF.motifs.CG.cur), " instead. Aborting.")
+      checkAndLogWarningsAndErrors(NULL,  error, isWarning = FALSE)
+  }
   
   colnames(TF.motifs.CG.cur) = c("chr","MSS","MES","strand","TF","AT","CG","A","C","G","T","N","other_nucl","length")
   
@@ -183,7 +186,9 @@ rm(TF.motifs.CG)
 rm(TF.motifs.ori)
 
 # remove duplicated TFBS from different TFs to use in the permuations 
-TF.motifs.all.unique = TF.motifs.all[!duplicated(TF.motifs.all[,c("permutation", "identifier")]),]
+TF.motifs.all.unique = TF.motifs.all[!duplicated(TF.motifs.all[,c("permutation", "TFBSID")]),]
+
+flog.info(paste0("Found ", nrow(TF.motifs.all) - nrow(TF.motifs.all.unique), " duplicated TFBS across all TF."))
 
 saveRDS(TF.motifs.all, file = par.l$file_output_allTF)
 saveRDS(TF.motifs.all.unique, file = par.l$file_output_allTFUnique)

@@ -54,7 +54,6 @@ for (fileCur in par.l$files_input_TF_summary) {
 
 ## OUTPUT ##
 assertList(snakemake@output, min.len = 1)
-#assertSubset(names(snakemake@output), c("", "volcanoPlot", "outputTable"))
 assertSubset(names(snakemake@output), c("", "outputTable"))
 
 #par.l$file_output_volcanoPlot = snakemake@output$volcanoPlot
@@ -66,8 +65,7 @@ par.l$file_log = snakemake@log[[1]]
 
 
 
-allDirs = c(#dirname(par.l$file_output_volcanoPlot), 
-            dirname(par.l$file_output_table),
+allDirs = c(dirname(par.l$file_output_table),
             dirname(par.l$file_log)
           )
 
@@ -101,7 +99,7 @@ for (fileCur in par.l$files_input_TF_summary) {
 
 peaks.df = read_tsv(par.l$file_input_peaks, col_types = cols())
 
-assertSubset(colnames(peaks.df), c("permutation", "position", "D2_baseMean", "D2_l2FC", "D2_ldcSE", "D2_stat", "D2_pval", "D2_padj")) #, "vst_diff"))
+assertSubset(colnames(peaks.df), c("permutation", "position", "D2_baseMean", "D2_l2FC", "D2_ldcSE", "D2_stat", "D2_pval", "D2_padj"))
 
 summary.df = NULL
 
@@ -117,6 +115,11 @@ for (fileCur in par.l$files_input_TF_summary) {
     
     stats.df = readRDS(fileCur)
     
+    if (nrow(stats.df) == 0) {
+        message = paste0("File ", fileCur, " contains no rows, this TF will be skipped thereafter")
+        checkAndLogWarningsAndErrors(NULL,  message, isWarning = TRUE)
+    }
+    
     if (is.null(summary.df)) {
       summary.df = stats.df
     } else {
@@ -126,44 +129,39 @@ for (fileCur in par.l$files_input_TF_summary) {
 
   } else {
     message = paste0("File missing: ", fileCur)
-    flog.warn(message)
-    warning(message)
+    checkAndLogWarningsAndErrors(NULL,  message, isWarning = TRUE)
   }
   
 }
 
-# TODO: WHy same values for both TF
+nTF = length(unique(summary.df$TF))
 
-nRowsSummary = nrow(summary.df)
-
-flog.info(paste0(" Imported ", nRowsSummary, " TFs out of a list of ", nTFs, ". Missing: ", nTFs - nRowsSummary))
+flog.info(paste0(" Imported ", nTF, " TFs out of a list of ", nTFs, ". Missing: ", nTFs - nTF))
 
 nTFMissing = length(which(is.na(summary.df$Pos_l2FC)))
 if (nTFMissing == nrow(summary.df)) {
   error = "All TF have missing data. Cannot continue. Add more samples or change the peaks."
-  flog.fatal(error)
-  stop(error)
+  checkAndLogWarningsAndErrors(NULL,  error, isWarning = FALSE)
 }
   
 
 # Replace p-values of 0 with the smallest p-value on the system
-summary.df$Ttest_pval[summary.df$Ttest_pval == 0] = .Machine$double.xmin
+summary.df$pvalue_raw[summary.df$pvalue_raw == 0] = .Machine$double.xmin
 
-# TODO: was previously assigned to modeNum, but why?
-mode_peaks = mlv(round(peaks.df$D2_l2FC, 2), method = "mfv", na.rm = TRUE)
+
+mode_peaks = mlv(peaks.df$D2_l2FC, method = "mfv", na.rm = TRUE)
 
 summary.df = summary.df %>%
               dplyr::mutate(
-                  adj_pvalue = p.adjust(Ttest_pval, method = "fdr"),
-                  Diff_mean  = Mean_l2FC   - mean  (peaks.df$D2_l2FC, na.rm = TRUE), 
-                  DiffMedian = Median_l2FC - median(peaks.df$D2_l2FC, na.rm = TRUE),
-                  Diff_mode  = Mode_l2FC - mode_peaks[[1]],    
-                  Diff_skew  = Modeskewness - mode_peaks[[2]])  %>%
+                  adj_pvalue = p.adjust(pvalue_raw, method = "fdr"),
+                  Diff_mean  = Mean_l2FC    -   mean(peaks.df$D2_l2FC, na.rm = TRUE), 
+                  DiffMedian = Median_l2FC  - median(peaks.df$D2_l2FC, na.rm = TRUE),
+                  Diff_mode  = Mode_l2FC    - mode_peaks[[1]],    
+                  Diff_skew  = skewness_l2FC - mode_peaks[[2]])  %>%
               na.omit(summary.df)
 
 
-
-write_tsv(summary.df, par.l$file_output_table) 
+write_tsv(summary.df, par.l$file_output_table) # TODO: check the dec = "." parameter
 
 .printExecutionTime(start.time)
 

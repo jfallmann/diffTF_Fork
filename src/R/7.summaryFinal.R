@@ -453,19 +453,12 @@ if (par.l$plotRNASeqClassification) {
     }
     
     # Filter by rowMeans to eliminate rows with an sd of 0
-    # rowMeans1 = rowMeans(expressed.TF.counts.df)
-    # rowsToDelete = which(rowMeans1 < 1)
-    # if (length(rowsToDelete) > 0) {
-    #   expressed.TF.counts.df = expressed.TF.counts.df[-rowsToDelete,]
-    #   flog.info(paste0("Removed ", length(rowsToDelete), " TFs out of ", nrow(expressed.TF.counts.df), " because they had a row mean of < 1."))
-    # }
-    rowSds = rowSds(expressed.TF.counts.df)
-    rowsToDelete = which(rowSds == 0)
+    rowMeans1 = rowMeans(expressed.TF.counts.df)
+    rowsToDelete = which(rowMeans1 < 1)
     if (length(rowsToDelete) > 0) {
-        expressed.TF.counts.df = expressed.TF.counts.df[-rowsToDelete,]
-        flog.info(paste0("Removed ", length(rowsToDelete), " TFs out of ", nrow(expressed.TF.counts.df), " because they had a standard deviation of 0."))
+      expressed.TF.counts.df = expressed.TF.counts.df[-rowsToDelete,]
+      flog.info(paste0("Removed ", length(rowsToDelete), " TFs out of ", nrow(expressed.TF.counts.df), " because they had a row mean of < 1."))
     }
-    
     rowMeans2 = rowMeans(peak.counts)
     rowsToDelete = which(rowMeans2 == 0)
     if (length(rowsToDelete) > 0) {

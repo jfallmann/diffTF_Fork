@@ -5,6 +5,10 @@ start.time  <-  Sys.time()
 # LIBRARY AND FUNCTIONS #
 #########################
 
+# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
+# Replace {outputFolder} correspondingly.
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/2.DESeqPeaks.R.rds")
+
 library("checkmate")
 assertClass(snakemake, "Snakemake")
 assertDirectoryExists(snakemake@config$par_general$dir_scripts)
@@ -14,9 +18,7 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 # SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
 ########################################################################
 
-# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
-# Replace {outputFolder} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/2.DESeqPeaks.R.rds")
+
 createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
@@ -41,13 +43,13 @@ checkAndLogWarningsAndErrors(snakemake, checkClass(snakemake, "Snakemake"))
 
 ## INPUT ##
 checkAndLogWarningsAndErrors(snakemake@input, checkList(snakemake@input, min.len = 1))
-checkAndLogWarningsAndErrors(snakemake@input, checkSubset(names(snakemake@input), c("", "sampleData", "peaks")))
+checkAndLogWarningsAndErrors(snakemake@input, checkSubset(names(snakemake@input), c("", "sampleData", "BAMPeakoverlaps")))
 
 par.l$file_input_sampleData = snakemake@input$sampleData
 checkAndLogWarningsAndErrors(par.l$file_input_sampleData, checkFileExists(par.l$file_input_sampleData, access = "r"))
 
   
-par.l$files_input_peaks = snakemake@input$peaks
+par.l$file_input_peakOverlaps = snakemake@input$BAMPeakoverlaps
 
 for (fileCur in par.l$files_input_TF_summary) {
   checkAndLogWarningsAndErrors(fileCur, checkFileExists(fileCur, access = "r"))
@@ -180,61 +182,40 @@ if (datatypeVariableToPermute == "factor" & nLevels != 2) {
 # ITERATE THROUGH PEAK FILES #
 ##############################
 
-peaks.df = NULL
-coverageAll.m = NULL
-
-# TODO: Peak annotation verifiation: Really unique? Number of columns correct? Must be between 3 and 6
+coverageAll.df = read_tsv(par.l$file_input_peakOverlaps, col_names = TRUE, comment = "#")
 
 
-flog.info(paste0("Iterating over ", length(par.l$files_input_peaks), " peak files "))
-
-for (fileCur in par.l$files_input_peaks) {
-
-  # TODO: Change accordingly: Between 4 and 7 here, set column names accordingly and
-  peaks.df =  read_tsv(fileCur, col_names = c("chr", "PSS", "PES", "annotation", "ID", "coverage"), col_types = cols())
-  flog.info(paste0("Parsed peak file ", fileCur, " with ", nrow(peaks.df)," rows"))
-  
-  if (nrow(peaks.df) == 0) {
+if (nrow(coverageAll.df) == 0) {
     
-    message = paste0("The file ", fileCur, " is empty, no overlaps have been identified. This file will be skipped.")
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-    
-  } else {
-    
-    #TODO: Needed?
-    peaks.df$identifier = paste0(peaks.df$chr,":", peaks.df$PSS,"-", peaks.df$PES)
-    
-    # Filter and retain only unique identifiers
-    peaks.filtered.df = distinct(peaks.df, identifier, .keep_all = TRUE)
-    
-    nRowsFiltered = nrow(peaks.df) - nrow(peaks.filtered.df)
-    if (par.l$verbose & nRowsFiltered  > 0) flog.info(paste0("Filtered ", nRowsFiltered, " non-unique positions out of ", nrow(peaks.df), " from peaks table."))
-    
-    peaks.df = peaks.filtered.df
-    
-    # concatenate results from COV from each iteration
-    coverageAll.m = cbind(coverageAll.m, peaks.df$coverage)
-    
-  }
- 
-}
-
-
-if (is.null(coverageAll.m)) {
-  
-  message = paste0("All overlap files are empty. Cannot continue. A different peak file may solve the issue.")
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+    message = paste0("Empty file ", par.l$file_input_peaks, ".")
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
 } 
 
+## transform as matrix data frame with counts
+coverageAll.m = as.matrix(dplyr::select(coverageAll.df, -one_of("Geneid", "Chr", "Start", "End", "Strand", "Length")))
+
+# Take the basenames of the files, which have not been modified in the sorted versions of the BAMs as they are just located in different folders
+sampleIDs = sampleData.df$SampleID[which(basename(sampleData.df$bamReads) %in% basename(colnames(coverageAll.m)))]
+
+if (length(unique(sampleIDs)) != nrow(sampleData.df)) {
+    message = paste0("Colnames mismatch.")
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+} 
+
+colnames(coverageAll.m) = sampleIDs
+rownames(coverageAll.m) = coverageAll.df$Geneid
+
+
+peaks.df = dplyr::select(coverageAll.df, one_of(c("Chr", "Start", "End", "Geneid")))
+colnames(peaks.df) = c("chr", "PSS", "PES", "annotation")
+# Filter and retain only unique identifiers
+peaks.filtered.df = distinct(peaks.df, annotation, .keep_all = TRUE)
+nRowsFiltered = nrow(peaks.df) - nrow(peaks.filtered.df)
+if (par.l$verbose & nRowsFiltered  > 0) flog.info(paste0("Filtered ", nRowsFiltered, " non-unique positions out of ", nrow(peaks.df), " from peaks table."))
+peaks.df = peaks.filtered.df
 
 # Save the last, they are all identical anyway except for the count column
 saveRDS(peaks.filtered.df, file = par.l$file_output_peaks)
-
-
-## transform as matrix data frame with counts
-coverageAll.m = as.matrix(coverageAll.m)
-colnames(coverageAll.m) = sampleData.df$SampleID
-rownames(coverageAll.m) = peaks.df$identifier # Take the first element as nameCur reprsentative, they are all identical anyway
 
 
 #############################

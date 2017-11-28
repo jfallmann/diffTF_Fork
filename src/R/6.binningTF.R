@@ -195,15 +195,15 @@ for (permutationCur in 0:par.l$nPermutations) {
     } else {
       
       nBinsWithData = nBinsWithData + 1
-      l2fc_allBins = binned.allTF.df$l2FC
+      l2fc_allBins = binned.allTF.df$log2FoldChange
       flog.info(paste0("  Calculating data for bin based on ", nRowsBinCurTF, " and ", nRowsAllTF, " rows"))
       
-      statistical.test = t.test(binned.allTF.df$l2FC, binned.curTF.df$l2FC)
+      statistical.test = t.test(binned.allTF.df$log2FoldChange, binned.curTF.df$log2FoldChange)
       
       flog.info(paste0("  Running bootstrap... "))
       
       if (permutationCur == 0 && par.l$nBootstraps > 1) {
-        boostrapResults.l[[TFCur]][[permutationName]][[bin]] = boot(data = binned.curTF.df$l2FC, statistic = ttest, R = par.l$nBootstraps, all = binned.allTF.df$l2FC)
+        boostrapResults.l[[TFCur]][[permutationName]][[bin]] = boot(data = binned.curTF.df$log2FoldChange, statistic = ttest, R = par.l$nBootstraps, all = binned.allTF.df$log2FoldChange)
      
         # Get the estimated boostrap variance
         varianceCur = var(boostrapResults.l[[TFCur]][[permutationName]][[bin]]$t[,1])
@@ -216,16 +216,16 @@ for (permutationCur in 0:par.l$nPermutations) {
       perm.l[[TFCur]] = add_row(perm.l[[TFCur]],
                                 permutation    = permutationCur,
                                 bin            = bin,
-                                meanDifference = mean(binned.curTF.df$l2FC) - mean(binned.allTF.df$l2FC),
-                                nDataAll       = length(binned.allTF.df$l2FC),
-                                nDataBin       = length(binned.curTF.df$l2FC),
+                                meanDifference = mean(binned.curTF.df$log2FoldChange) - mean(binned.allTF.df$log2FoldChange),
+                                nDataAll       = length(binned.allTF.df$log2FoldChange),
+                                nDataBin       = length(binned.curTF.df$log2FoldChange),
                                 pvalue         = statistical.test$p.value, 
                                 Tstat          = statistical.test$statistic[[1]],
                                 df             = statistical.test$parameter,
-                                sd             = sd(binned.curTF.df$l2FC, na.rm = TRUE), 
+                                sd             = sd(binned.curTF.df$log2FoldChange, na.rm = TRUE), 
                                 ratio_TFBS     = nRowsBinCurTF/nRowsTF,
-                                cohensD        = cohensD(binned.allTF.df$l2FC, binned.curTF.df$l2FC),  
-                                median         = median(binned.curTF.df$l2FC, na.rm = TRUE) - median(binned.allTF.df$l2FC, na.rm = TRUE),
+                                cohensD        = cohensD(binned.allTF.df$log2FoldChange, binned.curTF.df$log2FoldChange),  
+                                median         = median(binned.curTF.df$log2FoldChange, na.rm = TRUE) - median(binned.allTF.df$log2FoldChange, na.rm = TRUE),
                                 variance       = varianceCur
       )
     
@@ -294,7 +294,7 @@ for (permutationCur in 0:par.l$nPermutations) {
       # Function to estimate the variance of the weighted mean
       # Original proposal by Bernd
       # see the paper for a derivation of the formula
-      varianceFinal     = sum(weights^2 * varianceIndividual)     + (2 * sum(summaryCov.filt.df$weight1 * summaryCov.filt.df$weight2 * summaryCov.filt.df$cov))
+      varianceFinal = sum(weights^2 * varianceIndividual) + (2 * sum(summaryCov.filt.df$weight1 * summaryCov.filt.df$weight2 * summaryCov.filt.df$cov))
       
       
     } else {

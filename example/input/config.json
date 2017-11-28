@@ -30,13 +30,10 @@
   "additionalInputFiles":
   {
   "refGenome_fasta"      : "referenceGenome/mm10.fa",
-  "dir_PWMScan"          : "PWMscan",
+  "dir_TFBS"          : "mm10/PWMScan_HOCOMOCOv10",
   "RNASeqCounts"         : "data/RNA-Seq/RNA.counts.tsv",
-  "HOCOMOCO_mapping"     : "../../src/HOCOMOCO/translationTable_mouse.csv"
+  "HOCOMOCO_mapping"     : "../../src/TF_Gene_TranslationTables/HOCOMOCO_v10/translationTable_mm10.csv"
   }
-
-
-
 
 
 }
