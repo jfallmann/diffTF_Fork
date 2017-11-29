@@ -168,7 +168,7 @@ overlapsAll.df = read_tsv(par.l$file_input_peakTFOverlaps, col_names = TRUE, col
 
 if (nrow(problems(overlapsAll.df)) > 0) {
   flog.fatal(paste0("Parsing errors: "), problems(overlapsAll.df), capture = TRUE)
-  stop("Error when parsing the file ", fileCur, ", see warnings")
+  stop("Error when parsing the file ", fileCur, ", see errors above")
 }
 
 

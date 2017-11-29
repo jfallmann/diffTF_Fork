@@ -11,7 +11,7 @@ assertDirectoryExists(snakemake@config$par_general$dir_scripts)
 source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
-checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "methods"), verbose = FALSE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "methods", "BiocParallel", "rlist"), verbose = FALSE)
 
 # methods needed here because Rscript does not loads this package automatically, see http://stackoverflow.com/questions/19468506/rscript-could-not-find-function
 
@@ -106,80 +106,96 @@ if (nrow(TF.motifs.ori) == 0) {
   stop(message)
 }
 
+# TODO: eventuell löschen: chr, MSS, MES, PSS, PES
 
 #Filter permutations in the original files that the user does not want anymore
 TF.motifs.ori = filter(TF.motifs.ori, permutation <= par.l$nPermutations)
 
 TF.motifs.ori$CG.identifier = paste0(TF.motifs.ori$TF,":",TF.motifs.ori$TFBSID)
 
+
 #########################
 # READ ALL NUC CG FILES #
 #########################
 
-TF.motifs.CG = NULL
 
-for (permutationCur in 0:par.l$nPermutations) {
-  
-  permutationName = paste0("permutation", permutationCur)
-  
-  if (permutationCur > 0) {
-    flog.info(paste0("Reading file from permutation ", permutationCur))
-  }
-  
-  fileCur = par.l$files_input_nucContentGenome[permutationCur+1]
-  TF.motifs.CG.cur  = read_tsv(fileCur, col_names = TRUE, col_types = cols())
-  
-  if (ncol(TF.motifs.CG.cur) != 14) {
-      error = paste0("Expected 14 columns in file ", fileCur, ", but found ", ncol(TF.motifs.CG.cur), " instead. Aborting.")
-      checkAndLogWarningsAndErrors(NULL,  error, isWarning = FALSE)
-  }
-  
-  colnames(TF.motifs.CG.cur) = c("chr","MSS","MES","strand","TF","AT","CG","A","C","G","T","N","other_nucl","length")
-  
-  nRowsNA = length(which(is.na(TF.motifs.CG.cur$CG)))
-  if (nRowsNA > 0) {
-    message <- paste0("The file ", fileCur, " contains ", nRowsNA, " rows out of ", nrow(TF.motifs.CG.cur), " with a missing value for the CG content, which most likely results from an assembly discordance between the BAM files and the specified fasta file. These regions will be removed in subsequent steps. The first 10 are printed with their first 3 columns here for debugging purposes:") 
-    message = paste0(message, paste0(unlist(TF.motifs.CG.cur[1:10,"chr"]), ":", unlist(TF.motifs.CG.cur[1:10,"MSS"]), "-", unlist(TF.motifs.CG.cur[1:10,"MES"]), collapse = ", "))
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-    TF.motifs.CG.cur = TF.motifs.CG.cur[-nRowsNA,]
-  }
-  
-  TF.motifs.CG.cur$permutation = permutationCur
-  
-  
-  # Rbind and add permutation column
-  if (is.null(TF.motifs.CG)){
-    TF.motifs.CG = TF.motifs.CG.cur
-  } else {
-    TF.motifs.CG = rbind(TF.motifs.CG, TF.motifs.CG.cur)
-  }
-  
+readFile <- function(permutationCur, par.l) {
+    
+    fileCur = par.l$files_input_nucContentGenome[permutationCur + 1]
+    
+    if (permutationCur > 0) {
+        flog.info(paste0("Reading and processing file ", fileCur, " from permutation ", permutationCur))
+    } else {
+        flog.info(paste0("Reading and processing file ", fileCur, " from original data ", permutationCur))
+    }
+    
+    TF.motifs.CG.cur  = read_tsv(fileCur, col_names = TRUE, 
+                                 col_types = list(
+                                     col_skip(), # "chr"
+                                     col_skip(), # "MSS"
+                                     col_skip(), # "MES"
+                                     col_character(), # "strand"
+                                     col_character(), # "TF",
+                                     col_skip(), # "AT"
+                                     col_number(), # "CG"
+                                     col_skip(), # "A"
+                                     col_skip(), # "C"
+                                     col_skip(), # "G"
+                                     col_skip(), # "T"
+                                     col_skip(), # "N"
+                                     col_skip(), # "other_nucl"
+                                     col_skip() # "length"
+                                 )
+    )
+    if (nrow(problems(TF.motifs.CG.cur)) > 0) {
+        flog.fatal(paste0("Parsing errors: "), problems(TF.motifs.CG.cur), capture = TRUE)
+        stop("Error when parsing the file ", fileCur, ", see errors above")
+    }
+    
+    
+    colnames(TF.motifs.CG.cur) = c("TFBSID","TF","CG")
+    
+    nRowsNA = length(which(is.na(TF.motifs.CG.cur$CG)))
+    if (nRowsNA > 0) {
+        message <- paste0("The file ", fileCur, " contains ", nRowsNA, " rows out of ", nrow(TF.motifs.CG.cur), " with a missing value for the CG content, which most likely results from an assembly discordance between the BAM files and the specified fasta file. These regions will be removed in subsequent steps. The first 10 are printed with their first 3 columns here for debugging purposes:") 
+        message = paste0(message, paste0(unlist(TF.motifs.CG.cur[1:10,"chr"]), ":", unlist(TF.motifs.CG.cur[1:10,"MSS"]), "-", unlist(TF.motifs.CG.cur[1:10,"MES"]), collapse = ", "))
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+        TF.motifs.CG.cur = TF.motifs.CG.cur[-nRowsNA,]
+    }
+    
+    
+    TF.motifs.CG.cur = TF.motifs.CG.cur %>%
+        mutate(CG.identifier = paste0(TF,":" ,TFBSID), permutation = permutationCur)  %>%
+        select(-one_of("TFBSID", "TF"))
+    
+    return(TF.motifs.CG.cur)
+    
 }
 
 
-TF.motifs.CG$CG.identifier  = paste0(TF.motifs.CG$TF,":" ,TF.motifs.CG$chr ,":", TF.motifs.CG$MSS,  "-", TF.motifs.CG$MES)
+nCores = snakemake@threads
+results.l = .execInParallelGen(nCores, 
+                               returnAsList = TRUE, listNames = paste0("permutation", 0:par.l$nPermutations), 
+                               iteration = 0:par.l$nPermutations, 
+                               abortIfErrorParallel = TRUE, 
+                               verbose = TRUE,
+                               readFile, par.l)
+
+TF.motifs.CG = do.call("rbind", results.l)
+
+
 
 #########
 # MERGE #
 #########
-#TF.motifs.ori = filter(TF.motifs.ori, permutation<6)
-
-# Remove duplicated rows
-#TF.motifs.ori =  TF.motifs.ori[!duplicated(TF.motifs.ori),]
-
-
-# concatenate the data in one df 
-
-drop.cols = c( "A","C","G","T","N","other_nucl","length","chr.y","MSS.y","MES.y","strand.y","AT","CG.identifier","TF.y")
 
 CGBins = seq(0,1, 1/par.l$nBins)
 
 TF.motifs.all =  TF.motifs.ori %>% 
   full_join(TF.motifs.CG, by = c("CG.identifier", "permutation"))  %>% 
-  select(-one_of(drop.cols)) %>% 
-  mutate(CG.bins = cut(CG, breaks = CGBins, labels = paste0(round(CGBins[-1] * 100,0),"%"), include.lowest = TRUE)) %>%
-  #rename(TF = TF.x, chr = chr.x, MSS = MSS.x, MES = MES.x, strand = strand.x)
-  dplyr::rename(TF = TF.x, chr = chr.x, MSS = MSS.x, MES = MES.x)
+  select(-one_of("CG.identifier")) %>% 
+  mutate(CG.bins = cut(CG, breaks = CGBins, labels = paste0(round(CGBins[-1] * 100,0),"%"), include.lowest = TRUE)) 
+
 
 # Not needed anymore, delete
 rm(TF.motifs.CG)
@@ -187,6 +203,8 @@ rm(TF.motifs.ori)
 
 # remove duplicated TFBS from different TFs to use in the permuations 
 TF.motifs.all.unique = TF.motifs.all[!duplicated(TF.motifs.all[,c("permutation", "TFBSID")]),]
+
+# TODO: TFBSID and peakID needed?
 
 flog.info(paste0("Found ", nrow(TF.motifs.all) - nrow(TF.motifs.all.unique), " duplicated TFBS across all TF."))
 

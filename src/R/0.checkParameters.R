@@ -152,6 +152,18 @@ if (file_peaks != "") {
     stop("Parsing errors with file ", snakemake@config$peaks$consensusPeaks, ". See the log file for more information")
   }
   
+  flog.info(paste0("Peak file contains ", nrow(peaks.df), " peaks."))
+  
+  if (nrow(peaks.df) > 100000) {
+      message = paste0("The number of peaks is very high, subsequent steps may be slow, particularly in the prepareBinning and binningTF steps. Make sure the preparingBinning step has enough memory available. We recommend at least 50 GB. Alternatively, consider decreasing the number of peaks for improved performance.")
+      checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+      
+      if (snakemake@config$par_general$nPermutations > 5) {
+          message = paste0("In addition to the high number of peaks, more than 5 permutations have been selected, which will further increase running times and memory footprint. Consider decreasing the number of peaks for improved performance.")
+          checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+      }
+  }
+  
   if (ncol(peaks.df) < 3) {
     message = paste0("At least 3 columns are required, but only ", ncol(peaks.df), " columns have been found in the file ", snakemake@config$peaks$consensusPeaks)
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)

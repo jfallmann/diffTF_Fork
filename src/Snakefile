@@ -528,7 +528,7 @@ rule prepareBinning:
         allTFUniqueData = TEMP_EXTENSION_DIR + "/" + compType + "allTFUniqueData_processedForPermutations.rds"
     log: expand('{dir}/5.prepareBinning.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_prepareBinning} ..."
-    threads: 1
+    threads: min(threadsMax, config["par_general"]["nPermutations"] + 1)
     params:
         nCGBins    = nCGBins
     script: dir_scripts + script_prepareBinning
