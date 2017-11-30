@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # diffTF documentation build configuration file, created by
-# sphinx-quickstart on Thu Nov 30 12:48:48 2017.
+# sphinx-quickstart on Thu Nov 30 13:16:14 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -31,9 +31,7 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.todo',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.githubpages']
+extensions = []
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -49,8 +47,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'diffTF'
-copyright = '2017, Christian Arnold, Ivan berest, Judith B. Zaugg'
-author = 'Christian Arnold, Ivan berest, Judith B. Zaugg'
+copyright = '2017, Christian Arnold, Ivan Berest, Judith B. Zaugg'
+author = 'Christian Arnold, Ivan Berest, Judith B. Zaugg'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -77,7 +75,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True
+todo_include_todos = False
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -145,7 +143,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'diffTF.tex', 'diffTF Documentation',
-     'Christian Arnold, Ivan berest, Judith B. Zaugg', 'manual'),
+     'Christian Arnold, Ivan Berest, Judith B. Zaugg', 'manual'),
 ]
 
 
