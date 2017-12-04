@@ -169,8 +169,6 @@ output.global.TFs = filter(output.global.TFs.orig, permutation == 0, is.finite(w
 
 output.global.TFs$weighted_meanDifference_enrichment = NA
 
-variableXAxis = "weighted_meanDifference"
-
 
 # Remove rows with NA
 TF_NA = which(is.na(output.global.TFs$weighted_meanDifference) | is.na(output.global.TFs$variance) | is.na(output.global.TFs$weighted_Tstat))
@@ -208,9 +206,6 @@ if (par.l$nPermutations > 0) {
   permutationDensities2 = ggplot(output.global.TFs.permutations, aes(x = weighted_meanDifference, fill = factor(permutation))) + geom_density(alpha = 0.25) + theme_bw() + geom_vline(xintercept =  thresholdsPermutations, linetype = "dotted") 
   
   permutationDensities3 = ggplot(output.global.TFs, aes(x = weighted_meanDifference)) + geom_density(alpha = 0.25) + theme_bw() + geom_vline(xintercept =  thresholdsPermutations, linetype = "dotted") 
-  
-  variableXAxis = "weighted_meanDifference_enrichment"
-  
   
 }
 
@@ -333,11 +328,7 @@ if (par.l$plotRNASeqClassification) {
   file_sampleSummary = snakemake@config$samples$summaryFile
   assertFileExists(file_sampleSummary)
   
-  if (grepl(pattern = "/scratch/carnold/CLL/TF_act", rootOutdir)) {
-    RNASeqSummary = "/scratch/carnold/CLL/TF_act_10samplesOnlyRNASeq/output/FINAL_OUTPUT/extension100/tf_activator_repressor_classification.RData"
-    flog.info(paste0("Load object ", RNASeqSummary))
-    load(RNASeqSummary)
-  } else {
+  
     
     sampleSummary.df = read_tsv(file_sampleSummary, col_types = cols())
     
@@ -357,7 +348,7 @@ if (par.l$plotRNASeqClassification) {
       message = paste0("No shared samples with RNA-Seq samples between sample table ", file_sampleSummary, " and RNA-Seq table ", par.l$file_input_geneCountsPerSample, ".")
       checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
     }
-
+    
     colnames(TF.counts.df.all)[1] = "ENSEMBL"
     
     # Clean ENSEMBL IDs
@@ -391,7 +382,7 @@ if (par.l$plotRNASeqClassification) {
     #peak.counts.orig = peak.counts
     peak.counts  = peak.counts [, which(colnames(peak.counts) %in% sharedColumns)]
     TF.counts.df = TF.counts.df[, which(colnames(TF.counts.df) %in% c(sharedColumns, "ENSEMBL"))]
-
+    
     
     HOCOMOCO_mapping.df.exp <- filter(HOCOMOCO_mapping.df, ENSEMBL %in%  TF.counts.df$ENSEMBL, HOCOID %in% unique(output.global.TFs$TF))
     
@@ -488,12 +479,8 @@ if (par.l$plotRNASeqClassification) {
     t.cor.sel.matrix.non[(sel.TF.peakMatrix.df == 1)] = NA
     t.cor.sel.matrix.non = sel.TF.peakMatrix.df + t.cor.sel.matrix.non
     act.rep.thres = quantile(sort(apply(t.cor.sel.matrix.non, MARGIN = 2, FUN = my.median)), probs = c(.05, .95))
-    
-    
-    
-    
-  }  # end if special case for analysis
-  
+
+
   AR.data = as.data.frame(median.cor.tfs)
   AR.data$TF = rownames(AR.data)
   
@@ -540,12 +527,17 @@ if (height < 20) {
 permutationCategories = c(FALSE)
 if (par.l$nPermutations > 0) permutationCategories = c(TRUE, FALSE)
 
+
 pdf(file = par.l$file_plotCircular, height = height, width = width, useDingbats = FALSE)
 
 
 for (includePermutationCur in permutationCategories) {
   
-
+ if (includePermutationCur) {
+     variableXAxis = "weighted_meanDifference_enrichment"
+ } else {
+     variableXAxis = "weighted_meanDifference"
+ }
   
   for (FDRThresholdCur in par.l$FDR_threshold) {
     

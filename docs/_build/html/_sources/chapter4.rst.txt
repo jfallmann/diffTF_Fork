@@ -1,0 +1,16 @@
+.. _docs-details:
+
+Input
+======
+
+Workflow
+=========
+
+Working with the pipeline
+=========================
+
+Handling errors
+===============
+
+Output
+======

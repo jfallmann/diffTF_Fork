@@ -103,7 +103,15 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmat
 sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_types = cols())
 
 # Build the fasta index. Requires write access to the folder where the fasta is stored (limitation of samtools faidx)
-indexFa(fastaFile)
+
+fastaIndex = paste0(fastaFile, ".fai")
+if (!file.exists(fastaIndex)) {
+    flog.info(paste0("Running samtools faidx for fasta file to generate fasta index"))
+    indexFa(fastaFile)
+} else {
+    flog.info(paste0("Fasta index already found"))
+}
+
 indexes.df = as.data.frame(scanFaIndex(fastaFile))
 indexes.df$seqnames = as.character(indexes.df$seqnames)
 
