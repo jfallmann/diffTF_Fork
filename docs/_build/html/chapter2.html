@@ -138,10 +138,27 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#output">Output</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#folder-final-output">FOLDER <code class="docutils literal"><span class="pre">FINAL_OUTPUT</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#subfolder-extension-regionextension">Subfolder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#subfolder-extension-regionextension">Subfolder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-allmotifs-tsv-gz">FILE <code class="docutils literal"><span class="pre">{comparisonType}.allMotifs.tsv.gz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-tf-vs-peak-distribution-tsv">FILE <code class="docutils literal"><span class="pre">{comparisonType}.TF_vs_peak_distribution.tsv</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-summary-tsv">FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.tsv</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-summary-circular-pdf">FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.circular.pdf</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-diagnosticplots-pdf">FILE <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.pdf</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#folder-peaks">FOLDER <code class="docutils literal"><span class="pre">PEAKS</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#folder-peaks">FOLDER <code class="docutils literal"><span class="pre">PEAKS</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#files-comparisontype-consensuspeaks-bed-and-consensuspeaks-lengthdistribution-pdf">FILES <code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.bed</span></code> and <code class="docutils literal"><span class="pre">consensusPeaks_lengthDistribution.pdf</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-allbams-peaks-overlaps-bed">FILE <code class="docutils literal"><span class="pre">{comparisonType}.allBams.peaks.overlaps.bed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-samplemetadata-rds">FILE <code class="docutils literal"><span class="pre">{comparisonType}.sampleMetadata.rds</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-peaks-rds">FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.rds</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-peaks-tsv">FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.tsv</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-normfacs-rds">FILE <code class="docutils literal"><span class="pre">{comparisonType}.normFacs.rds</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#files-comparisontype-diagnosticplots-peaks-pdf-and-comparisontype-diagnosticplots-peaks-permutation-perm-pdf-for-each-permutation-perm">FILES <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code> and <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf</span></code> for each permutation <code class="docutils literal"><span class="pre">{perm}</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-deseq-object-rds">FILE ``{comparisonType}.DESeq.object.rds`</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#folder-tf-specific">FOLDER <code class="docutils literal"><span class="pre">TF-SPECIFIC</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id20">Subfolder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a></li>
 </ul>
@@ -312,7 +329,7 @@
 <span id="id4"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">designContrast</span></code><a class="headerlink" href="#parameter-designcontrast" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>String. Default  “~ Treatment + conditionSummary”. Design formula for the differential accessibility analysis in DESeq2.</dd>
+<dd>String. Default  “~ Treatment + conditionSummary”. Design formula for the differential accessibility analysis in <em>DESeq2</em>.</dd>
 <dt>Details</dt>
 <dd>This important parameter defines the actual contrast that is done in the differential analysis. That is, which groups of samples are being compared? Examples include mutant vs wildtype, mutated vs. unmutated, etc. The last element in the formula must always be “conditionSummary”, which defines the two groups that are being compared. This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified.</dd>
 </dl>
@@ -559,6 +576,7 @@
 </ul>
 <div class="section" id="folder-final-output">
 <h2>FOLDER <code class="docutils literal"><span class="pre">FINAL_OUTPUT</span></code><a class="headerlink" href="#folder-final-output" title="Permalink to this headline">¶</a></h2>
+<p>In this folder, the final output files are stored. Most users want to examine the files in here for further analysis.</p>
 <div class="section" id="subfolder-extension-regionextension">
 <h3>Subfolder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#subfolder-extension-regionextension" title="Permalink to this headline">¶</a></h3>
 <p>Stores results related to the user-specified extension size (<a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>)</p>
@@ -566,26 +584,47 @@
 <p class="first admonition-title">Note</p>
 <p class="last">Note that in all output files, in the column <code class="docutils literal"><span class="pre">permutation</span></code>, 0 always refers to the non-permuted, real data, while permutations &gt; 0 reflect real permutations.</p>
 </div>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">{comparisonType}.allMotifs.tsv.gz</span></code>: Summary table for each TFBS with the columns as follows:<ul>
+<div class="section" id="file-comparisontype-allmotifs-tsv-gz">
+<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.allMotifs.tsv.gz</span></code><a class="headerlink" href="#file-comparisontype-allmotifs-tsv-gz" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Summary table for each TFBS</dd>
+<dt>Details</dt>
+<dd><p class="first">Columns are as follows:</p>
+<ul class="last simple">
 <li><em>permutation</em>: The number of the permutaton.</li>
-<li><a href="#id18"><span class="problematic" id="id19">*</span></a>TF: name of the TF</li>
-<li><em>chr, *MSS</em>, <em>MES</em>, <em>strand</em>, <em>TFBSID</em>: Genomic location and identifier of the (extended) TFBS</li>
-<li><em>PSS, *PES</em>, <em>peakID</em>:  Genomic location and annotation of the overlapping peak region</li>
-<li><em>baseMean</em>, <em>log2FoldChange</em>, <em>lfcSE</em>, <em>stat</em>, <em>pvalue</em>, <em>padj</em>: Results from the DESeq2 analysis. See the <a class="reference external" href="https://www.bioconductor.org/help/course-materials/2015/LearnBioconductorFeb2015/B02.1.1_RNASeqLab.html">DESeq2 documentation</a> for details.</li>
-</ul>
-</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.TF_vs_peak_distribution.tsv</span></code>: TODO. The columns are as follows:<ul>
 <li><em>TF</em>: name of the TF</li>
-<li><em>permutation</em>: The number of the permutation.</li>
-<li><em>Pos_l2F*C, *Mean_l2FC</em>, <em>Median_l2FC</em>, <em>sd_l2FC</em>, <em>Mode_l2FC</em>, <em>skewness_l2FC</em>: fraction of positive values, mean, median, standard deviation, mode value and Bickel’s measure of skewness of the log2 fold change distribution across all TFBS</li>
-<li><em>pvalue_raw</em> and <em>pvalue_adj</em>: raw and adjusted (fdr) p-value of the  t-test</li>
-<li><em>T_statistic</em>: the value of the T statistic from the t-test</li>
-<li><em>TFBS_num</em>: number of TFBS</li>
-<li><em>Diff_mean</em>, <em>Diff_median</em>, <em>Diff_mode</em>, <em>Diff_skew</em>: Difference of the mean, median, mode, and skewness between the log2 fold-change distribution across all TFBS and the peaks, respectively</li>
+<li><em>chr</em>, <em>MSS</em>, <em>MES</em>, <em>strand</em>, <em>TFBSID</em>: Genomic location and identifier of the (extended) TFBS</li>
+<li><em>PSS</em>, <em>PES</em>, <em>peakID</em>:  Genomic location and annotation of the overlapping peak region</li>
+<li><em>baseMean</em>, <em>log2FoldChange</em>, <em>lfcSE</em>, <em>stat</em>, <em>pvalue</em>, <em>padj</em>: Results from the <em>DESeq2</em> analysis. See the <a class="reference external" href="https://www.bioconductor.org/help/course-materials/2015/LearnBioconductorFeb2015/B02.1.1_RNASeqLab.html">DESeq2 documentation</a> for details.</li>
 </ul>
-</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.summary.tsv</span></code>: The final summary table that is also used for the final circular visualization (see below). The columns are as follows:<ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="file-comparisontype-tf-vs-peak-distribution-tsv">
+<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.TF_vs_peak_distribution.tsv</span></code><a class="headerlink" href="#file-comparisontype-tf-vs-peak-distribution-tsv" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>TODO</dd>
+<dt>Details</dt>
+<dd>Columns are as follows:
+- <em>TF</em>: name of the TF
+- <em>permutation</em>: The number of the permutation.
+- <em>Pos_l2F*C, *Mean_l2FC</em>, <em>Median_l2FC</em>, <em>sd_l2FC</em>, <em>Mode_l2FC</em>, <em>skewness_l2FC</em>: fraction of positive values, mean, median, standard deviation, mode value and Bickel’s measure of skewness of the log2 fold change distribution across all TFBS
+- <em>pvalue_raw</em> and <em>pvalue_adj</em>: raw and adjusted (fdr) p-value of the  t-test
+- <em>T_statistic</em>: the value of the T statistic from the t-test
+- <em>TFBS_num</em>: number of TFBS
+- <em>Diff_mean</em>, <em>Diff_median</em>, <em>Diff_mode</em>, <em>Diff_skew</em>: Difference of the mean, median, mode, and skewness between the log2 fold-change distribution across all TFBS and the peaks, respectively</dd>
+</dl>
+</div>
+<div class="section" id="file-comparisontype-summary-tsv">
+<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.tsv</span></code><a class="headerlink" href="#file-comparisontype-summary-tsv" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>The final summary table that is also used for the final circular visualization</dd>
+<dt>Details</dt>
+<dd><p class="first">The columns are as follows:</p>
+<ul class="last simple">
 <li><em>TF</em>: name of the TF</li>
 <li><em>permutation</em>: The number of the permutation.</li>
 <li><em>weighted_meanDifference</em>: the weighted mean difference of the real and background distribution across all CG bins. This value is the basis for the final calculation of the x-axis position for the circular plot. Without permutations, this value is shown, while for permutations, the weighted_meanDifference_enrichment is used.</li>
@@ -601,48 +640,128 @@
 <li><em>classification</em>: RNA-Seq classification (either activator, undetermined, repressor or not-expressed)</li>
 <li><em>Cohend_factor</em>     , <em>weighted_CD</em>, <em>weighted_median</em>, <em>weighted_sd</em>: Not used.</li>
 </ul>
-</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.summary.circular.pdf</span></code>: The final visualization of the diffTF results. The PDF contains multiple pages, the structure of which varies depending on the parameters:</li>
+</dd>
+</dl>
+</div>
+<div class="section" id="file-comparisontype-summary-circular-pdf">
+<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.circular.pdf</span></code><a class="headerlink" href="#file-comparisontype-summary-circular-pdf" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>The final visualization of the diffTF results</dd>
+<dt>Details</dt>
+<dd><p class="first">The PDF contains multiple pages, the structure of which varies depending on the parameters:</p>
+<ul class="last simple">
+<li>Number of permutations &gt; 0<ul>
+<li>RNA-Seq integration: Within each of the two following sections, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)<ul>
+<li>Pages 1-15: Visualization of the results including the permutations</li>
+<li>Pages 16-30: Visualization of the results excluding the permutations</li>
 </ul>
-<p>Number of permutations &gt; 0
-RNA-Seq integration
-Pages 1-15: Visualization of the results including the permutations
-Pages 16-30: Visualization of the results excluding the permutations
-Within each of these two categories, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)
-No RNA-Seq integration:
-Pages 1-5: Visualization of the results including the permutations for different FDR thresholds
-Pages 6-10: Visualization of the results excluding the permutations for different FDR thresholds
-Within each of these two categories, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)
-Number of permutations = 0
-RNA-Seq integration: Pages 1-15 show the results in a format as described below for varying combinations of FDR threshold and RNA-Seq categories
-No RNA-Seq integration: Pages 1-5 show the results for different FDR thresholds
-If RNA-Seq data is integrated, different combinations of categories are shown on each page (1:activator-undetermined-repressor-not-expressed, 2:activator-undetermined-repressor, 3:activator-repressor), which along with different FDR thresholds gives rise to multiple individual plots. The values on the x-axis denote the effect size (if permutations are incorporated enrichment over background, otherwise the mean difference between the two conditions), with higher values indicating a higher differential TF activity between the two conditions. TFs that are similarly active between the two conditions are close to 0, while TFs more active in either condition are located in the left and right part of the plot. The y-axis (radial position) denotes the statistical significance (adjusted p-values). The significance threshold is indicated as red circular line. TFs that pass the significance threshold are labeled and, if RNA-Seq data is integrated, colored according to their predicted role (see above).
-{comparisonType}.diagnosticPlots.pdf: Various diagnostic plots for the final TF activity values. If the number of permutations is larger than 0, the first three pages show various versions of the pemruted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation &gt; 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the locfdr package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.</p>
+</li>
+<li>No RNA-Seq integration: Within each of the two following section, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)<ul>
+<li>Pages 1-5: Visualization of the results including the permutations for different FDR thresholds</li>
+<li>Pages 6-10: Visualization of the results excluding the permutations for different FDR thresholds</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Number of permutations = 0<ul>
+<li>RNA-Seq integration: Pages 1-15 show the results in a format as described below for varying combinations of FDR threshold and RNA-Seq categories</li>
+<li>No RNA-Seq integration: Pages 1-5 show the results for different FDR thresholds</li>
+</ul>
+</li>
+<li>If RNA-Seq data is integrated, different combinations of categories are shown on each page (1: activator-undetermined-repressor-not-expressed, 2: activator-undetermined-repressor, 3: activator-repressor), which along with different FDR thresholds gives rise to multiple individual plots. The values on the x-axis denote the effect size (if permutations are incorporated enrichment over background, otherwise the mean difference between the two conditions), with higher values indicating a higher differential TF activity between the two conditions. TFs that are similarly active between the two conditions are close to 0, while TFs more active in either condition are located in the left and right part of the plot. The y-axis (radial position) denotes the statistical significance (adjusted p-values). The significance threshold is indicated as red circular line. TFs that pass the significance threshold are labeled and, if RNA-Seq data is integrated, colored according to their predicted role (see above).</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="file-comparisontype-diagnosticplots-pdf">
+<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.pdf</span></code><a class="headerlink" href="#file-comparisontype-diagnosticplots-pdf" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Various diagnostic plots for the final TF activity values</dd>
+<dt>Details</dt>
+<dd>If the number of permutations is larger than 0, the first three pages show various versions of the pemruted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation &gt; 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the <em>locfdr</em> package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.</dd>
+</dl>
+</div>
 </div>
 </div>
 <div class="section" id="folder-peaks">
 <h2>FOLDER <code class="docutils literal"><span class="pre">PEAKS</span></code><a class="headerlink" href="#folder-peaks" title="Permalink to this headline">¶</a></h2>
 <p>Stores peak-associated files.</p>
-<ul class="simple">
-<li>if no consensus peak file was provided (<a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>):<ul>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.bed</span></code> and <code class="docutils literal"><span class="pre">consensusPeaks_lengthDistribution.pdf</span></code>: generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.filtered.sorted.bed</span></code>: Produced in rule <code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>. Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn*, *random*, *hap|_gl*</li>
-</ul>
-</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.allBams.peaks.overlaps.bed</span></code>: Produced in rule <code class="docutils literal"><span class="pre">intersectPeaksAndBAM</span></code>. Counts for each consensus peak with each of the input BAM files</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.sampleMetadata.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.peaks.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores all peaks that will be used in the analysis.</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.peaks.tsv</span></code>: Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores the DESEq2 results of the differential accessibility analysis for the peaks.</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.normFacs.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Gene-specific normalization factors for each sample and peak. This file is produces after the differential accessibility analysis for the peaks. The normalization factors will be used for the TF-specific differential accessibility analysis.</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code> and <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf</span></code> for each permutation <code class="docutils literal"><span class="pre">{perm}</span></code>: Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Various diagnostic plots for the differential accessibility peak analysis for the real and permuted data, respectively:<ol class="arabic">
+<div class="section" id="files-comparisontype-consensuspeaks-bed-and-consensuspeaks-lengthdistribution-pdf">
+<h3>FILES <code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.bed</span></code> and <code class="docutils literal"><span class="pre">consensusPeaks_lengthDistribution.pdf</span></code><a class="headerlink" href="#files-comparisontype-consensuspeaks-bed-and-consensuspeaks-lengthdistribution-pdf" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Only present if no consensus peak file was provided (<a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>). Produced in rule <code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>. Generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks.</dd>
+<dt>Details</dt>
+<dd>Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn*, *random*, *hap|_gl*</dd>
+</dl>
+</div>
+<div class="section" id="file-comparisontype-allbams-peaks-overlaps-bed">
+<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.allBams.peaks.overlaps.bed</span></code><a class="headerlink" href="#file-comparisontype-allbams-peaks-overlaps-bed" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">intersectPeaksAndBAM</span></code>. Counts for each consensus peak with each of the input BAM files.</dd>
+</dl>
+<p>Details</p>
+</div>
+<div class="section" id="file-comparisontype-samplemetadata-rds">
+<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.sampleMetadata.rds</span></code><a class="headerlink" href="#file-comparisontype-samplemetadata-rds" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.</dd>
+</dl>
+<p>Details</p>
+</div>
+<div class="section" id="file-comparisontype-peaks-rds">
+<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.rds</span></code><a class="headerlink" href="#file-comparisontype-peaks-rds" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores all peaks that will be used in the analysis.</dd>
+</dl>
+<p>Details</p>
+</div>
+<div class="section" id="file-comparisontype-peaks-tsv">
+<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.tsv</span></code><a class="headerlink" href="#file-comparisontype-peaks-tsv" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores the <em>DESeq2</em> results of the differential accessibility analysis for the peaks.</dd>
+</dl>
+<p>Details</p>
+</div>
+<div class="section" id="file-comparisontype-normfacs-rds">
+<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.normFacs.rds</span></code><a class="headerlink" href="#file-comparisontype-normfacs-rds" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Gene-specific normalization factors for each sample and peak.</dd>
+<dt>Details</dt>
+<dd>This file is produces after the differential accessibility analysis for the peaks. The normalization factors will be used for the TF-specific differential accessibility analysis.</dd>
+</dl>
+</div>
+<div class="section" id="files-comparisontype-diagnosticplots-peaks-pdf-and-comparisontype-diagnosticplots-peaks-permutation-perm-pdf-for-each-permutation-perm">
+<h3>FILES <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code> and <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf</span></code> for each permutation <code class="docutils literal"><span class="pre">{perm}</span></code><a class="headerlink" href="#files-comparisontype-diagnosticplots-peaks-pdf-and-comparisontype-diagnosticplots-peaks-permutation-perm-pdf-for-each-permutation-perm" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Various diagnostic plots for the differential accessibility peak analysis for the real and permuted data, respectively</dd>
+<dt>Details</dt>
+<dd><p class="first">The pages are as follows:</p>
+<ol class="last arabic simple">
 <li>MA plots</li>
 <li>density plots of normalized and non-normalized counts</li>
 <li>mean-average plots (average of the log-transformed counts vs the fold-change per peak) for each of the sample pairs</li>
 <li>mean SD plots (row standard deviations versus row means)</li>
 </ol>
-</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.DESeq.object.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. The DESeq2 object from the differential accessibility peak analysis.</li>
-</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="file-comparisontype-deseq-object-rds">
+<h3>FILE <a href="#id18"><span class="problematic" id="id19">``</span></a>{comparisonType}.DESeq.object.rds`<a class="headerlink" href="#file-comparisontype-deseq-object-rds" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. The <em>DESeq2</em> object from the differential accessibility peak analysis.</dd>
+</dl>
+<p>Details</p>
+</div>
 </div>
 <div class="section" id="folder-tf-specific">
 <h2>FOLDER <code class="docutils literal"><span class="pre">TF-SPECIFIC</span></code><a class="headerlink" href="#folder-tf-specific" title="Permalink to this headline">¶</a></h2>
@@ -652,15 +771,15 @@ If RNA-Seq data is integrated, different combinations of categories are shown on
 <ul>
 <li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.gz</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.summary</span></code>: Overlap and featureCounts summary file of  read counts across all TFBS for all input BAM files.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv</span></code>: Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A summary table for the DeSeq2 analysis. See the file <code class="docutils literal"><span class="pre">{comparisonType}.allMotifs.tsv.gz</span></code> in the <code class="docutils literal"><span class="pre">FINAL_OUTPUT</span></code> folder for a column description.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv</span></code>: Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A summary table for the <em>DESeq2</em> analysis. See the file <code class="docutils literal"><span class="pre">{comparisonType}.allMotifs.tsv.gz</span></code> in the <code class="docutils literal"><span class="pre">FINAL_OUTPUT</span></code> folder for a column description.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summary.rds</span></code>:  Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A summary table for the log2 fold-changes across all TFBS DESeq2 results.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summary.rds</span></code>:  Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A summary table for the log2 fold-changes across all TFBS <em>DESeq2</em> results.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.diagnosticPlots.pdf</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.diagnosticPlots_permutation{perm}.pdf</span></code>: Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. Various diagnostic plots for the differential accessibility TFBS analysis for the real and permuted data, respectively. See the description of the file <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code> in the <code class="docutils literal"><span class="pre">PEAKS</span></code> folder, which has an identical structure.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summaryPlots.pdf</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf</span></code>: Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A PDF with a summary of the DESeq2 analysis for the real and permuted data, respectively: Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summaryPlots.pdf</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf</span></code>: Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A PDF with a summary of the <em>DESeq2</em> analysis for the real and permuted data, respectively: Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.DESeq.object.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. Original DESeq2 object.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.DESeq.object.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. Original <em>DESeq2</em> object.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">{TF}.{comparisonType}.permutationResults.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">binningTF</span></code>. contains a data frame that stores the results of bin-specific results.</p>
 </li>

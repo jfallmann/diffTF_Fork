@@ -105,7 +105,7 @@ PARAMETER ``designContrast``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default  "~ Treatment + conditionSummary". Design formula for the differential accessibility analysis in DESeq2.
+  String. Default  "~ Treatment + conditionSummary". Design formula for the differential accessibility analysis in *DESeq2*.
 
 Details
   This important parameter defines the actual contrast that is done in the differential analysis. That is, which groups of samples are being compared? Examples include mutant vs wildtype, mutated vs. unmutated, etc. The last element in the formula must always be “conditionSummary”, which defines the two groups that are being compared. This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified.
@@ -362,6 +362,9 @@ Most files have one of the following file formats:
 FOLDER ``FINAL_OUTPUT``
 =============================================
 
+In this folder, the final output files are stored. Most users want to examine the files in here for further analysis.
+
+
 Subfolder ``extension{regionExtension}``
 ----------------------------------------
 
@@ -369,16 +372,27 @@ Stores results related to the user-specified extension size (:ref:`parameter_reg
 
 .. note:: Note that in all output files, in the column ``permutation``, 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
 
-- ``{comparisonType}.allMotifs.tsv.gz``: Summary table for each TFBS with the columns as follows:
+FILE ``{comparisonType}.allMotifs.tsv.gz``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  Summary table for each TFBS
+
+Details
+  Columns are as follows:
 
   - *permutation*: The number of the permutaton.
-  - *TF: name of the TF
-  - *chr, *MSS*, *MES*, *strand*, *TFBSID*: Genomic location and identifier of the (extended) TFBS
-  - *PSS, *PES*, *peakID*:  Genomic location and annotation of the overlapping peak region
-  - *baseMean*, *log2FoldChange*, *lfcSE*, *stat*, *pvalue*, *padj*: Results from the DESeq2 analysis. See the `DESeq2 documentation <https://www.bioconductor.org/help/course-materials/2015/LearnBioconductorFeb2015/B02.1.1_RNASeqLab.html>`_ for details.
+  - *TF*: name of the TF
+  - *chr*, *MSS*, *MES*, *strand*, *TFBSID*: Genomic location and identifier of the (extended) TFBS
+  - *PSS*, *PES*, *peakID*:  Genomic location and annotation of the overlapping peak region
+  - *baseMean*, *log2FoldChange*, *lfcSE*, *stat*, *pvalue*, *padj*: Results from the *DESeq2* analysis. See the `DESeq2 documentation <https://www.bioconductor.org/help/course-materials/2015/LearnBioconductorFeb2015/B02.1.1_RNASeqLab.html>`_ for details.
 
-- ``{comparisonType}.TF_vs_peak_distribution.tsv``: TODO. The columns are as follows:
+FILE ``{comparisonType}.TF_vs_peak_distribution.tsv``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  TODO
 
+Details
+  Columns are as follows:
   - *TF*: name of the TF
   - *permutation*: The number of the permutation.
   - *Pos_l2F*C, *Mean_l2FC*, *Median_l2FC*, *sd_l2FC*, *Mode_l2FC*, *skewness_l2FC*: fraction of positive values, mean, median, standard deviation, mode value and Bickel's measure of skewness of the log2 fold change distribution across all TFBS
@@ -387,7 +401,13 @@ Stores results related to the user-specified extension size (:ref:`parameter_reg
   - *TFBS_num*: number of TFBS
   - *Diff_mean*, *Diff_median*, *Diff_mode*, *Diff_skew*: Difference of the mean, median, mode, and skewness between the log2 fold-change distribution across all TFBS and the peaks, respectively
 
-- ``{comparisonType}.summary.tsv``: The final summary table that is also used for the final circular visualization (see below). The columns are as follows:
+FILE ``{comparisonType}.summary.tsv``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  The final summary table that is also used for the final circular visualization
+
+Details
+  The columns are as follows:
 
   - *TF*: name of the TF
   - *permutation*: The number of the permutation.
@@ -404,44 +424,127 @@ Stores results related to the user-specified extension size (:ref:`parameter_reg
   - *classification*: RNA-Seq classification (either activator, undetermined, repressor or not-expressed)
   - *Cohend_factor*	, *weighted_CD*, *weighted_median*, *weighted_sd*: Not used.
 
-- ``{comparisonType}.summary.circular.pdf``: The final visualization of the diffTF results. The PDF contains multiple pages, the structure of which varies depending on the parameters:
-Number of permutations > 0
-RNA-Seq integration
-Pages 1-15: Visualization of the results including the permutations
-Pages 16-30: Visualization of the results excluding the permutations
-Within each of these two categories, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)
-No RNA-Seq integration:
-Pages 1-5: Visualization of the results including the permutations for different FDR thresholds
-Pages 6-10: Visualization of the results excluding the permutations for different FDR thresholds
-Within each of these two categories, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)
-Number of permutations = 0
-RNA-Seq integration: Pages 1-15 show the results in a format as described below for varying combinations of FDR threshold and RNA-Seq categories
-No RNA-Seq integration: Pages 1-5 show the results for different FDR thresholds
-If RNA-Seq data is integrated, different combinations of categories are shown on each page (1:activator-undetermined-repressor-not-expressed, 2:activator-undetermined-repressor, 3:activator-repressor), which along with different FDR thresholds gives rise to multiple individual plots. The values on the x-axis denote the effect size (if permutations are incorporated enrichment over background, otherwise the mean difference between the two conditions), with higher values indicating a higher differential TF activity between the two conditions. TFs that are similarly active between the two conditions are close to 0, while TFs more active in either condition are located in the left and right part of the plot. The y-axis (radial position) denotes the statistical significance (adjusted p-values). The significance threshold is indicated as red circular line. TFs that pass the significance threshold are labeled and, if RNA-Seq data is integrated, colored according to their predicted role (see above).
-{comparisonType}.diagnosticPlots.pdf: Various diagnostic plots for the final TF activity values. If the number of permutations is larger than 0, the first three pages show various versions of the pemruted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation > 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the locfdr package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.
+FILE ``{comparisonType}.summary.circular.pdf``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  The final visualization of the diffTF results
+
+Details
+  The PDF contains multiple pages, the structure of which varies depending on the parameters:
+
+  - Number of permutations > 0
+
+    - RNA-Seq integration: Within each of the two following sections, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)
+
+      - Pages 1-15: Visualization of the results including the permutations
+      - Pages 16-30: Visualization of the results excluding the permutations
+
+    - No RNA-Seq integration: Within each of the two following section, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)
+
+      - Pages 1-5: Visualization of the results including the permutations for different FDR thresholds
+      - Pages 6-10: Visualization of the results excluding the permutations for different FDR thresholds
+
+  - Number of permutations = 0
+
+    - RNA-Seq integration: Pages 1-15 show the results in a format as described below for varying combinations of FDR threshold and RNA-Seq categories
+    - No RNA-Seq integration: Pages 1-5 show the results for different FDR thresholds
+
+  - If RNA-Seq data is integrated, different combinations of categories are shown on each page (1: activator-undetermined-repressor-not-expressed, 2: activator-undetermined-repressor, 3: activator-repressor), which along with different FDR thresholds gives rise to multiple individual plots. The values on the x-axis denote the effect size (if permutations are incorporated enrichment over background, otherwise the mean difference between the two conditions), with higher values indicating a higher differential TF activity between the two conditions. TFs that are similarly active between the two conditions are close to 0, while TFs more active in either condition are located in the left and right part of the plot. The y-axis (radial position) denotes the statistical significance (adjusted p-values). The significance threshold is indicated as red circular line. TFs that pass the significance threshold are labeled and, if RNA-Seq data is integrated, colored according to their predicted role (see above).
+
+
+FILE ``{comparisonType}.diagnosticPlots.pdf``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  Various diagnostic plots for the final TF activity values
+
+Details
+  If the number of permutations is larger than 0, the first three pages show various versions of the pemruted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation > 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the *locfdr* package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.
 
 FOLDER ``PEAKS``
 =============================================
 
 Stores peak-associated files.
 
-- if no consensus peak file was provided (:ref:`parameter_consensusPeaks`):
 
-  - ``{comparisonType}.consensusPeaks.bed`` and ``consensusPeaks_lengthDistribution.pdf``: generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks
-  - ``{comparisonType}.consensusPeaks.filtered.sorted.bed``: Produced in rule ``filterSexChromosomesAndSortPeaks``. Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn\*, \*random*, \*hap|_gl\*
-- ``{comparisonType}.allBams.peaks.overlaps.bed``: Produced in rule ``intersectPeaksAndBAM``. Counts for each consensus peak with each of the input BAM files
-- ``{comparisonType}.sampleMetadata.rds``: Produced in rule ``DESeqPeaks``. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.
-- ``{comparisonType}.peaks.rds``: Produced in rule ``DESeqPeaks``. Stores all peaks that will be used in the analysis.
-- ``{comparisonType}.peaks.tsv``: Produced in rule ``DESeqPeaks``. Stores the DESEq2 results of the differential accessibility analysis for the peaks.
-- ``{comparisonType}.normFacs.rds``: Produced in rule ``DESeqPeaks``. Gene-specific normalization factors for each sample and peak. This file is produces after the differential accessibility analysis for the peaks. The normalization factors will be used for the TF-specific differential accessibility analysis.
-- ``{comparisonType}.diagnosticPlots.peaks.pdf`` and ``{comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf`` for each permutation ``{perm}``: Produced in rule ``DESeqPeaks``. Various diagnostic plots for the differential accessibility peak analysis for the real and permuted data, respectively:
+FILES ``{comparisonType}.consensusPeaks.bed`` and ``consensusPeaks_lengthDistribution.pdf``
+--------------------------------------------
+
+Summary
+  Only present if no consensus peak file was provided (:ref:`parameter_consensusPeaks`). Produced in rule ``filterSexChromosomesAndSortPeaks``. Generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks.
+
+Details
+  Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn\*, \*random*, \*hap|_gl\*
+
+
+FILE ``{comparisonType}.allBams.peaks.overlaps.bed``
+--------------------------------------------
+
+Summary
+  Produced in rule ``intersectPeaksAndBAM``. Counts for each consensus peak with each of the input BAM files.
+
+Details
+
+
+FILE ``{comparisonType}.sampleMetadata.rds``
+--------------------------------------------
+
+Summary
+  Produced in rule ``DESeqPeaks``. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.
+
+Details
+
+
+
+FILE ``{comparisonType}.peaks.rds``
+--------------------------------------------
+
+Summary
+  Produced in rule ``DESeqPeaks``. Stores all peaks that will be used in the analysis.
+
+Details
+
+
+FILE ``{comparisonType}.peaks.tsv``
+--------------------------------------------
+
+Summary
+  Produced in rule ``DESeqPeaks``. Stores the *DESeq2* results of the differential accessibility analysis for the peaks.
+
+Details
+  
+
+FILE ``{comparisonType}.normFacs.rds``
+--------------------------------------------
+
+Summary
+  Produced in rule ``DESeqPeaks``. Gene-specific normalization factors for each sample and peak.
+
+Details
+  This file is produces after the differential accessibility analysis for the peaks. The normalization factors will be used for the TF-specific differential accessibility analysis.
+
+
+FILES ``{comparisonType}.diagnosticPlots.peaks.pdf`` and ``{comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf`` for each permutation ``{perm}``
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Summary
+  Produced in rule ``DESeqPeaks``. Various diagnostic plots for the differential accessibility peak analysis for the real and permuted data, respectively
+
+Details
+  The pages are as follows:
 
   (1) MA plots
   (2) density plots of normalized and non-normalized counts
   (3) mean-average plots (average of the log-transformed counts vs the fold-change per peak) for each of the sample pairs
   (4) mean SD plots (row standard deviations versus row means)
 
-- ``{comparisonType}.DESeq.object.rds``: Produced in rule ``DESeqPeaks``. The DESeq2 object from the differential accessibility peak analysis.
+
+FILE ``{comparisonType}.DESeq.object.rds`
+--------------------------------------------
+
+Summary
+  Produced in rule ``DESeqPeaks``. The *DESeq2* object from the differential accessibility peak analysis.
+
+Details
+
 
 FOLDER ``TF-SPECIFIC``
 =============================================
@@ -452,11 +555,11 @@ Subfolder ``extension{regionExtension}``
 ----------------------------------------
 
 - ``{TF}.{comparisonType}.allBAMs.overlaps.bed.gz`` and ``{TF}.{comparisonType}.allBAMs.overlaps.bed.summary``: Overlap and featureCounts summary file of  read counts across all TFBS for all input BAM files.
-- ``{TF}.{comparisonType}.output.tsv``: Produced in rule ``analyzeTF``. A summary table for the DeSeq2 analysis. See the file ``{comparisonType}.allMotifs.tsv.gz`` in the ``FINAL_OUTPUT`` folder for a column description.
-- ``{TF}.{comparisonType}.summary.rds``:  Produced in rule ``analyzeTF``. A summary table for the log2 fold-changes across all TFBS DESeq2 results.
+- ``{TF}.{comparisonType}.output.tsv``: Produced in rule ``analyzeTF``. A summary table for the *DESeq2* analysis. See the file ``{comparisonType}.allMotifs.tsv.gz`` in the ``FINAL_OUTPUT`` folder for a column description.
+- ``{TF}.{comparisonType}.summary.rds``:  Produced in rule ``analyzeTF``. A summary table for the log2 fold-changes across all TFBS *DESeq2* results.
 - ``{TF}.{comparisonType}.diagnosticPlots.pdf`` and ``{TF}.{comparisonType}.diagnosticPlots_permutation{perm}.pdf``: Produced in rule ``analyzeTF``. Various diagnostic plots for the differential accessibility TFBS analysis for the real and permuted data, respectively. See the description of the file ``{comparisonType}.diagnosticPlots.peaks.pdf`` in the ``PEAKS`` folder, which has an identical structure.
-- ``{TF}.{comparisonType}.summaryPlots.pdf`` and ``{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf``: Produced in rule ``analyzeTF``. A PDF with a summary of the DESeq2 analysis for the real and permuted data, respectively: Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.
-- ``{TF}.{comparisonType}.DESeq.object.rds``: Produced in rule ``analyzeTF``. Original DESeq2 object.
+- ``{TF}.{comparisonType}.summaryPlots.pdf`` and ``{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf``: Produced in rule ``analyzeTF``. A PDF with a summary of the *DESeq2* analysis for the real and permuted data, respectively: Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.
+- ``{TF}.{comparisonType}.DESeq.object.rds``: Produced in rule ``analyzeTF``. Original *DESeq2* object.
 - ``{TF}.{comparisonType}.permutationResults.rds``: Produced in rule ``binningTF``. contains a data frame that stores the results of bin-specific results.
 - ``{TF}.{comparisonType}.permutationSummary.tsv``: Produced in rule ``binningTF``. A final summary table that summarizes the results across bins by calculating weighted means. The data of this table are used for the final visualization.
 - ``{TF}.{comparisonType}.covarianceResults.rds``: Produced in rule ``binningTF``. Contains a data frame that stores the results of the pairwise bin covariances and the bin-specific weights.
