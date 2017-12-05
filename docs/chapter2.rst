@@ -136,7 +136,7 @@ Summary
 Details
   If set to a value > 0, in addition to the real and non-permuted data, the sample conditions as specified in the sample table will be randomly permuted nPermutations times. Specifically, for the condition with fewer samples, 50% will be randomly chosen and switched with the same number of samples from the other condition. This procedure maximizes randomized conditions.
 
-  .. note:: Note that the running time of the pipeline will be increased when using permutations because parts of the pipeline are run for each permutation.
+  .. note:: The running time of the pipeline will be increased when using permutations because parts of the pipeline are run for each permutation.
 
 .. _parameter_TFs:
 
@@ -150,7 +150,7 @@ Summary
 Details
   If the analysis should be restricted to a subset of TFs, list the names of the TF to include in a comma-separated manner here.
 
-  .. note:: Note that for each TF ``{TF}``, a corresponding file ``{TF}_TFBS.bed`` needs to be present in the directory ``dir_TFBS``.
+  .. note:: For each TF ``{TF}``, a corresponding file ``{TF}_TFBS.bed`` needs to be present in the directory ``dir_TFBS``.
 
   .. warning:: We strongly recommending running diffTF with as many TF as possible due to our statistical model that we use that compares against a background model.
 
@@ -175,7 +175,7 @@ Summary
 Details
   If set to true, RNA-Seq counts as specified in the :ref:`parameter_RNASeqCounts` will be used to classify each TF into either “activator”, “repressor”, “unknown”, or “not-expressed” for the final circular visualization and the summary table.
 
-  .. note:: Note that RNA-Seq integration is only included in the very last step of the pipeline, so it can also be easily integrated later.
+  .. note::RNA-Seq integration is only included in the very last step of the pipeline, so it can also be easily integrated later.
 
 
 SECTION ``samples``
@@ -268,7 +268,7 @@ Summary
 Details
   You need write access to the directory in which the fasta file is stored, make sure this is the case or copy the fasta file to a different directory. The reason is that the pipeline produces a fasta index file, which is put in the same directory as the corresponding fasta file. This is a limitation of samtools faidx and not our pipeline.
 
-  .. note:: Note that this file has to be in concordance with the input data; that is, the exact same genome assembly version must be used. In the first step of the pipeline, this is checked explicitly, and any mismatches will result in an error.
+  .. note:: This file has to be in concordance with the input data; that is, the exact same genome assembly version must be used. In the first step of the pipeline, this is checked explicitly, and any mismatches will result in an error.
 
 .. _parameter_dir_TFBS:
 
@@ -349,7 +349,9 @@ This file summarizes the data and corresponding available metadata  that should 
 Output
 ************************************************************
 
-The pipeline produces quite a large number of output files, only some of which are however relevant for the regular user. In the following, the directory structure and the files are briefly outlined. As some directory or file names depend on specific parameters in the configuration file, curly brackets will be used to denote that the filename depends on a particular parameter or name. For example, ``{comparisonType}`` and ``{regionExtension}`` refer to the :ref:`parameter_comparisonType` and :ref:`parameter_regionExtension` as specified in the configuration file.
+The pipeline produces quite a large number of output files, only some of which are however relevant for the regular user.
+
+.. note:: In the following, the directory structure and the files are briefly outlined. As some directory or file names depend on specific parameters in the configuration file, curly brackets will be used to denote that the filename depends on a particular parameter or name. For example, ``{comparisonType}`` and ``{regionExtension}`` refer to the :ref:`parameter_comparisonType` and :ref:`parameter_regionExtension` as specified in the configuration file.
 
 Most files have one of the following file formats:
 
@@ -370,7 +372,7 @@ Subfolder ``extension{regionExtension}``
 
 Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
 
-.. note:: Note that in all output files, in the column ``permutation``, 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
+.. note:: In all output files, in the column ``permutation``, 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
 
 FILE ``{comparisonType}.allMotifs.tsv.gz``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -467,7 +469,7 @@ Stores peak-associated files.
 
 
 FILES ``{comparisonType}.consensusPeaks.bed`` and ``consensusPeaks_lengthDistribution.pdf``
---------------------------------------------
+----------------------------------------------------------------------------------------------
 
 Summary
   Only present if no consensus peak file was provided (:ref:`parameter_consensusPeaks`). Produced in rule ``filterSexChromosomesAndSortPeaks``. Generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks.
@@ -477,7 +479,7 @@ Details
 
 
 FILE ``{comparisonType}.allBams.peaks.overlaps.bed``
---------------------------------------------
+----------------------------------------------------
 
 Summary
   Produced in rule ``intersectPeaksAndBAM``. Counts for each consensus peak with each of the input BAM files.
@@ -537,7 +539,7 @@ Details
   (4) mean SD plots (row standard deviations versus row means)
 
 
-FILE ``{comparisonType}.DESeq.object.rds`
+FILE ``{comparisonType}.DESeq.object.rds``
 --------------------------------------------
 
 Summary
@@ -554,17 +556,93 @@ Stores TF-specific files. For each TF ``{TF}``, a separate subfolder ``{TF}`` is
 Subfolder ``extension{regionExtension}``
 ----------------------------------------
 
-- ``{TF}.{comparisonType}.allBAMs.overlaps.bed.gz`` and ``{TF}.{comparisonType}.allBAMs.overlaps.bed.summary``: Overlap and featureCounts summary file of  read counts across all TFBS for all input BAM files.
-- ``{TF}.{comparisonType}.output.tsv``: Produced in rule ``analyzeTF``. A summary table for the *DESeq2* analysis. See the file ``{comparisonType}.allMotifs.tsv.gz`` in the ``FINAL_OUTPUT`` folder for a column description.
-- ``{TF}.{comparisonType}.summary.rds``:  Produced in rule ``analyzeTF``. A summary table for the log2 fold-changes across all TFBS *DESeq2* results.
-- ``{TF}.{comparisonType}.diagnosticPlots.pdf`` and ``{TF}.{comparisonType}.diagnosticPlots_permutation{perm}.pdf``: Produced in rule ``analyzeTF``. Various diagnostic plots for the differential accessibility TFBS analysis for the real and permuted data, respectively. See the description of the file ``{comparisonType}.diagnosticPlots.peaks.pdf`` in the ``PEAKS`` folder, which has an identical structure.
-- ``{TF}.{comparisonType}.summaryPlots.pdf`` and ``{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf``: Produced in rule ``analyzeTF``. A PDF with a summary of the *DESeq2* analysis for the real and permuted data, respectively: Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.
-- ``{TF}.{comparisonType}.DESeq.object.rds``: Produced in rule ``analyzeTF``. Original *DESeq2* object.
-- ``{TF}.{comparisonType}.permutationResults.rds``: Produced in rule ``binningTF``. contains a data frame that stores the results of bin-specific results.
-- ``{TF}.{comparisonType}.permutationSummary.tsv``: Produced in rule ``binningTF``. A final summary table that summarizes the results across bins by calculating weighted means. The data of this table are used for the final visualization.
-- ``{TF}.{comparisonType}.covarianceResults.rds``: Produced in rule ``binningTF``. Contains a data frame that stores the results of the pairwise bin covariances and the bin-specific weights.
+FILES ``{TF}.{comparisonType}.allBAMs.overlaps.bed.gz`` and ``{TF}.{comparisonType}.allBAMs.overlaps.bed.summary``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  .. note:: Note that covariances are only computed for the real data but not the permuted ones.
+Summary
+  Overlap and featureCounts summary file of read counts across all TFBS for all input BAM files.
+
+Details
+  No details provided yet.
+
+
+FILE ``{TF}.{comparisonType}.output.tsv``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Produced in rule ``analyzeTF``. A summary table for the *DESeq2* analysis.
+
+Details
+  See the file ``{comparisonType}.allMotifs.tsv.gz`` in the ``FINAL_OUTPUT`` folder for a column description.
+
+
+FILE ``{TF}.{comparisonType}.summary.rds``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+   Produced in rule ``analyzeTF``. A summary table for the log2 fold-changes across all TFBS *DESeq2* results.
+
+Details
+  No details provided yet.
+
+
+FILES ``{TF}.{comparisonType}.diagnosticPlots.pdf`` and ``{TF}.{comparisonType}.diagnosticPlots_permutation{perm}.pdf``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Produced in rule ``analyzeTF``. Various diagnostic plots for the differential accessibility TFBS analysis for the real and permuted data, respectively.
+
+Details
+  See the description of the file ``{comparisonType}.diagnosticPlots.peaks.pdf`` in the ``PEAKS`` folder, which has an identical structure.
+
+
+FILES ``{TF}.{comparisonType}.summaryPlots.pdf`` and ``{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Produced in rule ``analyzeTF``. A PDF with a summary of the *DESeq2* analysis for the real and permuted data, respectively.
+
+Details
+  Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.
+
+
+FILE ``{TF}.{comparisonType}.DESeq.object.rds``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Produced in rule ``analyzeTF``. Original *DESeq2* object.
+
+Details
+  No details provided yet.
+
+FILE ``{TF}.{comparisonType}.permutationResults.rds``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Produced in rule ``binningTF``. Contains a data frame that stores the results of bin-specific results.
+
+Details
+  No details provided yet.
+
+FILE ``{TF}.{comparisonType}.permutationSummary.tsv``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Produced in rule ``binningTF``. A final summary table that summarizes the results across bins by calculating weighted means.
+
+Details
+  The data of this table are used for the final visualization.
+
+
+FILE ``{TF}.{comparisonType}.covarianceResults.rds``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Produced in rule ``binningTF``. Contains a data frame that stores the results of the pairwise bin covariances and the bin-specific weights.
+
+Details
+  .. note:: Covariances are only computed for the real data but not the permuted ones.
+
 
 FOLDER ``LOGS_AND_BENCHMARKS``
 =============================================
@@ -589,7 +667,7 @@ Stores various log and error files.
 FOLDER ``TEMP``
 =============================================
 
-Stores temporary and intermediate files.
+Stores temporary and intermediate files. Since they are usually not relevant for the user, they are explained only very briefly here.
 
 Subfolder ``SortedBAM``
 ------------------------------
@@ -651,7 +729,7 @@ Errors occur during the Snakemake run can principally be divided into:
 - Temporary errors (often when running in a cluster setting)
 
   * might occur due to temporary problems such as bad nodes, file system issues or latencies
-  * rerunning usually fixes the problem already. Consider using the option –restart-times.
+  * rerunning usually fixes the problem already. Consider using the option ``--restart-times`` in Snakemake.
 
 - Permanent errors
 
@@ -663,8 +741,8 @@ Identify the cause
 
 To troubleshoot errors, you have to first locate the exact error. Depending on how you run Snakemake (i.e., in a cluster setting or not), check the following places:
 
-- in locale mode: the Snakemake output on the console
-- in cluster mode: either error, output or log file of the corresponding rule that threw the error
+- in locale mode: the Snakemake output on the console. Errors from R script should also be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory.
+- in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identifyx the rule name that caused the error and search for files that contain the rule name in it
 
 Fixing the error
 ==============================
