@@ -349,56 +349,62 @@ This file summarizes the data and corresponding available metadata  that should 
 Output
 ************************************************************
 
+The pipeline produces quite a large number of output files, only some of which are however relevant for the regular user. In the following, the directory structure and the files are briefly outlined. As some directory or file names depend on specific parameters in the configuration file, curly brackets will be used to denote that the filename depends on a particular parameter or name. For example, ``{comparisonType}`` and ``{regionExtension}`` refer to the :ref:`parameter_comparisonType` and :ref:`parameter_regionExtension` as specified in the configuration file.
 
-The pipeline produces quite a large number of output files, only some of which are however relevant for the regular user. In the following, the directory structure and the files are briefly outlined. As some directory or file names depend on specific parameters in the configuration file, curly brackets will be used to denote that the filename depends on a particular parameter or name. For example, {comparisonType} and {regionExtension} refer to the parameters comparisonType and regionExtension as specified in the configuration file.
 Most files have one of the following file formats:
-.bed.gz (gzipped bed file)
-.tsv (tab-separated value, text file with tab as column separators)
-.rds (binary R format, read into with the function readRDS)
-.pdf (PDF format)
-.log (text format)
 
-4.5.1 Folder FINAL_OUTPUT
-extension{regionExtension}: Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
-{comparisonType}.allMotifs.tsv.gz: Summary table for each TFBS with the columns  as follows:
-permutation: The number of the permutaton.
+- .bed.gz (gzipped bed file)
+- .tsv (tab-separated value, text file with tab as column separators)
+- .rds (binary R format, read into with the function ``readRDS``)
+- .pdf (PDF format)
+- .log (text format)
 
-.. note:: Note that 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
+FOLDER ``FINAL_OUTPUT``
+=============================================
 
-TF: name of the TF
-chr, MSS, MES, strand, TFBSID  : Genomic location and identifier of the (extended) TFBS
-PSS, PES, peakID:  Genomic location and annotation of the overlapping peak region
-baseMean, log2FoldChange , lfcSE, stat, pvalue, padj: Results from the DESeq2 analysis. See the `DESeq2 documentation <https://www.bioconductor.org/help/course-materials/2015/LearnBioconductorFeb2015/B02.1.1_RNASeqLab.html>`_ for details.
-{comparisonType}.TF_vs_peak_distribution.tsv: . The columns are as follows:
-TF: name of the TF
-permutation: The number of the permutation.
+Subfolder ``extension{regionExtension}``
+----------------------------------------
 
-.. note:: Note that 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
+Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
 
-Pos_l2FC, Mean_l2FC, Median_l2FC, sd_l2FC, Mode_l2FC, skewness_l2FC: fraction of positive values, mean, median, standard deviation, mode value and Bickel's measure of skewness of the log2 fold change distribution across all TFBS
-pvalue_raw and pvalue_adj: raw and adjusted (fdr) p-value of the  t-test
-T_statistic: the value of the T statistic from the t-test
-TFBS_num: number of TFBS
-Diff_mean, Diff_median, Diff_mode, Diff_skew: Difference of the mean, median, mode, and skewness between the log2 fold-change distribution across all TFBS and the peaks, respectively
-{comparisonType}.summary.tsv: The final summary table that is also used for the final circular visualization (see below). The columns are as follows:
-TF: name of the TF
-permutation: The number of the permutation.
+.. note:: Note that in all output files, in the column ``permutation``, 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
 
-.. note:: Note that 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
+- ``{comparisonType}.allMotifs.tsv.gz``: Summary table for each TFBS with the columns as follows:
 
-weighted_meanDifference: the weighted mean difference of the real and background distribution across all CG bins. This value is the basis for the final calculation of the x-axis position for the circular plot. Without permutations, this value is shown, while for permutations, the weighted_meanDifference_enrichment is used.
-weighted_Tstat: the weighted value of the T statistic across all CG bins.
-TFBS: The number of TF binding sites that overlap with the peaks
-variance: Estimated variance for the weighted_Tstat estimate that is incorporated to calculate the p-value
-weighted_meanDifference_enrichment: If permutations are used, the enrichment over the background is calculated based on the weighted_meanDifference values for the real and permuted data, respectively. Specifically, by default, the minimum and maximum of the permuted weighted_meanDifference values is taken as permutation thresholds, and the real weighted_meanDifference values are then divided by these thresholds to calculate an enrichment.
-weighted_Tstat_centralized: a centralized version of the weighted_Tstat values that is used to calculate raw p-values while including the variance also. If possible, the MLE estimate of the distribution median is used for centralization.
-pvalue: raw p-values
-pvalueAdj: adjusted p-values (FDR, Benjamini & Hochberg (1995) correction)
-yValue: the y-value for the plotting
-median.cor.tfs: the median correlation, related to the RNA-Seq classification
-classification: RNA-Seq classification (either activator, undetermined, repressor or not-expressed)
-Cohend_factor	, weighted_CD, weighted_median, weighted_sd: Not used.
-{comparisonType}.summary.circular.pdf: The final visualization of the diffTF results. The PDF contains multiple pages, The PDF contains multiple pages, the structure of which varies depending on the parameters:
+  - *permutation*: The number of the permutaton.
+  - *TF: name of the TF
+  - *chr, *MSS*, *MES*, *strand*, *TFBSID*: Genomic location and identifier of the (extended) TFBS
+  - *PSS, *PES*, *peakID*:  Genomic location and annotation of the overlapping peak region
+  - *baseMean*, *log2FoldChange*, *lfcSE*, *stat*, *pvalue*, *padj*: Results from the DESeq2 analysis. See the `DESeq2 documentation <https://www.bioconductor.org/help/course-materials/2015/LearnBioconductorFeb2015/B02.1.1_RNASeqLab.html>`_ for details.
+
+- ``{comparisonType}.TF_vs_peak_distribution.tsv``: TODO. The columns are as follows:
+
+  - *TF*: name of the TF
+  - *permutation*: The number of the permutation.
+  - *Pos_l2F*C, *Mean_l2FC*, *Median_l2FC*, *sd_l2FC*, *Mode_l2FC*, *skewness_l2FC*: fraction of positive values, mean, median, standard deviation, mode value and Bickel's measure of skewness of the log2 fold change distribution across all TFBS
+  - *pvalue_raw* and *pvalue_adj*: raw and adjusted (fdr) p-value of the  t-test
+  - *T_statistic*: the value of the T statistic from the t-test
+  - *TFBS_num*: number of TFBS
+  - *Diff_mean*, *Diff_median*, *Diff_mode*, *Diff_skew*: Difference of the mean, median, mode, and skewness between the log2 fold-change distribution across all TFBS and the peaks, respectively
+
+- ``{comparisonType}.summary.tsv``: The final summary table that is also used for the final circular visualization (see below). The columns are as follows:
+
+  - *TF*: name of the TF
+  - *permutation*: The number of the permutation.
+  - *weighted_meanDifference*: the weighted mean difference of the real and background distribution across all CG bins. This value is the basis for the final calculation of the x-axis position for the circular plot. Without permutations, this value is shown, while for permutations, the weighted_meanDifference_enrichment is used.
+  - *weighted_Tstat*: the weighted value of the T statistic across all CG bins.
+  - *TFBS*: The number of TF binding sites that overlap with the peaks
+  - *variance*: Estimated variance for the weighted_Tstat estimate that is incorporated to calculate the p-value
+  - *weighted_meanDifference_enrichment*: If permutations are used, the enrichment over the background is calculated based on the weighted_meanDifference values for the real and permuted data, respectively. Specifically, by default, the minimum and maximum of the permuted weighted_meanDifference values is taken as permutation thresholds, and the real weighted_meanDifference values are then divided by these thresholds to calculate an enrichment.
+  - *weighted_Tstat_centralized*: a centralized version of the weighted_Tstat values that is used to calculate raw p-values while including the variance also. If possible, the MLE estimate of the distribution median is used for centralization.
+  - *pvalue*: raw p-values
+  - *pvalueAdj*: adjusted p-values (FDR, Benjamini & Hochberg (1995) correction)
+  - *yValue*: the y-value for the plotting
+  - *median.cor.tfs*: the median correlation, related to the RNA-Seq classification
+  - *classification*: RNA-Seq classification (either activator, undetermined, repressor or not-expressed)
+  - *Cohend_factor*	, *weighted_CD*, *weighted_median*, *weighted_sd*: Not used.
+
+- ``{comparisonType}.summary.circular.pdf``: The final visualization of the diffTF results. The PDF contains multiple pages, the structure of which varies depending on the parameters:
 Number of permutations > 0
 RNA-Seq integration
 Pages 1-15: Visualization of the results including the permutations
@@ -414,63 +420,95 @@ No RNA-Seq integration: Pages 1-5 show the results for different FDR thresholds
 If RNA-Seq data is integrated, different combinations of categories are shown on each page (1:activator-undetermined-repressor-not-expressed, 2:activator-undetermined-repressor, 3:activator-repressor), which along with different FDR thresholds gives rise to multiple individual plots. The values on the x-axis denote the effect size (if permutations are incorporated enrichment over background, otherwise the mean difference between the two conditions), with higher values indicating a higher differential TF activity between the two conditions. TFs that are similarly active between the two conditions are close to 0, while TFs more active in either condition are located in the left and right part of the plot. The y-axis (radial position) denotes the statistical significance (adjusted p-values). The significance threshold is indicated as red circular line. TFs that pass the significance threshold are labeled and, if RNA-Seq data is integrated, colored according to their predicted role (see above).
 {comparisonType}.diagnosticPlots.pdf: Various diagnostic plots for the final TF activity values. If the number of permutations is larger than 0, the first three pages show various versions of the pemruted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation > 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the locfdr package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.
 
-4.5.2 Folder PEAKS
+FOLDER ``PEAKS``
+=============================================
+
 Stores peak-associated files.
-if no consensus peak file was provided (:ref:`parameter_consensusPeaks`):
-{comparisonType}.consensusPeaks.bed and consensusPeaks_lengthDistribution.pdf: generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks
-{comparisonType}.consensusPeaks.filtered.sorted.bed: Produced in rule filterSexChromosomesAndSortPeaks. Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn*, *random*, *hap|_gl*
-{comparisonType}.allBams.peaks.overlaps.bed: Produced in rule intersectPeaksAndBAM. Counts for each consensus peak with each of the input BAM files
-{comparisonType}.sampleMetadata.rds: Produced in rule DESeqPeaks. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.
-{comparisonType}.peaks.rds: Produced in rule DESeqPeaks. Stores all peaks that will be used in the analysis.
-{comparisonType}.peaks.tsv: Produced in rule DESeqPeaks. Stores the DESEq2 results of the differential accessibility analysis for the peaks.
-{comparisonType}.normFacs.rds: Produced in rule DESeqPeaks. Gene-specific normalization factors for each sample and peak. This file is produces after the differential accessibility analysis for the peaks. The normalization factors will be used for the TF-specific differential accessibility analysis.
-{comparisonType}.diagnosticPlots.peaks.pdf and {comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf for each permutation {perm}: Produced in rule DESeqPeaks. Various diagnostic plots for the differential accessibility peak analysis for the real and permuted data, respectively: (1) MA plots, (2) density plots of normalized and non-normalized counts, (3) mean-average plots (average of the log-transformed counts vs the fold-change per peak) for each of the sample pairs and (4) mean SD plots (row standard deviations versus row means)
-{comparisonType}.DESeq.object.rds: Produced in rule DESeqPeaks. The DESeq2 object from the differential accessibility peak analysis.
 
-4.5.3 Folder TF-SPECIFIC
-Stores TF-specific files.
-for each TF {TF}:
-extension{regionExtension}
-{TF}.{comparisonType}.allBAMs.overlaps.bed.gz and                                             {TF}.{comparisonType}.allBAMs.overlaps.bed.summary : Overlap and featureCounts summary file of  read counts across all TFBS for all input BAM files.
-{TF}.{comparisonType}.output.tsv: Produced in rule analyzeTF. A summary table for the DeSeq2 analysis. See the file {comparisonType}.allMotifs.tsv.gz in the FINAL_OUTPUT folder for a column description.
-{TF}.{comparisonType}.summary.rds:  Produced in rule analyzeTF. A summary table for the log2 fold-changes across all TFBS DESeq2 results.
-{TF}.{comparisonType}.diagnosticPlots.pdf and {TF}.{comparisonType}.diagnosticPlots_permutation{perm}.pdf: Produced in rule analyzeTF. Various diagnostic plots for the differential accessibility TFBS analysis for the real and permuted data, respectively. See the description of the file {comparisonType}.diagnosticPlots.peaks.pdf in the PEAKS folder, which has an identical structure.
-{TF}.{comparisonType}.summaryPlots.pdf and {TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf: Produced in rule analyzeTF. A PDF with a summary of the DESeq2 analysis for the real and permuted data, respectively: Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.
-{TF}.{comparisonType}.DESeq.object.rds: Produced in rule analyzeTF. Original DESeq2 object.
-{TF}.{comparisonType}.permutationResults.rds: Produced in rule binningTF. An rds file containing a data frame that stores the results of bin-specific results.
-{TF}.{comparisonType}.permutationSummary.tsv: Produced in rule binningTF. A final summary table that summarizes the results across bins by calculating weighted means. The data of this table are used for the final visualization.
-{TF}.{comparisonType}.covarianceResults.rds: Produced in rule binningTF. An rds file containing a data frame that stores the results of the pairwise bin covariances and the bin-specific weights.
+- if no consensus peak file was provided (:ref:`parameter_consensusPeaks`):
 
-.. note:: Note that covariances are only computed for the real data but not the permuted ones.
+  - ``{comparisonType}.consensusPeaks.bed`` and ``consensusPeaks_lengthDistribution.pdf``: generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks
+  - ``{comparisonType}.consensusPeaks.filtered.sorted.bed``: Produced in rule ``filterSexChromosomesAndSortPeaks``. Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn\*, \*random*, \*hap|_gl\*
+- ``{comparisonType}.allBams.peaks.overlaps.bed``: Produced in rule ``intersectPeaksAndBAM``. Counts for each consensus peak with each of the input BAM files
+- ``{comparisonType}.sampleMetadata.rds``: Produced in rule ``DESeqPeaks``. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.
+- ``{comparisonType}.peaks.rds``: Produced in rule ``DESeqPeaks``. Stores all peaks that will be used in the analysis.
+- ``{comparisonType}.peaks.tsv``: Produced in rule ``DESeqPeaks``. Stores the DESEq2 results of the differential accessibility analysis for the peaks.
+- ``{comparisonType}.normFacs.rds``: Produced in rule ``DESeqPeaks``. Gene-specific normalization factors for each sample and peak. This file is produces after the differential accessibility analysis for the peaks. The normalization factors will be used for the TF-specific differential accessibility analysis.
+- ``{comparisonType}.diagnosticPlots.peaks.pdf`` and ``{comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf`` for each permutation ``{perm}``: Produced in rule ``DESeqPeaks``. Various diagnostic plots for the differential accessibility peak analysis for the real and permuted data, respectively:
 
-4.5.4 Folder LOGS_AND_BENCHMARKS
+  (1) MA plots
+  (2) density plots of normalized and non-normalized counts
+  (3) mean-average plots (average of the log-transformed counts vs the fold-change per peak) for each of the sample pairs
+  (4) mean SD plots (row standard deviations versus row means)
+
+- ``{comparisonType}.DESeq.object.rds``: Produced in rule ``DESeqPeaks``. The DESeq2 object from the differential accessibility peak analysis.
+
+FOLDER ``TF-SPECIFIC``
+=============================================
+
+Stores TF-specific files. For each TF ``{TF}``, a separate subfolder ``{TF}`` is created by the pipeline. Within this folder, the following structure is created:
+
+Subfolder ``extension{regionExtension}``
+----------------------------------------
+
+- ``{TF}.{comparisonType}.allBAMs.overlaps.bed.gz`` and ``{TF}.{comparisonType}.allBAMs.overlaps.bed.summary``: Overlap and featureCounts summary file of  read counts across all TFBS for all input BAM files.
+- ``{TF}.{comparisonType}.output.tsv``: Produced in rule ``analyzeTF``. A summary table for the DeSeq2 analysis. See the file ``{comparisonType}.allMotifs.tsv.gz`` in the ``FINAL_OUTPUT`` folder for a column description.
+- ``{TF}.{comparisonType}.summary.rds``:  Produced in rule ``analyzeTF``. A summary table for the log2 fold-changes across all TFBS DESeq2 results.
+- ``{TF}.{comparisonType}.diagnosticPlots.pdf`` and ``{TF}.{comparisonType}.diagnosticPlots_permutation{perm}.pdf``: Produced in rule ``analyzeTF``. Various diagnostic plots for the differential accessibility TFBS analysis for the real and permuted data, respectively. See the description of the file ``{comparisonType}.diagnosticPlots.peaks.pdf`` in the ``PEAKS`` folder, which has an identical structure.
+- ``{TF}.{comparisonType}.summaryPlots.pdf`` and ``{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf``: Produced in rule ``analyzeTF``. A PDF with a summary of the DESeq2 analysis for the real and permuted data, respectively: Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.
+- ``{TF}.{comparisonType}.DESeq.object.rds``: Produced in rule ``analyzeTF``. Original DESeq2 object.
+- ``{TF}.{comparisonType}.permutationResults.rds``: Produced in rule ``binningTF``. contains a data frame that stores the results of bin-specific results.
+- ``{TF}.{comparisonType}.permutationSummary.tsv``: Produced in rule ``binningTF``. A final summary table that summarizes the results across bins by calculating weighted means. The data of this table are used for the final visualization.
+- ``{TF}.{comparisonType}.covarianceResults.rds``: Produced in rule ``binningTF``. Contains a data frame that stores the results of the pairwise bin covariances and the bin-specific weights.
+
+  .. note:: Note that covariances are only computed for the real data but not the permuted ones.
+
+FOLDER ``LOGS_AND_BENCHMARKS``
+=============================================
+
 Stores various log and error files.
-*.log files from R scripts: Each logfile is produced by the corresponding R script and contains debugging information as well as warnings and errors:
-1.produceConsensusPeaks.R.log
-2.DESeqPeaks.R.log
-3.analyzeTF.{TF}.R.log for each TF {TF}
-4.summary1.R.log
-5.prepareBinning.log
-6.binningTF.{TF}.log  for each TF {TF}
-7.summaryFinal.R.log
-*.log summary files: Summary logs for user convenience, produced at very end of the pipeline only. They should contain all errors and warnings from the pipeline run.
-all.errors.log
-all.warnings.log
 
-4.5.5 Folder TEMP
+- ``*.log`` files from R scripts: Each log file is produced by the corresponding R script and contains debugging information as well as warnings and errors:
+
+  - ``1.produceConsensusPeaks.R.log``
+  - ``2.DESeqPeaks.R.log``
+  - ``3.analyzeTF.{TF}.R.log`` for each TF ``{TF}``
+  - ``4.summary1.R.log``
+  - ``5.prepareBinning.log``
+  - ``6.binningTF.{TF}.log``  for each TF ``{TF}``
+  - ``7.summaryFinal.R.log``
+
+- ``*.log`` summary files: Summary logs for user convenience, produced at very end of the pipeline only. They should contain all errors and warnings from the pipeline run.
+
+  - ``all.errors.log``
+  - ``all.warnings.log``
+
+FOLDER ``TEMP``
+=============================================
+
 Stores temporary and intermediate files.
-SortedBAM: Stores sorted versions of the original BAMs that are optimized for featureCounts.
-{basenameBAM}.bam for each input BAM file: Produced in rule resortBAM. Resorted BAM file
-extension{regionExtension}: Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
-{comparisonType}.allTFBS.peaks.bed.gz: Produced in rule intersectPeaksAndTFBS. BED file containing all TFBS from all TF that overlap with the peaks after motif extension
-{comparisonType}.{TF}.allTFBS.peaks.extension.saf for each TF {TF}: Produced in rule intersectTFBSAndBAM. TF-specific file in SAF format needed for featureCounts
-conditionComparison.rds: Produced in rule DESeqPeaks. Stores the condition comparison as a string. Some steps in diffTF need this file as input.
-for each permutation {perm}:{comparisonType}.motifs.coord.permutation{perm}.bed.gz and {comparisonType}.motifs.coord.nucContent.permutation{perm}.bed.gz: Produced in rule calcNucleotideContent, and needed subsequently for the binning. Temporary and result file of bedtools nuc, respectively. The latter contains the GC content for all TFBS.
-{comparisonType}.allTFData_processedForPermutations.rds and {comparisonType}.allTFUniqueData_processedForPermutations.rds. Produced in rule prepareBinning, and needed subsequently for each 6.binningTF.R step.
-{comparisonType}.consensusPeaks.*: Produced in rule filterSexChromosomesAndSortPeaks. Various temporary files related to the consensus peaks
-{comparisonType}.checkParameterValidity.done: temporary flag file
-{TF}_TFBS.sorted.bed for each TF {TF}: Produced in rule sortPWM. Coordinate-sorted version of the input TFBS.
-{comparisonType}.allTFBS.peaks.bed.gz: Produced in rule intersectPeaksAndTFBS. BED file containing all TFBS from all TF that overlap with the peaks before motif extension
+
+Subfolder ``SortedBAM``
+------------------------------
+
+Stores sorted versions of the original BAMs that are optimized for fast count retrieval using *featureCounts*.
+
+- ``{basenameBAM}.bam`` for each input BAM file: Produced in rule ``resortBAM``. Resorted BAM file
+
+Subfolder ``extension{regionExtension}``
+----------------------------------------
+
+Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
+
+- ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. BED file containing all TFBS from all TF that overlap with the peaks after motif extension
+- ``{comparisonType}.{TF}.allTFBS.peaks.extension.saf`` for each TF {TF}: Produced in rule ``intersectTFBSAndBAM``. TF-specific file in SAF format needed for featureCounts
+- ``conditionComparison.rds``: Produced in rule ``DESeqPeaks``. Stores the condition comparison as a string. Some steps in diffTF need this file as input.
+- ``{comparisonType}.motifs.coord.permutation{perm}.bed.gz`` and ``{comparisonType}.motifs.coord.nucContent.permutation{perm}.bed.gz`` for each permutation ``{perm}``: Produced in rule ``calcNucleotideContent``, and needed subsequently for the binning. Temporary and result file of bedtools nuc, respectively. The latter contains the GC content for all TFBS.
+- ``{comparisonType}.allTFData_processedForPermutations.rd`` and ``{comparisonType}.allTFUniqueData_processedForPermutations.rds``. Produced in rule ``prepareBinning``, and needed subsequently for each ``6.binningTF.R`` step.
+- ``{comparisonType}.consensusPeaks.*``: Produced in rule ``filterSexChromosomesAndSortPeaks``. Various temporary files related to the consensus peaks
+- ``{comparisonType}.checkParameterValidity.done``: temporary flag file
+- ``{TF}_TFBS.sorted.bed`` for each TF ``{TF}``: Produced in rule ``sortPWM``. Coordinate-sorted version of the input TFBS.
+- ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. BED file containing all TFBS from all TF that overlap with the peaks before motif extension
 
 
 Working with the pipeline and frequently asked questions
