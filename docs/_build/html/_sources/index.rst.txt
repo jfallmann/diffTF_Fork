@@ -17,11 +17,6 @@ This site is organized into the following three parts:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
-
-
-.. toctree::
-   :maxdepth: 2
    :caption: Quick Start and Installation
 
    chapter1.rst

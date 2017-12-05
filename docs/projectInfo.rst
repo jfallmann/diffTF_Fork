@@ -9,20 +9,27 @@ Help, contribute and contact
 
 If you have questions or comments, feel free to contact us. We will be happy to answer any questions related to this project as well as questions related to the software implementation. For method-related questions, contact Judith B. Zaugg (judith.zaugg@embl.de) or Ivan Berest (berest@embl.de). For technical questions, contact Christian Arnold (christian.arnold@embl.de).
 
-If you have questions, doubts, ideas or problems, please use the Issue Tracker at https://git.embl.de/grp-zaugg/diffTF/issues. We will respond in a timely manner.
+If you have questions, doubts, ideas or problems, please use the `Bitbucket Issue Tracker <https://bitbucket.org/chrarnold/diffTF>`_. We will respond in a timely manner.
 
 Citation
-================
+============================
 
 If you use this software, please cite the following reference:
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. Genome-wide quantification of differential transcription factor activity: diffTF. 2017. submitted.
 
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Genome-wide quantification of differential transcription factor activity: diffTF*. 2017. submitted.
 
-Frequently asked questions
-=============
 
 Change log
-==========================
+============================
+
+COMING SOON
+
 
 License
 ============================
+
+
+diffTF is licensed under the MIT License:
+
+.. literalinclude:: ../LICENSE.md
+    :language: text

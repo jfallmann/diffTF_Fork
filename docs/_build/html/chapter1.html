@@ -106,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="chapter2.html">Workflow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chapter2.html#input">Input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chapter2.html#output">Output</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chapter2.html#working-with-the-pipeline">Working with the pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter2.html#working-with-the-pipeline-and-frequently-asked-questions">Working with the pipeline and frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chapter2.html#handling-errors">Handling errors</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Project Information</span></p>
@@ -114,7 +114,6 @@
 <li class="toctree-l1"><a class="reference internal" href="projectInfo.html">Biological motivation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="projectInfo.html#help-contribute-and-contact">Help, contribute and contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="projectInfo.html#citation">Citation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="projectInfo.html#frequently-asked-questions">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="projectInfo.html#change-log">Change log</a></li>
 <li class="toctree-l1"><a class="reference internal" href="projectInfo.html#license">License</a></li>
 </ul>
@@ -183,16 +182,31 @@
   <div class="section" id="try-it-out-now">
 <span id="docs-quickstart"></span><h1>Try it out now!<a class="headerlink" href="#try-it-out-now" title="Permalink to this headline">¶</a></h1>
 <p>The following quick start briefly summarizes the necessary steps to use our pipeline:</p>
-<ol class="arabic">
-<li><p class="first">Install the necessary tools (Snakemake, samtools, bedtools, and Subread). We recommend installing them via conda, in which case the installation is as easy as</p>
+<ol class="arabic simple">
+<li>Install the necessary tools (Snakemake, samtools, bedtools, and Subread).</li>
+</ol>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">-c</span> <span class="pre">bioconda</span> <span class="pre">snakemake</span> <span class="pre">bedtools</span> <span class="pre">samtools</span> <span class="pre">subread</span></code></p>
-<p>If conda is not yet installed, follow the <a class="reference external" href="https://conda.io/docs/user-guide/install/index.html">installation instructions</a>. If you want to install the tools manually and outside of the conda framework, see the following instructions for each of the tools: <a class="reference external" href="http://snakemake.readthedocs.io/en/stable/getting_started/installation.html">snakemake</a>, <a class="reference external" href="http://www.htslib.org/download">samtools</a>, <a class="reference external" href="http://bedtools.readthedocs.io/en/latest/content/installation.html">bedtools</a>, <a class="reference external" href="http://subread.sourceforge.net">Subread</a>.</p>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Note that they all require Python 3.</p>
+</div>
+<p>We recommend installing them via conda, in which case the installation is as easy as</p>
+<div class="highlight-Bash"><div class="highlight"><pre><span></span>conda install -c bioconda snakemake bedtools samtools subread
+</pre></div>
+</div>
+<p>If conda is not yet installed, follow the <a class="reference external" href="https://conda.io/docs/user-guide/install/index.html">installation instructions</a>. Installation is quick and easy.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You do not need to uninstall other Python installations or packages in order to use conda. Even if you already have a system Python, another Python installation from a source such as the macOS Homebrew package manager and globally installed packages from pip such as pandas and NumPy, you do not need to uninstall, remove, or change any of them before using conda.</p>
+</div>
+<p>If you want to install the tools manually and outside of the conda framework, see the following instructions for each of the tools: <a class="reference external" href="http://snakemake.readthedocs.io/en/stable/getting_started/installation.html">snakemake</a>, <a class="reference external" href="http://www.htslib.org/download">samtools</a>, <a class="reference external" href="http://bedtools.readthedocs.io/en/latest/content/installation.html">bedtools</a>, <a class="reference external" href="http://subread.sourceforge.net">Subread</a>.</p>
 </div></blockquote>
-</li>
+<ol class="arabic" start="2">
 <li><p class="first">Clone the Git repository:</p>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://git.embl.de/grp-zaugg/diffTF</span></code></p>
+<div><div class="highlight-Bash"><div class="highlight"><pre><span></span>git clone https://git.embl.de/grp-zaugg/diffTF
+</pre></div>
+</div>
 </div></blockquote>
 </li>
 <li><p class="first">To run the example analysis for 50 TF, simply perform the following steps:</p>
@@ -202,22 +216,30 @@
 <div><ul>
 <li><p class="first">Change into the <code class="docutils literal"><span class="pre">example/input</span></code> directory within the Git repository</p>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">cd</span> <span class="pre">diffTF/example/input</span></code></p>
+<div><div class="highlight-Bash"><div class="highlight"><pre><span></span><span class="nb">cd</span> diffTF/example/input
+</pre></div>
+</div>
 </div></blockquote>
 </li>
 <li><p class="first">Download the data via the download script</p>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">sh</span> <span class="pre">downloadAllData.sh</span></code></p>
+<div><div class="highlight-Bash"><div class="highlight"><pre><span></span>sh downloadAllData.sh
+</pre></div>
+</div>
 </div></blockquote>
 </li>
 <li><p class="first">To test if the setup is correct, start a dryrun via the first helper script</p>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">sh</span> <span class="pre">startAnalysisDryRun.sh</span></code></p>
+<div><div class="highlight-Bash"><div class="highlight"><pre><span></span>sh startAnalysisDryRun.sh
+</pre></div>
+</div>
 </div></blockquote>
 </li>
 <li><p class="first">Once the dryrun is successful, start the analysis via the second helper script</p>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">sh</span> <span class="pre">startAnalysis.sh</span></code></p>
+<div><div class="highlight-Bash"><div class="highlight"><pre><span></span>sh startAnalysis.sh
+</pre></div>
+</div>
 </div></blockquote>
 </li>
 </ul>
@@ -250,6 +272,21 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 </div>
 <div class="section" id="run-your-own-analysis">
 <span id="docs-runownanalysis"></span><h1>Run your own analysis<a class="headerlink" href="#run-your-own-analysis" title="Permalink to this headline">¶</a></h1>
+<p>Running your own analysis is almost as easy as running the example analysis. Carefully read and follow the following steps and notes:</p>
+<ol class="arabic simple">
+<li>Copy the files <code class="docutils literal"><span class="pre">config.json</span></code> and <code class="docutils literal"><span class="pre">startAnalysis.sh</span></code> to a directory of your choice.</li>
+<li>Modify the file <code class="docutils literal"><span class="pre">config.json</span></code> accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section 4 (TODO) for details about the meaning of the parameters. Do not delete or rename any parameters or sections.</li>
+<li>Create a tab-separated file that defines the input data, in analogy to the file <code class="docutils literal"><span class="pre">sampleData.tsv</span></code> from the example analysis, and refer to that in the file <code class="docutils literal"><span class="pre">config.json</span></code> (parameter <code class="docutils literal"><span class="pre">summaryFile</span></code>)</li>
+<li>Adapt the file <code class="docutils literal"><span class="pre">startAnalysis.sh</span></code> if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ul class="last simple">
+<li>For Snakemake to run properly, the R folder with the scripts has to be in the same folder as the Snakefile.</li>
+<li>Since running the pipeline might be computationally demanding, make sure you have enough space left on your device. As a guideline, analysis with 8 samples need around 12 GB of disk space, while a large analysis with 84 samples needs around 45 GB. Also, adjust the number of available cores accordingly. The pipeline can be invoked in a highly parallelized manner, so the more cores are available, the better!</li>
+<li>The pipeline is written in Snakemake, so for a deeper understanding and troubleshooting errors, some knowledge of Snakemake is invaluable. The same holds true for running the pipeline in a cluster setting. We recommend using a proper cluster configuration file in addition. For guidance and user convenience, we provide different cluster configuration files for a small (up to 10-15 samples) and large (&gt;15 samples) analysis. See the folder <code class="docutils literal"><span class="pre">src/clusterConfigurationTemplates</span></code> for examples. Note that the sample number guidelines above are very rough estimates only. See the <a class="reference external" href="http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration">Snakemake documentation</a> for details for how to use cluster configuration files.</li>
+</ul>
+</div>
 </div>
 
 
