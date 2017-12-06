@@ -106,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="chapter2.html">Workflow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chapter2.html#input">Input</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chapter2.html#output">Output</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chapter2.html#working-with-the-pipeline-and-frequently-asked-questions">Working with the pipeline and frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter2.html#working-with-difftf-and-faqs">Working with <em>diffTF</em> and FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chapter2.html#handling-errors">Handling errors</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Project Information</span></p>
@@ -275,18 +275,11 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 <p>Running your own analysis is almost as easy as running the example analysis. Carefully read and follow the following steps and notes:</p>
 <ol class="arabic simple">
 <li>Copy the files <code class="docutils literal"><span class="pre">config.json</span></code> and <code class="docutils literal"><span class="pre">startAnalysis.sh</span></code> to a directory of your choice.</li>
-<li>Modify the file <code class="docutils literal"><span class="pre">config.json</span></code> accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section 4 (TODO) for details about the meaning of the parameters. Do not delete or rename any parameters or sections.</li>
+<li>Modify the file <code class="docutils literal"><span class="pre">config.json</span></code> accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section <a class="reference internal" href="chapter2.html#configurationfile"><span class="std std-ref">General configuration file</span></a> for details about the meaning of the parameters. Do not delete or rename any parameters or sections.</li>
 <li>Create a tab-separated file that defines the input data, in analogy to the file <code class="docutils literal"><span class="pre">sampleData.tsv</span></code> from the example analysis, and refer to that in the file <code class="docutils literal"><span class="pre">config.json</span></code> (parameter <code class="docutils literal"><span class="pre">summaryFile</span></code>)</li>
 <li>Adapt the file <code class="docutils literal"><span class="pre">startAnalysis.sh</span></code> if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)</li>
+<li>Since running the pipeline might be computationally demanding, read Section <a class="reference internal" href="chapter2.html#timememoryrequirements"><span class="std std-ref">Execute diffTF - Running times and memory requirements</span></a> and decide on which machine to run the pipeline. In most cases, we recommend running <em>diffTF</em> in a cluster environment. The pipeline is written in Snakemake, and we strongly suggest to also read Section <a class="reference internal" href="chapter2.html#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a> to get a basic understanding of how the pipeline works.</li>
 </ol>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<ul class="last simple">
-<li>For Snakemake to run properly, the R folder with the scripts has to be in the same folder as the Snakefile.</li>
-<li>Since running the pipeline might be computationally demanding, make sure you have enough space left on your device. As a guideline, analysis with 8 samples need around 12 GB of disk space, while a large analysis with 84 samples needs around 45 GB. Also, adjust the number of available cores accordingly. The pipeline can be invoked in a highly parallelized manner, so the more cores are available, the better!</li>
-<li>The pipeline is written in Snakemake, so for a deeper understanding and troubleshooting errors, some knowledge of Snakemake is invaluable. The same holds true for running the pipeline in a cluster setting. We recommend using a proper cluster configuration file in addition. For guidance and user convenience, we provide different cluster configuration files for a small (up to 10-15 samples) and large (&gt;15 samples) analysis. See the folder <code class="docutils literal"><span class="pre">src/clusterConfigurationTemplates</span></code> for examples. Note that the sample number guidelines above are very rough estimates only. See the <a class="reference external" href="http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration">Snakemake documentation</a> for details for how to use cluster configuration files.</li>
-</ul>
-</div>
 </div>
 
 

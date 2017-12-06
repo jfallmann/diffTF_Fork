@@ -1,4 +1,4 @@
-.. _docs-details:
+.. _workflow:
 
 Workflow
 ************************************************************
@@ -43,6 +43,7 @@ In addition, the following files are need, all of which we provide already for h
 - TF-specific list of TFBS (see :ref:`parameter_dir_TFBS`)
 - mapping table (see :ref:`parameter_HOCOMOCO_mapping`)
 
+.. _configurationFile:
 
 General configuration file
 ==============================
@@ -162,6 +163,9 @@ PARAMETER ``dir_scripts``
 
 Summary
   String. The path to the directory where the R scripts for running the pipeline are stored.
+
+Details
+  .. warning:: The folder name must be ``R``, and it has to be located in the same folder as the ``Snakefile``.
 
 .. _parameter_RNASeqIntegration:
 
@@ -391,13 +395,14 @@ Details
 FILE ``{comparisonType}.TF_vs_peak_distribution.tsv``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Summary
-  TODO
+  This summary table contains various results regarding TFs, their log2 fold change distribution across all TFBS and differences between all TFBS and the peaks
 
 Details
   Columns are as follows:
+
   - *TF*: name of the TF
   - *permutation*: The number of the permutation.
-  - *Pos_l2F*C, *Mean_l2FC*, *Median_l2FC*, *sd_l2FC*, *Mode_l2FC*, *skewness_l2FC*: fraction of positive values, mean, median, standard deviation, mode value and Bickel's measure of skewness of the log2 fold change distribution across all TFBS
+  - *Pos_l2FC*, *Mean_l2FC*, *Median_l2FC*, *sd_l2FC*, *Mode_l2FC*, *skewness_l2FC*: fraction of positive values, mean, median, standard deviation, mode value and Bickel's measure of skewness of the log2 fold change distribution across all TFBS
   - *pvalue_raw* and *pvalue_adj*: raw and adjusted (fdr) p-value of the  t-test
   - *T_statistic*: the value of the T statistic from the t-test
   - *TFBS_num*: number of TFBS
@@ -667,7 +672,7 @@ Stores various log and error files.
 FOLDER ``TEMP``
 =============================================
 
-Stores temporary and intermediate files.
+Stores temporary and intermediate files. Since they are usually not relevant for the user, they are explained only very briefly here.
 
 Subfolder ``SortedBAM``
 ------------------------------
@@ -691,16 +696,84 @@ Stores results related to the user-specified extension size (:ref:`parameter_reg
 - ``{TF}_TFBS.sorted.bed`` for each TF ``{TF}``: Produced in rule ``sortPWM``. Coordinate-sorted version of the input TFBS.
 - ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. BED file containing all TFBS from all TF that overlap with the peaks before motif extension
 
+.. _workingWithPipeline:
 
-Working with the pipeline and frequently asked questions
+Working with *diffTF* and FAQs
 ************************************************************
 
-`diffTF` is programmed as a Snakemake pipeline, which offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and running the pipeline on different systems is easy with minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no Snakemake experience.
+General remarks
+==============================
+
+`diffTF` is programmed as a Snakemake pipeline, which offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and running the pipeline on different systems is easy with minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no Snakemake experience. For a deeper understanding and troubleshooting errors, some knowledge of Snakemake is invaluable.
+
+Simply put, the Snakemake pipeline runs various *rules*. Each *rule* can be thougt of as a single task, such as sorting a file, running an R script, etc that has, among other features, an input and an output. You can see in the ``Snakefile`` what these rules are and what they do. Importantly, each rule has a name, which is also displayed during execution. Different rules are connected through their input and output files, so that the output of one rule is the input for a subsequent rule, thereby creasting *dependencies*, whichn ultimately leads to the directed acyclic graph (*DAG*) that you have seen in Section :ref:`workflow`. In diffTF, a rule is typically executed separately for each TF.
+
+The number of *jobs* or rules to execute in total with the pipeline can roughly be calculated as 4 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, four rules are executed:
+
+1. Sorting the TFBS list
+2. Calulating read counts for each TFBS within the peak regions
+3. Differential accessibility analysis
+4. Binning step
+
+In addition, a few other rules are executed that however do not add up much more to the overall rule count.
+
+
+.. _timeMemoryRequirements:
+
+Executing diffTF - Running times and memory requirements
+===============================================================
+
+*diffTF* is computationally demanding, and depending on the sample size and the number of peaks, a rather high amount of resources may be required to run it. In the following, we discuss avrious issues related to time and memory requirements and we provide some general guidelines that worked well for us.
+
+.. warning:: We generally advise to run diffTF in a cluster environment. For small analysis, a local analysis on your machine might work just fine (see the example analysis in the Git repository), but running time increases substantially due to limited amount of available cores.
+
+Analysis size
+---------------
+
+We now provide a *very rough* classification into small, medium and large with respect to the sample size and the number of peaks:
+
+- Small: Fewer than 10-15 samples, number of peaks not exceeding 50,000-80,000, normal read depth per sample
+- Large: Number of samples larger than say 20 or number of peaks clearly exceeds 100,000, or very high read depth per sample
+- Medium: Anything between small and large
+
+Memory
+---------------
+
+Some notes regarding memory:
+
+- Disk space: Make sure you have enough space left on your device. As a guideline, analysis with 8 samples need around 12 GB of disk space, while a large analysis with 84 samples needs around 45 GB.
+- Machine memory: Although most steps of the pipeline have a modest memory footprint, depending on the analysis size, some others (e.g., rule ``prepareBinning``) may need a lot of RAM during execution. We recommend having at least 16 GB available for large analysis (see above)
+
+Number of cores
+-----------------
+
+Some notes regarding the number of available cores:
+
+- diffTF can be invoked in a highly parallelized manner, so the more CPUs are available, the better.
+- you can use the ``--cores`` option when invoking Snakemake to specify the number of cores that are available for the analysis. If you specify 4 cores, for example, up to 4 rules can be run in parallel (if each of them occupies only 1 core), or 1 rule can use up to 4 cores.
+- we strongly recommend running diffTF in a cluster environment due to the massive parallization. With Snakemake, it is easy to run diffTF in a cluster setting. Simply do the following:
+
+  - write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder ``src/clusterConfigurationTemplates`` for examples. Note that these are rough estimates only. See the `Snakemake documentation <http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration>`_ for details for how to use cluster configuration files.
+  - invoke Snakemake with one of the available cluster modes, which will depend on your cluster system. We used ``--cluster`` and tested the pipeline extensively with *LSF/BSUB* and *SLURM*. For more details, see the `Snakemake documentation <http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution>`_
+
+Total running time
+--------------------
+
+Some notes regarding the total running time:
+
+- the total running time is very difficult to estimate beforehand and depends on many parameters, most importantly the number of samples, their read depth, the number of peaks, and the number of TF included in the analysis.
+- for small analysis such as the example analysis in the Git repository, running times are roughly 30 minutes with 2 cores for 50 TF and a few hours with all 640 TF.
+- for large analysis, running time will be up to a day or so when executed on a cluster machine
+
+
+Frequently asked questions
+==============================
+
 Here a few typical use cases, which we will extend regularly in the future if the need arises:
 
 1. I received an error, and the pipeline did not finish.
 
-  As explained in Section 4.5, you first have to identify and fix the error. Rerunning then becomes trivially easy: just restart Snakemake, it will start off where it left off: at the step that produced that error.
+  As explained in Section :ref:`docs-errors`, you first have to identify and fix the error. Rerunning then becomes trivially easy: just restart Snakemake, it will start off where it left off: at the step that produced that error.
 
 2. I want to rerun a specific part of the pipeline only.
 
