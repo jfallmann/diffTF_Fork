@@ -704,16 +704,18 @@ Working with *diffTF* and FAQs
 General remarks
 ==============================
 
-`diffTF` is programmed as a Snakemake pipeline, which offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and running the pipeline on different systems is easy with minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no Snakemake experience. For a deeper understanding and troubleshooting errors, some knowledge of Snakemake is invaluable.
+`diffTF` is programmed as a Snakemake pipeline. Snakemake is a bioinformatics workflow manager that uses workflows that are described via a human readable, Python based language. It offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and workflows can be seamlessly scaled to server, cluster, grid and cloud environments, without the need to modify the workflow definition or only minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no Snakemake experience. For a deeper understanding and troubleshooting errors, some knowledge of Snakemake is invaluable.
 
-Simply put, the Snakemake pipeline runs various *rules*. Each *rule* can be thougt of as a single task, such as sorting a file, running an R script, etc that has, among other features, an input and an output. You can see in the ``Snakefile`` what these rules are and what they do. Importantly, each rule has a name, which is also displayed during execution. Different rules are connected through their input and output files, so that the output of one rule is the input for a subsequent rule, thereby creasting *dependencies*, whichn ultimately leads to the directed acyclic graph (*DAG*) that you have seen in Section :ref:`workflow`. In diffTF, a rule is typically executed separately for each TF.
+Simply put, Snakemake executes various *rules*. Each *rule* can be thougt of as a single *recipe* or task such as sorting a file, running an R script, etc. Each rule has, among other features, a name, an input, an output, and the command that is executed. You can see in the ``Snakefile`` what these rules are and what they do. During the execution, the rule name is displayed, so you know exactly at which step the pipeline is at the given moment. Different rules are connected through their input and output files, so that the output of one rule becomes the input for a subsequent rule, thereby creasting *dependencies*, which ultimately leads to the directed acyclic graph (*DAG*) that describes the whole workflow. You have seen such a graph in Section :ref:`workflow`.
 
-The number of *jobs* or rules to execute in total with the pipeline can roughly be calculated as 4 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, four rules are executed:
+In diffTF, a rule is typically executed separately for each TF. One example for a particular rule is sorting the TFBS list for the TF CTCF.
 
-1. Sorting the TFBS list
-2. Calulating read counts for each TFBS within the peak regions
-3. Differential accessibility analysis
-4. Binning step
+In diffTF, the total number of *jobs* or rules to execute can roughly be calculated as 4 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, four rules are executed:
+
+1. Sorting the TFBS list (rule ``sortTFBS``)
+2. Calulating read counts for each TFBS within the peak regions (rule ``intersectTFBSAndBAM``)
+3. Differential accessibility analysis  (rule ``analyzeTF``)
+4. Binning step (rule ``binningTF``)
 
 In addition, a few other rules are executed that however do not add up much more to the overall rule count.
 

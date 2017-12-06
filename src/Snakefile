@@ -178,8 +178,8 @@ suffixTFBS = '_TFBS.bed'
 allTF = []
 
 if config["par_general"]["TFs"] == "all":
-    PWM_FILES = os.popen("ls " + config["additionalInputFiles"]["dir_TFBS"]).readlines()
-    for TFCur in PWM_FILES:
+    TFBS_FILES = os.popen("ls " + config["additionalInputFiles"]["dir_TFBS"]).readlines()
+    for TFCur in TFBS_FILES:
         if not os.path.basename(TFCur.replace('\n', '')).endswith(suffixTFBS):
             continue
         TFCurBasename = os.path.basename(TFCur.replace('\n', '').replace(suffixTFBS, ''))
@@ -297,7 +297,7 @@ rule filterSexChromosomesAndSortPeaks:
 
 overlapPattern = "overlaps.bed.gz"
 
-rule sortPWM:
+rule sortTFBS:
     input:
         flag = ancient(rules.checkParameterValidity.output.flag),
         bed  = config["additionalInputFiles"]["dir_TFBS"] + "/{TF}" + suffixTFBS
@@ -366,16 +366,16 @@ rule intersectPeaksAndBAM:
 
 # TF-specific part:
 
-rule intersectPeaksAndPWM:
+rule intersectPeaksAndTFBS:
     input:
         consensusPeaks = rules.filterSexChromosomesAndSortPeaks.output.consensusPeaks_sorted,
-        #allPWMs        = expand('{dir}/{compType}{TF}_TFBS.sorted.bed.gz', dir = TEMP_DIR, compType = compType, TF = allTF)
-        allPWMs        = expand('{dir}/{compType}{TF}_TFBS.sorted.bed', dir = TEMP_DIR, compType = compType, TF = allTF)
+        #allTFBS        = expand('{dir}/{compType}{TF}_TFBS.sorted.bed.gz', dir = TEMP_DIR, compType = compType, TF = allTF)
+        allTFBS        = expand('{dir}/{compType}{TF}_TFBS.sorted.bed', dir = TEMP_DIR, compType = compType, TF = allTF)
     output:
-        TFBSinPeaks_bed    = expand('{dir}/{compType}allPWM.peaks.bed.gz', dir = TEMP_DIR, compType = compType),
-        TFBSinPeaksMod_bed = expand('{dir}/{compType}allPWM.peaks.extension.bed.gz', dir = TEMP_EXTENSION_DIR, compType = compType)
+        TFBSinPeaks_bed    = expand('{dir}/{compType}allTFBS.peaks.bed.gz', dir = TEMP_DIR, compType = compType),
+        TFBSinPeaksMod_bed = expand('{dir}/{compType}allTFBS.peaks.extension.bed.gz', dir = TEMP_EXTENSION_DIR, compType = compType)
     log:
-    message: "{ruleDisplayMessage} Obtain binding sites from peaks: Intersect files {input.allPWMs} and {input.consensusPeaks}..."
+    message: "{ruleDisplayMessage} Obtain binding sites from peaks: Intersect files {input.allTFBS} and {input.consensusPeaks}..."
     threads: 1
     params:
         extension = config["par_general"]["regionExtension"],
@@ -384,7 +384,7 @@ rule intersectPeaksAndPWM:
         """ ulimit -n {params.ulimitMax} &&
             bedtools intersect \
                 -a {input.consensusPeaks} \
-                -b {input.allPWMs} \
+                -b {input.allTFBS} \
                 -wa -wb \
                 -sorted \
                 -filenames \
@@ -394,10 +394,10 @@ rule intersectPeaksAndPWM:
 
 rule intersectTFBSAndBAM:
     input:
-        bed     = rules.intersectPeaksAndPWM.output.TFBSinPeaksMod_bed,
+        bed     = rules.intersectPeaksAndTFBS.output.TFBSinPeaksMod_bed,
         allBAMs = expand('{dir}/{allBasenamesBAM}.bam', dir = TEMP_BAM_DIR, allBasenamesBAM = allBamFilesBasename)
     output:
-        saf           = temp(expand('{dir}/{compType}{{TF}}.allPWM.peaks.extension.saf', dir = TEMP_EXTENSION_DIR, compType = compType)),
+        saf           = temp(expand('{dir}/{compType}{{TF}}.allTFBS.peaks.extension.saf', dir = TEMP_EXTENSION_DIR, compType = compType)),
         BAMOverlapRaw = temp(TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.allBAMs.overlaps.bed"),
         BAMOverlap    =      TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.allBAMs.overlaps.bed.gz"
     log:
