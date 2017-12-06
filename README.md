@@ -18,7 +18,7 @@ Documentation
 Installation and Quick Start
 -------------------------------
 
-[Please see the Documentation for easy Installation and Quick Start instructions.](http://difftf.readthedocs.io/en/latest/chapter1.html)
+[Please see the Documentation for easy "Installation and Quick Start" instructions.](http://difftf.readthedocs.io/en/latest/chapter1.html)
 
 
 Citation
