@@ -14,7 +14,7 @@ The workflow is illustrated by the following two Figures. First, we show a schem
       Schematic of the diffTF workflow, with input and output of the pipeline highlighted.
 
 
-We now show which rules are executed by Snakemake for a specific example 8see the caption of the image):
+We now show which rules are executed by Snakemake for a specific example (see the caption of the image):
 
 
    .. figure:: Figures/DAG_transparent.png
@@ -23,6 +23,26 @@ We now show which rules are executed by Snakemake for a specific example 8see th
          :align: center
 
          Exact workflow (a so-called directed acyclic graph, or DAG) that is executed when calling Snakemake for an easy of example with two TFs (CEBPB and CTCF) for the two samples GMP.WT1 and MPP.WT1. Each node represents a rule name as defined in the Snakefile, and each arrow a dependency.
+
+diffTF is implemented as a Snakemake pipeline. For a gentle introduction about Snakemake, see Section :ref:`workingWithPipeline`. As you can see, the workflow consists of the following steps or *rules*:
+
+- ``checkParameterValidity``: R script that checks whether the specified peak file has the correct format, whether the provided fasta file and the BAM files are compatible, and other checks
+- ``produceConsensusPeaks``:  R script that generates the consensus peaks if none are provided
+- ``filterSexChromosomesAndSortPeaks``: Filters various chromosomes 8sex, unassembled ones, contigs, etc) from the peak file.
+- ``sortTFBS``: Sort the TFBS lists by position
+- ``resortBAM``: Sort the BAM file for optimized processing
+- ``intersectPeaksAndBAM``: Count all reads for peak regions across all input files
+- ``intersectPeaksAndTFBS``: Intersect all TFBS with peak regions to retain only TFBS in peak regions
+- ``intersectTFBSAndBAM``: Count all reads from all TFBS across all input files in a TF-specific manner
+- ``DESeqPeaks``: R script that performs a differential accessibility analysis for the peak regions as well as sample permutations
+- ``analyzeTF``: R script that performs a TF-specific differential accessibility analysis
+- ``summary1``:  R script that sumamriozes the previous script for all TFs
+- ``concatenateMotifs``: Concatenates previous results (TFBS motives)
+- ``calcNucleotideContent``: Calculates the GC content for all TFBS
+- ``prepareBinning``:  R script that prepares the binning procedure
+- ``binningTF``:  R script that performs the binning approach in na TF-specific manner
+- ``summaryFinal``:  R script that summarizes the analysis and calculates final statistics
+- ``cleanUpLogFiles``: Cleans up the ``LOGS_AND_BENCHMARKS`` directory (mostly relevant if run in cluster mode)
 
 
 Input

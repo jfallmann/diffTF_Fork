@@ -280,13 +280,33 @@
 <p class="caption"><span class="caption-text">Schematic of the diffTF workflow, with input and output of the pipeline highlighted.</span></p>
 </div>
 </div></blockquote>
-<p>We now show which rules are executed by Snakemake for a specific example 8see the caption of the image):</p>
+<p>We now show which rules are executed by Snakemake for a specific example (see the caption of the image):</p>
 <blockquote>
 <div><div class="figure align-center" id="id23">
 <a class="reference internal image-reference" href="_images/DAG_transparent.png"><img alt="Directed acyclic graph of an example workflow" src="_images/DAG_transparent.png" style="width: 587.3px; height: 914.9px;" /></a>
 <p class="caption"><span class="caption-text">Exact workflow (a so-called directed acyclic graph, or DAG) that is executed when calling Snakemake for an easy of example with two TFs (CEBPB and CTCF) for the two samples GMP.WT1 and MPP.WT1. Each node represents a rule name as defined in the Snakefile, and each arrow a dependency.</span></p>
 </div>
 </div></blockquote>
+<p>diffTF is implemented as a Snakemake pipeline. For a gentle introduction about Snakemake, see Section <a class="reference internal" href="#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a>. As you can see, the workflow consists of the following steps or <em>rules</em>:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">checkParameterValidity</span></code>: R script that checks whether the specified peak file has the correct format, whether the provided fasta file and the BAM files are compatible, and other checks</li>
+<li><code class="docutils literal"><span class="pre">produceConsensusPeaks</span></code>:  R script that generates the consensus peaks if none are provided</li>
+<li><code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>: Filters various chromosomes 8sex, unassembled ones, contigs, etc) from the peak file.</li>
+<li><code class="docutils literal"><span class="pre">sortTFBS</span></code>: Sort the TFBS lists by position</li>
+<li><code class="docutils literal"><span class="pre">resortBAM</span></code>: Sort the BAM file for optimized processing</li>
+<li><code class="docutils literal"><span class="pre">intersectPeaksAndBAM</span></code>: Count all reads for peak regions across all input files</li>
+<li><code class="docutils literal"><span class="pre">intersectPeaksAndTFBS</span></code>: Intersect all TFBS with peak regions to retain only TFBS in peak regions</li>
+<li><code class="docutils literal"><span class="pre">intersectTFBSAndBAM</span></code>: Count all reads from all TFBS across all input files in a TF-specific manner</li>
+<li><code class="docutils literal"><span class="pre">DESeqPeaks</span></code>: R script that performs a differential accessibility analysis for the peak regions as well as sample permutations</li>
+<li><code class="docutils literal"><span class="pre">analyzeTF</span></code>: R script that performs a TF-specific differential accessibility analysis</li>
+<li><code class="docutils literal"><span class="pre">summary1</span></code>:  R script that sumamriozes the previous script for all TFs</li>
+<li><code class="docutils literal"><span class="pre">concatenateMotifs</span></code>: Concatenates previous results (TFBS motives)</li>
+<li><code class="docutils literal"><span class="pre">calcNucleotideContent</span></code>: Calculates the GC content for all TFBS</li>
+<li><code class="docutils literal"><span class="pre">prepareBinning</span></code>:  R script that prepares the binning procedure</li>
+<li><code class="docutils literal"><span class="pre">binningTF</span></code>:  R script that performs the binning approach in na TF-specific manner</li>
+<li><code class="docutils literal"><span class="pre">summaryFinal</span></code>:  R script that summarizes the analysis and calculates final statistics</li>
+<li><code class="docutils literal"><span class="pre">cleanUpLogFiles</span></code>: Cleans up the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> directory (mostly relevant if run in cluster mode)</li>
+</ul>
 </div>
 <div class="section" id="input">
 <h1>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h1>
