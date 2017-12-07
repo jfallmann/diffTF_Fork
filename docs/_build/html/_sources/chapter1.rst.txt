@@ -5,7 +5,7 @@ Try it out now!
 
 The following quick start briefly summarizes the necessary steps to use our pipeline:
 
-1. Install the necessary tools (Snakemake, samtools, bedtools, and Subread).
+1. Install the necessary tools (*Snakemake*, *samtools*, *bedtools*, and *Subread*).
 
   .. note:: Note that all tools require Python 3.
 
@@ -68,7 +68,7 @@ Snakemake
 
 Please ensure that you have at least version 4.3 installed. Principally, there are `multiple ways to install Snakemake <http://snakemake.readthedocs.io/en/stable/getting_started/installation.html>`_. We recommend installing it, along with all the other required software, via conda.
 
-samtools, bedtools, Subread
+*samtools*, *bedtool*s, *Subread*
 ----------------------------
 
 In addition, `samtools <http://www.htslib.org/download>`_, `bedtools <http://bedtools.readthedocs.io>`_ and `Subread <http://subread.sourceforge.net>`_ are needed to run *diffTF*. We recommend installing them, along with all the other required software, via conda.

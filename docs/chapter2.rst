@@ -26,21 +26,21 @@ We now show which rules are executed by Snakemake for a specific example (see th
 
 diffTF is implemented as a Snakemake pipeline. For a gentle introduction about Snakemake, see Section :ref:`workingWithPipeline`. As you can see, the workflow consists of the following steps or *rules*:
 
-- ``checkParameterValidity``: R script that checks whether the specified peak file has the correct format, whether the provided fasta file and the BAM files are compatible, and other checks
+- ``checkParameterValidity``: R script that checks whether the specified peak file has the correct format, whether the provided *fasta* file and the *BAM* files are compatible, and other checks
 - ``produceConsensusPeaks``:  R script that generates the consensus peaks if none are provided
 - ``filterSexChromosomesAndSortPeaks``: Filters various chromosomes 8sex, unassembled ones, contigs, etc) from the peak file.
 - ``sortTFBS``: Sort the TFBS lists by position
-- ``resortBAM``: Sort the BAM file for optimized processing
+- ``resortBAM``: Sort the *BAM* file for optimized processing
 - ``intersectPeaksAndBAM``: Count all reads for peak regions across all input files
 - ``intersectPeaksAndTFBS``: Intersect all TFBS with peak regions to retain only TFBS in peak regions
 - ``intersectTFBSAndBAM``: Count all reads from all TFBS across all input files in a TF-specific manner
 - ``DESeqPeaks``: R script that performs a differential accessibility analysis for the peak regions as well as sample permutations
 - ``analyzeTF``: R script that performs a TF-specific differential accessibility analysis
-- ``summary1``:  R script that sumamriozes the previous script for all TFs
+- ``summary1``:  R script that summarizes the previous script for all TFs
 - ``concatenateMotifs``: Concatenates previous results (TFBS motives)
 - ``calcNucleotideContent``: Calculates the GC content for all TFBS
 - ``prepareBinning``:  R script that prepares the binning procedure
-- ``binningTF``:  R script that performs the binning approach in na TF-specific manner
+- ``binningTF``:  R script that performs the binning approach in a TF-specific manner
 - ``summaryFinal``:  R script that summarizes the analysis and calculates final statistics
 - ``cleanUpLogFiles``: Cleans up the ``LOGS_AND_BENCHMARKS`` directory (mostly relevant if run in cluster mode)
 
@@ -54,8 +54,8 @@ Summary
 
 As input for diffTF for your own analysis, the following data are needed:
 
-- BAM file with aligned reads for each sample (see :ref:`parameter_summaryFile`)
-- genome reference fasta that has been used to produce the BAM files (see :ref:`parameter_refGenome_fasta`)
+- *BAM* file with aligned reads for each sample (see :ref:`parameter_summaryFile`)
+- genome reference *fasta* that has been used to produce the *BAM* files (see :ref:`parameter_refGenome_fasta`)
 - Optionally: corresponding RNA-Seq data (see :ref:`parameter_RNASeqCounts`)
 
 In addition, the following files are need, all of which we provide already for human hg19, hg38 and mouse mm10:
@@ -90,7 +90,7 @@ PARAMETER ``outdir``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default “output”. Root output directory.
+  String. Default "output". Root output directory.
 
 Details
   The root output directory where all output is stored.
@@ -102,7 +102,7 @@ PARAMETER ``regionExtension``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  Integer > 0. Default 100. Target region extension in base pairs.
+  Integer >= 0. Default 100. Target region extension in base pairs.
 
 Details
   Specifies the number of base pairs each target region (from the peaks file) should be extended in both 5’ and 3’ direction.
@@ -114,7 +114,7 @@ PARAMETER ``comparisonType``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default ‘’.
+  String. Default "".
 
 Details
   This parameter helps to organize complex analysis for which multiple different types of comparisons should be done. Set it to a short but descriptive name that summarizes the type of comparison you are making or the types of cells you compare. The value of this parameter appears as prefix in most output files created by the pipeline. It may also be empty.
@@ -126,10 +126,10 @@ PARAMETER ``designContrast``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default  "~ Treatment + conditionSummary". Design formula for the differential accessibility analysis in *DESeq2*.
+  String. Default  *conditionSummary*. Design formula for the differential accessibility analysis in *DESeq2*.
 
 Details
-  This important parameter defines the actual contrast that is done in the differential analysis. That is, which groups of samples are being compared? Examples include mutant vs wildtype, mutated vs. unmutated, etc. The last element in the formula must always be “conditionSummary”, which defines the two groups that are being compared. This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified.
+  This important parameter defines the actual contrast that is done in the differential analysis. That is, which groups of samples are being compared? Examples include mutant vs wild type, mutated vs. unmutated, etc. The last element in the formula must always be *conditionSummary*, which defines the two groups that are being compared. This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified. For example, for an analysis that also includes the batch number of the samples, you may specify this as "*~ Treatment + conditionSummary*".
 
 .. _parameter_designVariableTypes:
 
@@ -138,10 +138,10 @@ PARAMETER ``designVariableTypes``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default  "Treatment:factor, Condition:factor".
+  String. Default  *conditionSummary:factor*.   The data types of all elements listed in :ref:`parameter_designContrast`.
 
 Details
-  The data types of all elements listed in designContrast. Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”.
+Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if :ref:`parameter_designContrast` is specified as "*~ Treatment + conditionSummary*", the corresponding types might be "Treatment:factor, conditionSummary:factor". If a data type is specified as either "logical" or "factor", the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). *conditionSummary* is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If *conditionSummary* is specified as "integer" or "numeric", however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.
 
   .. note:: Importantly, if the variable of interest is continuous-valued (i.e., marked as being integer or numeric), then the reported log2 fold change is per unit of change of that variable. That is, in the final circular plot, TFs displayed in the left side have a negative slope  per unit of change of that variable, while TFs at the right side have a positive one.
 
@@ -166,12 +166,12 @@ PARAMETER ``TFs``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default ``all``. Either ``all`` or a comma-separated list of TF names of TFs to include. If set to ``all``, all TFs that are found in the directory as specified in ``dir_TFBS`` will be used.
+  String. Default "all". Either "all" or a comma-separated list of TF names of TFs to include. If set to "all", all TFs that are found in the directory as specified in ``dir_TFBS`` (:ref:`parameter_dir_TFBS`) will be used.
 
 Details
   If the analysis should be restricted to a subset of TFs, list the names of the TF to include in a comma-separated manner here.
 
-  .. note:: For each TF ``{TF}``, a corresponding file ``{TF}_TFBS.bed`` needs to be present in the directory ``dir_TFBS``.
+  .. note:: For each TF ``{TF}``, a corresponding file ``{TF}_TFBS.bed`` needs to be present in the directory that is specified by ``dir_TFBS`` (:ref:`parameter_dir_TFBS`).
 
   .. warning:: We strongly recommending running diffTF with as many TF as possible due to our statistical model that we use that compares against a background model.
 
@@ -226,15 +226,15 @@ SECTION ``peaks``
 PARAMETER ``consensusPeaks``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Summary
-  String. Default ``""`` (empty). Path to the consensus peak file.
+  String. Default "" (empty). Path to the consensus peak file.
 
 Details
   If set to the empty string "", the pipeline will generate a consensus peaks out of the peak files from each individual sample. For this, you need to provide the following two things:
 
   - a peak file for each sample in the metadata file in the column ``peaks``, see the section :ref:`section_metadata` for details.
-  - The format of the peak files, as specified in the :ref:`parameter_peakType`
+  - The format of the peak files, as specified in ``peakType`` (:ref:`parameter_peakType`)
 
-  If a file is provided, it must be a valid BED file with at least 3 columns:
+  If a file is provided, it must be a valid *BED* file with at least 3 columns:
 
   - tab-separated columns
   - no column names in the first row
@@ -275,7 +275,7 @@ Summary
   Integer >= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the ``minOverlap`` argument in the ``dba`` function of ``DiffBind``. Only relevant if no consensus peak file has been provided (i.e., the :ref:`parameter_consensusPeaks` is empty).
 
 Details
-  Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peaksets. For more information, see the ``minOverlap`` argument in the ``dba`` function of ``DiffBind``  `(click here) <http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf>`_.
+  Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the ``minOverlap`` argument in the ``dba`` function of ``DiffBind``  `(click here) <http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf>`_.
 
 
 SECTION ``additionalInputFiles``
@@ -288,9 +288,9 @@ PARAMETER ``refGenome_fasta``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default ‘hg19.fasta’. Path to the reference genome FASTA file.
+  String. Default ‘hg19.fasta’. Path to the reference genome *fasta* file.
 Details
-  You need write access to the directory in which the fasta file is stored, make sure this is the case or copy the fasta file to a different directory. The reason is that the pipeline produces a fasta index file, which is put in the same directory as the corresponding fasta file. This is a limitation of samtools faidx and not our pipeline.
+  You need write access to the directory in which the *fasta* file is stored, make sure this is the case or copy the *fasta* file to a different directory. The reason is that the pipeline produces a *fasta* index file, which is put in the same directory as the corresponding *fasta* file. This is a limitation of *samtools faidx* and not our pipeline.
 
   .. note:: This file has to be in concordance with the input data; that is, the exact same genome assembly version must be used. In the first step of the pipeline, this is checked explicitly, and any mismatches will result in an error.
 
@@ -304,7 +304,7 @@ Summary
   String. Path to the directory where the TF-specific files for TFBS results are stored.
 
 Details
-  Each TF ``{TF}`` has to have one bed file, in the format ``{TF}.bed``.  Each file must be a valid BED6 file with 6 columns, as follows:
+  Each TF ``{TF}`` has to have one *BED* file, in the format ``{TF}.bed``.  Each file must be a valid *BED6* file with 6 columns, as follows:
 
   1. chromosome
   2. start
@@ -333,7 +333,7 @@ Summary
 Details
   If no RNA-Seq data is included, set to the empty string “”. Otherwise, if the :ref:`parameter_RNASeqIntegration` is set to true,  specify the path to a tab-separated file with normalized RNA-Seq counts. It does not matter whether the values have been variance-stabilized or not, as long as values across samples are comparable. Also, consider filtering lowly expressed genes. For guidance, you may want to read `Question 4 here <https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html>`_.
 
-  The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (:ref:`parameter_summaryFile`). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then anturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., *ENSG00000028277*) without dots. The IDs are then matched to the IDs from the file as specified in the :ref:`parameter_HOCOMOCO_mapping`.
+  The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (:ref:`parameter_summaryFile`). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then naturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., *ENSG00000028277*) without dots. The IDs are then matched to the IDs from the file as specified in the :ref:`parameter_HOCOMOCO_mapping`.
 
 .. _parameter_HOCOMOCO_mapping:
 
@@ -362,9 +362,9 @@ Input metadata
 This file summarizes the data and corresponding available metadata  that should be used for the analysis. The format is flexible and may contain additional columns that are ignored by the pipeline, so it can be used to capture all available information in a single place. Importantly, the file must be saved as tab-separated, the exact name does not matter as long as it is correctly specified in the configuration file. It must contain at least contain the following columns (the exact names do matter):
 
 - ``sampleID``: The ID of the sample
-- ``bamReads``:  path to the BAM file corresponding to the sample.
+- ``bamReads``:  path to the *BAM* file corresponding to the sample.
 
-  .. warning:: All BAM files must be valid BAM files with chromosome names with `chr` as prefix. The pipeline may crash if the `chr` part is missing.
+  .. warning:: All *BAM* files must be valid *BAM* files with chromosome names with "*chr*" as prefix. The pipeline may crash if the "*chr*" part is missing.
 
 - ``peaks``: absolute path to the sample-specific peak file, in the format as given by the :ref:`parameter_peakType`. Only needed if no consensus peak file is provided.
 - ``conditionSummary``: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., *mutated and unmutated*, *day0 and day10*, ...)
@@ -391,8 +391,8 @@ FOLDER ``FINAL_OUTPUT``
 In this folder, the final output files are stored. Most users want to examine the files in here for further analysis.
 
 
-Subfolder ``extension{regionExtension}``
-----------------------------------------
+Sub-folder ``extension{regionExtension}``
+----------------------------------------------
 
 Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
 
@@ -406,7 +406,7 @@ Summary
 Details
   Columns are as follows:
 
-  - *permutation*: The number of the permutaton.
+  - *permutation*: The number of the permutation.
   - *TF*: name of the TF
   - *chr*, *MSS*, *MES*, *strand*, *TFBSID*: Genomic location and identifier of the (extended) TFBS
   - *PSS*, *PES*, *peakID*:  Genomic location and annotation of the overlapping peak region
@@ -485,7 +485,7 @@ Summary
   Various diagnostic plots for the final TF activity values
 
 Details
-  If the number of permutations is larger than 0, the first three pages show various versions of the pemruted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation > 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the *locfdr* package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.
+  If the number of permutations is larger than 0, the first three pages show various versions of the permuted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation > 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the *locfdr* package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.
 
 FOLDER ``PEAKS``
 =============================================
@@ -507,7 +507,7 @@ FILE ``{comparisonType}.allBams.peaks.overlaps.bed``
 ----------------------------------------------------
 
 Summary
-  Produced in rule ``intersectPeaksAndBAM``. Counts for each consensus peak with each of the input BAM files.
+  Produced in rule ``intersectPeaksAndBAM``. Counts for each consensus peak with each of the input *BAM* files.
 
 Details
   No details provided yet.
@@ -576,16 +576,16 @@ Details
 FOLDER ``TF-SPECIFIC``
 =============================================
 
-Stores TF-specific files. For each TF ``{TF}``, a separate subfolder ``{TF}`` is created by the pipeline. Within this folder, the following structure is created:
+Stores TF-specific files. For each TF ``{TF}``, a separate sub-folder ``{TF}`` is created by the pipeline. Within this folder, the following structure is created:
 
-Subfolder ``extension{regionExtension}``
-----------------------------------------
+Sub-folder ``extension{regionExtension}``
+----------------------------------------------
 
 FILES ``{TF}.{comparisonType}.allBAMs.overlaps.bed.gz`` and ``{TF}.{comparisonType}.allBAMs.overlaps.bed.summary``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  Overlap and featureCounts summary file of read counts across all TFBS for all input BAM files.
+  Overlap and *featureCounts* summary file of read counts across all TFBS for all input *BAM* files.
 
 Details
   No details provided yet.
@@ -694,27 +694,27 @@ FOLDER ``TEMP``
 
 Stores temporary and intermediate files. Since they are usually not relevant for the user, they are explained only very briefly here.
 
-Subfolder ``SortedBAM``
+Sub-folder ``SortedBAM``
 ------------------------------
 
-Stores sorted versions of the original BAMs that are optimized for fast count retrieval using *featureCounts*.
+Stores sorted versions of the original *BAMs* that are optimized for fast count retrieval using *featureCounts*.
 
-- ``{basenameBAM}.bam`` for each input BAM file: Produced in rule ``resortBAM``. Resorted BAM file
+- ``{basenameBAM}.bam`` for each input *BAM* file: Produced in rule ``resortBAM``. Resorted *BAM* file
 
-Subfolder ``extension{regionExtension}``
-----------------------------------------
+Sub-folder ``extension{regionExtension}``
+----------------------------------------------
 
 Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
 
-- ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. BED file containing all TFBS from all TF that overlap with the peaks after motif extension
-- ``{comparisonType}.{TF}.allTFBS.peaks.extension.saf`` for each TF {TF}: Produced in rule ``intersectTFBSAndBAM``. TF-specific file in SAF format needed for featureCounts
+- ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. *BED* file containing all TFBS from all TF that overlap with the peaks after motif extension
+- ``{comparisonType}.{TF}.allTFBS.peaks.extension.saf`` for each TF {TF}: Produced in rule ``intersectTFBSAndBAM``. TF-specific file in SAF format needed for *featureCounts*
 - ``conditionComparison.rds``: Produced in rule ``DESeqPeaks``. Stores the condition comparison as a string. Some steps in diffTF need this file as input.
-- ``{comparisonType}.motifs.coord.permutation{perm}.bed.gz`` and ``{comparisonType}.motifs.coord.nucContent.permutation{perm}.bed.gz`` for each permutation ``{perm}``: Produced in rule ``calcNucleotideContent``, and needed subsequently for the binning. Temporary and result file of bedtools nuc, respectively. The latter contains the GC content for all TFBS.
+- ``{comparisonType}.motifs.coord.permutation{perm}.bed.gz`` and ``{comparisonType}.motifs.coord.nucContent.permutation{perm}.bed.gz`` for each permutation ``{perm}``: Produced in rule ``calcNucleotideContent``, and needed subsequently for the binning. Temporary and result file of *bedtools nuc*, respectively. The latter contains the GC content for all TFBS.
 - ``{comparisonType}.allTFData_processedForPermutations.rd`` and ``{comparisonType}.allTFUniqueData_processedForPermutations.rds``. Produced in rule ``prepareBinning``, and needed subsequently for each ``6.binningTF.R`` step.
 - ``{comparisonType}.consensusPeaks.*``: Produced in rule ``filterSexChromosomesAndSortPeaks``. Various temporary files related to the consensus peaks
 - ``{comparisonType}.checkParameterValidity.done``: temporary flag file
 - ``{TF}_TFBS.sorted.bed`` for each TF ``{TF}``: Produced in rule ``sortPWM``. Coordinate-sorted version of the input TFBS.
-- ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. BED file containing all TFBS from all TF that overlap with the peaks before motif extension
+- ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. *BED* file containing all TFBS from all TF that overlap with the peaks before motif extension
 
 .. _workingWithPipeline:
 
@@ -726,14 +726,14 @@ General remarks
 
 `diffTF` is programmed as a Snakemake pipeline. Snakemake is a bioinformatics workflow manager that uses workflows that are described via a human readable, Python based language. It offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and workflows can be seamlessly scaled to server, cluster, grid and cloud environments, without the need to modify the workflow definition or only minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no Snakemake experience. For a deeper understanding and troubleshooting errors, some knowledge of Snakemake is invaluable.
 
-Simply put, Snakemake executes various *rules*. Each *rule* can be thougt of as a single *recipe* or task such as sorting a file, running an R script, etc. Each rule has, among other features, a name, an input, an output, and the command that is executed. You can see in the ``Snakefile`` what these rules are and what they do. During the execution, the rule name is displayed, so you know exactly at which step the pipeline is at the given moment. Different rules are connected through their input and output files, so that the output of one rule becomes the input for a subsequent rule, thereby creasting *dependencies*, which ultimately leads to the directed acyclic graph (*DAG*) that describes the whole workflow. You have seen such a graph in Section :ref:`workflow`.
+Simply put, Snakemake executes various *rules*. Each *rule* can be thought of as a single *recipe* or task such as sorting a file, running an R script, etc. Each rule has, among other features, a name, an input, an output, and the command that is executed. You can see in the ``Snakefile`` what these rules are and what they do. During the execution, the rule name is displayed, so you know exactly at which step the pipeline is at the given moment. Different rules are connected through their input and output files, so that the output of one rule becomes the input for a subsequent rule, thereby creating *dependencies*, which ultimately leads to the directed acyclic graph (*DAG*) that describes the whole workflow. You have seen such a graph in Section :ref:`workflow`.
 
 In diffTF, a rule is typically executed separately for each TF. One example for a particular rule is sorting the TFBS list for the TF CTCF.
 
 In diffTF, the total number of *jobs* or rules to execute can roughly be calculated as 4 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, four rules are executed:
 
 1. Sorting the TFBS list (rule ``sortTFBS``)
-2. Calulating read counts for each TFBS within the peak regions (rule ``intersectTFBSAndBAM``)
+2. Calculating read counts for each TFBS within the peak regions (rule ``intersectTFBSAndBAM``)
 3. Differential accessibility analysis  (rule ``analyzeTF``)
 4. Binning step (rule ``binningTF``)
 
@@ -745,7 +745,7 @@ In addition, a few other rules are executed that however do not add up much more
 Executing diffTF - Running times and memory requirements
 ===============================================================
 
-*diffTF* is computationally demanding, and depending on the sample size and the number of peaks, a rather high amount of resources may be required to run it. In the following, we discuss avrious issues related to time and memory requirements and we provide some general guidelines that worked well for us.
+*diffTF* is computationally demanding, and depending on the sample size and the number of peaks, a rather high amount of resources may be required to run it. In the following, we discuss various issues related to time and memory requirements and we provide some general guidelines that worked well for us.
 
 .. warning:: We generally advise to run diffTF in a cluster environment. For small analysis, a local analysis on your machine might work just fine (see the example analysis in the Git repository), but running time increases substantially due to limited amount of available cores.
 
@@ -773,7 +773,7 @@ Some notes regarding the number of available cores:
 
 - diffTF can be invoked in a highly parallelized manner, so the more CPUs are available, the better.
 - you can use the ``--cores`` option when invoking Snakemake to specify the number of cores that are available for the analysis. If you specify 4 cores, for example, up to 4 rules can be run in parallel (if each of them occupies only 1 core), or 1 rule can use up to 4 cores.
-- we strongly recommend running diffTF in a cluster environment due to the massive parallization. With Snakemake, it is easy to run diffTF in a cluster setting. Simply do the following:
+- we strongly recommend running diffTF in a cluster environment due to the massive parallelization. With Snakemake, it is easy to run diffTF in a cluster setting. Simply do the following:
 
   - write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder ``src/clusterConfigurationTemplates`` for examples. Note that these are rough estimates only. See the `Snakemake documentation <http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration>`_ for details for how to use cluster configuration files.
   - invoke Snakemake with one of the available cluster modes, which will depend on your cluster system. We used ``--cluster`` and tested the pipeline extensively with *LSF/BSUB* and *SLURM*. For more details, see the `Snakemake documentation <http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution>`_
@@ -837,7 +837,7 @@ Identify the cause
 To troubleshoot errors, you have to first locate the exact error. Depending on how you run Snakemake (i.e., in a cluster setting or not), check the following places:
 
 - in locale mode: the Snakemake output on the console. Errors from R script should also be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory.
-- in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identifyx the rule name that caused the error and search for files that contain the rule name in it
+- in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it
 
 Fixing the error
 ==============================

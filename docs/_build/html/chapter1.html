@@ -95,7 +95,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Try it out now!</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#prerequisites">Prerequisites</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id1">Snakemake</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#samtools-bedtools-subread">samtools, bedtools, Subread</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#samtools-bedtool-s-subread"><em>samtools</em>, <em>bedtool*s, *Subread</em></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#r-and-r-packages">R and R packages</a></li>
 </ul>
 </li>
@@ -183,7 +183,7 @@
 <span id="docs-quickstart"></span><h1>Try it out now!<a class="headerlink" href="#try-it-out-now" title="Permalink to this headline">¶</a></h1>
 <p>The following quick start briefly summarizes the necessary steps to use our pipeline:</p>
 <ol class="arabic simple">
-<li>Install the necessary tools (Snakemake, samtools, bedtools, and Subread).</li>
+<li>Install the necessary tools (<em>Snakemake</em>, <em>samtools</em>, <em>bedtools</em>, and <em>Subread</em>).</li>
 </ol>
 <blockquote>
 <div><div class="admonition note">
@@ -256,8 +256,8 @@
 <h2>Snakemake<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>Please ensure that you have at least version 4.3 installed. Principally, there are <a class="reference external" href="http://snakemake.readthedocs.io/en/stable/getting_started/installation.html">multiple ways to install Snakemake</a>. We recommend installing it, along with all the other required software, via conda.</p>
 </div>
-<div class="section" id="samtools-bedtools-subread">
-<h2>samtools, bedtools, Subread<a class="headerlink" href="#samtools-bedtools-subread" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="samtools-bedtool-s-subread">
+<h2><em>samtools</em>, <em>bedtool*s, *Subread</em><a class="headerlink" href="#samtools-bedtool-s-subread" title="Permalink to this headline">¶</a></h2>
 <p>In addition, <a class="reference external" href="http://www.htslib.org/download">samtools</a>, <a class="reference external" href="http://bedtools.readthedocs.io">bedtools</a> and <a class="reference external" href="http://subread.sourceforge.net">Subread</a> are needed to run <em>diffTF</em>. We recommend installing them, along with all the other required software, via conda.</p>
 </div>
 <div class="section" id="r-and-r-packages">
@@ -278,7 +278,7 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 <li>Modify the file <code class="docutils literal"><span class="pre">config.json</span></code> accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section <a class="reference internal" href="chapter2.html#configurationfile"><span class="std std-ref">General configuration file</span></a> for details about the meaning of the parameters. Do not delete or rename any parameters or sections.</li>
 <li>Create a tab-separated file that defines the input data, in analogy to the file <code class="docutils literal"><span class="pre">sampleData.tsv</span></code> from the example analysis, and refer to that in the file <code class="docutils literal"><span class="pre">config.json</span></code> (parameter <code class="docutils literal"><span class="pre">summaryFile</span></code>)</li>
 <li>Adapt the file <code class="docutils literal"><span class="pre">startAnalysis.sh</span></code> if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)</li>
-<li>Since running the pipeline might be computationally demanding, read Section <a class="reference internal" href="chapter2.html#timememoryrequirements"><span class="std std-ref">Execute diffTF - Running times and memory requirements</span></a> and decide on which machine to run the pipeline. In most cases, we recommend running <em>diffTF</em> in a cluster environment. The pipeline is written in Snakemake, and we strongly suggest to also read Section <a class="reference internal" href="chapter2.html#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a> to get a basic understanding of how the pipeline works.</li>
+<li>Since running the pipeline might be computationally demanding, read Section <a class="reference internal" href="chapter2.html#timememoryrequirements"><span class="std std-ref">Executing diffTF - Running times and memory requirements</span></a> and decide on which machine to run the pipeline. In most cases, we recommend running <em>diffTF</em> in a cluster environment. The pipeline is written in Snakemake, and we strongly suggest to also read Section <a class="reference internal" href="chapter2.html#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a> to get a basic understanding of how the pipeline works.</li>
 </ol>
 </div>
 
