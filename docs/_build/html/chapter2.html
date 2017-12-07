@@ -380,10 +380,10 @@
 <span id="id6"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">designVariableTypes</span></code><a class="headerlink" href="#parameter-designvariabletypes" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>String. Default  <em>conditionSummary:factor</em>.   The data types of all elements listed in <a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>.</dd>
+<dd>String. Default  <em>conditionSummary:factor</em>.   The data types of all elements listed in <code class="docutils literal"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>).</dd>
 </dl>
 <p>Details
-Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if <a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a> is specified as “<em>~ Treatment + conditionSummary</em>”, the corresponding types might be “Treatment:factor, conditionSummary:factor”. If a data type is specified as either “logical” or “factor”, the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). <em>conditionSummary</em> is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If <em>conditionSummary</em> is specified as “integer” or “numeric”, however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.</p>
+Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if <code class="docutils literal"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>) is specified as “<em>~ Treatment + conditionSummary</em>”, the corresponding types might be “Treatment:factor, conditionSummary:factor”. If a data type is specified as either “logical” or “factor”, the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). <em>conditionSummary</em> is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If <em>conditionSummary</em> is specified as “integer” or “numeric”, however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.</p>
 <blockquote>
 <div><div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -442,7 +442,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dt>Summary</dt>
 <dd>Logical. true or false. Default false. Should RNA-Seq data be integrated into the pipeline?</dd>
 <dt>Details</dt>
-<dd>If set to true, RNA-Seq counts as specified in the <a class="reference internal" href="#parameter-rnaseqcounts"><span class="std std-ref">PARAMETER RNASeqCounts</span></a> will be used to classify each TF into either “activator”, “repressor”, “unknown”, or “not-expressed” for the final circular visualization and the summary table.</dd>
+<dd>If set to true, RNA-Seq counts as specified in <code class="docutils literal"><span class="pre">RNASeqCounts</span></code> (<a class="reference internal" href="#parameter-rnaseqcounts"><span class="std std-ref">PARAMETER RNASeqCounts</span></a>) will be used to classify each TF into either “activator”, “repressor”, “unknown”, or “not-expressed” for the final circular visualization and the summary table.</dd>
 </dl>
 </div>
 </div>
@@ -468,7 +468,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dt>Details</dt>
 <dd><p class="first">If set to the empty string “”, the pipeline will generate a consensus peaks out of the peak files from each individual sample. For this, you need to provide the following two things:</p>
 <ul class="simple">
-<li>a peak file for each sample in the metadata file in the column <code class="docutils literal"><span class="pre">peaks</span></code>, see the section <a class="reference internal" href="#section-metadata"><span class="std std-ref">Input metadata</span></a> for details.</li>
+<li>a peak file for each sample in the metadata file in the column <em>peaks</em>, see the section <a class="reference internal" href="#section-metadata"><span class="std std-ref">Input metadata</span></a> for details.</li>
 <li>The format of the peak files, as specified in <code class="docutils literal"><span class="pre">peakType</span></code> (<a class="reference internal" href="#parameter-peaktype"><span class="std std-ref">PARAMETER peakType</span></a>)</li>
 </ul>
 <p>If a file is provided, it must be a valid <em>BED</em> file with at least 3 columns:</p>
@@ -497,7 +497,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dt>Summary</dt>
 <dd>String. Default <code class="docutils literal"><span class="pre">narrow</span></code>. Format of the peaks. Only relevant if no consensus peak file has been provided (i.e., the <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a> is empty).</dd>
 <dt>Details</dt>
-<dd><p class="first">Only needed if no consensus peak set has been provided. All individual peak files must be in the same format. See the help for <code class="docutils literal"><span class="pre">DiffBind</span></code> <code class="docutils literal"><span class="pre">dba</span></code> for a full list of supported formats, the most common ones include:</p>
+<dd><p class="first">Only needed if no consensus peak set has been provided. All individual peak files must be in the same format. See the help for <em>DiffBind dba</em> for a full list of supported formats, the most common ones include:</p>
 <ul class="last simple">
 <li><code class="docutils literal"><span class="pre">raw</span></code>: text file file; peak score is in fourth column</li>
 <li><code class="docutils literal"><span class="pre">bed</span></code>: .bed file; peak score is in fifth column</li>
@@ -510,9 +510,9 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <span id="id14"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">minOverlap</span></code><a class="headerlink" href="#parameter-minoverlap" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Integer &gt;= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <code class="docutils literal"><span class="pre">dba</span></code> function of <code class="docutils literal"><span class="pre">DiffBind</span></code>. Only relevant if no consensus peak file has been provided (i.e., the <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a> is empty).</dd>
+<dd>Integer &gt;= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <em>dba</em> function of <em>DiffBind</em>. Only relevant if no consensus peak file has been provided (i.e., <code class="docutils literal"><span class="pre">consensusPeaks</span></code>, <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>, is empty).</dd>
 <dt>Details</dt>
-<dd>Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <code class="docutils literal"><span class="pre">dba</span></code> function of <code class="docutils literal"><span class="pre">DiffBind</span></code>  <a class="reference external" href="http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf">(click here)</a>.</dd>
+<dd>Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <code class="docutils literal"><span class="pre">dba</span></code> function of <code class="docutils literal"><span class="pre">DiffBind</span></code>  <a class="reference external" href="http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf">(see here)</a>.</dd>
 </dl>
 </div>
 </div>
@@ -538,7 +538,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dt>Summary</dt>
 <dd>String. Path to the directory where the TF-specific files for TFBS results are stored.</dd>
 <dt>Details</dt>
-<dd><p class="first">Each TF <code class="docutils literal"><span class="pre">{TF}</span></code> has to have one <em>BED</em> file, in the format <code class="docutils literal"><span class="pre">{TF}.bed</span></code>.  Each file must be a valid <em>BED6</em> file with 6 columns, as follows:</p>
+<dd><p class="first">Each TF <em>{TF}</em> has to have one <em>BED</em> file, in the format <em>{TF}.bed</em>.  Each file must be a valid <em>BED6</em> file with 6 columns, as follows:</p>
 <ol class="arabic simple">
 <li>chromosome</li>
 <li>start</li>
@@ -563,8 +563,8 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dt>Summary</dt>
 <dd>String. Default “”. Path to the file with RNA-Seq counts.</dd>
 <dt>Details</dt>
-<dd><p class="first">If no RNA-Seq data is included, set to the empty string “”. Otherwise, if the <a class="reference internal" href="#parameter-rnaseqintegration"><span class="std std-ref">PARAMETER RNASeqIntegration</span></a> is set to true,  specify the path to a tab-separated file with normalized RNA-Seq counts. It does not matter whether the values have been variance-stabilized or not, as long as values across samples are comparable. Also, consider filtering lowly expressed genes. For guidance, you may want to read <a class="reference external" href="https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html">Question 4 here</a>.</p>
-<p class="last">The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (<a class="reference internal" href="#parameter-summaryfile"><span class="std std-ref">PARAMETER summaryFile</span></a>). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then naturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., <em>ENSG00000028277</em>) without dots. The IDs are then matched to the IDs from the file as specified in the <a class="reference internal" href="#parameter-hocomoco-mapping"><span class="std std-ref">PARAMETER HOCOMOCO_mapping</span></a>.</p>
+<dd><p class="first">If no RNA-Seq data is included, set to the empty string “”. Otherwise, if <code class="docutils literal"><span class="pre">RNASeqIntegration</span></code> (<a class="reference internal" href="#parameter-rnaseqintegration"><span class="std std-ref">PARAMETER RNASeqIntegration</span></a>) is set to true,  specify the path to a tab-separated file with normalized RNA-Seq counts. It does not matter whether the values have been variance-stabilized or not, as long as values across samples are comparable. Also, consider filtering lowly expressed genes. For guidance, you may want to read <a class="reference external" href="https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html">Question 4 here</a>.</p>
+<p class="last">The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (<code class="docutils literal"><span class="pre">summaryFile</span></code>, <a class="reference internal" href="#parameter-summaryfile"><span class="std std-ref">PARAMETER summaryFile</span></a>). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then naturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., <em>ENSG00000028277</em>) without dots. The IDs are then matched to the IDs from the file as specified in <code class="docutils literal"><span class="pre">HOCOMOCO_mapping</span></code> (<a class="reference internal" href="#parameter-hocomoco-mapping"><span class="std std-ref">PARAMETER HOCOMOCO_mapping</span></a>).</p>
 </dd>
 </dl>
 </div>
@@ -598,7 +598,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <p class="last">All <em>BAM</em> files must be valid <em>BAM</em> files with chromosome names with “<em>chr</em>” as prefix. The pipeline may crash if the “<em>chr</em>” part is missing.</p>
 </div>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">peaks</span></code>: absolute path to the sample-specific peak file, in the format as given by the <a class="reference internal" href="#parameter-peaktype"><span class="std std-ref">PARAMETER peakType</span></a>. Only needed if no consensus peak file is provided.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">peaks</span></code>: absolute path to the sample-specific peak file, in the format as given by <code class="docutils literal"><span class="pre">peakType</span></code> (<a class="reference internal" href="#parameter-peaktype"><span class="std std-ref">PARAMETER peakType</span></a>). Only needed if no consensus peak file is provided.</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">conditionSummary</span></code>: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., <em>mutated and unmutated</em>, <em>day0 and day10</em>, …)</p>
 </li>
@@ -612,7 +612,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <p>The pipeline produces quite a large number of output files, only some of which are however relevant for the regular user.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">In the following, the directory structure and the files are briefly outlined. As some directory or file names depend on specific parameters in the configuration file, curly brackets will be used to denote that the filename depends on a particular parameter or name. For example, <code class="docutils literal"><span class="pre">{comparisonType}</span></code> and <code class="docutils literal"><span class="pre">{regionExtension}</span></code> refer to the <a class="reference internal" href="#parameter-comparisontype"><span class="std std-ref">PARAMETER comparisonType</span></a> and <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a> as specified in the configuration file.</p>
+<p class="last">In the following, the directory structure and the files are briefly outlined. As some directory or file names depend on specific parameters in the configuration file, curly brackets will be used to denote that the filename depends on a particular parameter or name. For example, <code class="docutils literal"><span class="pre">{comparisonType}</span></code> and <code class="docutils literal"><span class="pre">{regionExtension}</span></code> refer to <code class="docutils literal"><span class="pre">comparisonType</span></code> (<a class="reference internal" href="#parameter-comparisontype"><span class="std std-ref">PARAMETER comparisonType</span></a>) and <code class="docutils literal"><span class="pre">regionExtension</span></code> ( <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>) as specified in the configuration file.</p>
 </div>
 <p>Most files have one of the following file formats:</p>
 <ul class="simple">
@@ -627,7 +627,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <p>In this folder, the final output files are stored. Most users want to examine the files in here for further analysis.</p>
 <div class="section" id="sub-folder-extension-regionextension">
 <h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#sub-folder-extension-regionextension" title="Permalink to this headline">¶</a></h3>
-<p>Stores results related to the user-specified extension size (<a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>)</p>
+<p>Stores results related to the user-specified extension size (<code class="docutils literal"><span class="pre">regionExtension</span></code>, <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>)</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">In all output files, in the column <code class="docutils literal"><span class="pre">permutation</span></code>, 0 always refers to the non-permuted, real data, while permutations &gt; 0 reflect real permutations.</p>
@@ -743,7 +743,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <h3>FILES <code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.bed</span></code> and <code class="docutils literal"><span class="pre">consensusPeaks_lengthDistribution.pdf</span></code><a class="headerlink" href="#files-comparisontype-consensuspeaks-bed-and-consensuspeaks-lengthdistribution-pdf" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Only present if no consensus peak file was provided (<a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>). Produced in rule <code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>. Generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks.</dd>
+<dd>Only present if no consensus peak file was provided (<code class="docutils literal"><span class="pre">consensusPeaks</span></code>, <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>). Produced in rule <code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>. Generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks.</dd>
 <dt>Details</dt>
 <dd>Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn*, *random*, *hap|_gl*</dd>
 </dl>
@@ -944,7 +944,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </div>
 <div class="section" id="id20">
 <h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
-<p>Stores results related to the user-specified extension size (<a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>)</p>
+<p>Stores results related to the user-specified extension size (<code class="docutils literal"><span class="pre">regionExtension</span></code>, <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>)</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">{comparisonType}.allTFBS.peaks.bed.gz</span></code>: Produced in rule <code class="docutils literal"><span class="pre">intersectPeaksAndTFBS</span></code>. <em>BED</em> file containing all TFBS from all TF that overlap with the peaks after motif extension</li>
 <li><code class="docutils literal"><span class="pre">{comparisonType}.{TF}.allTFBS.peaks.extension.saf</span></code> for each TF {TF}: Produced in rule <code class="docutils literal"><span class="pre">intersectTFBSAndBAM</span></code>. TF-specific file in SAF format needed for <em>featureCounts</em></li>

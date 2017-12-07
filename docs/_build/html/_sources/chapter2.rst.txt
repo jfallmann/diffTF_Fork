@@ -138,10 +138,10 @@ PARAMETER ``designVariableTypes``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default  *conditionSummary:factor*.   The data types of all elements listed in :ref:`parameter_designContrast`.
+  String. Default  *conditionSummary:factor*.   The data types of all elements listed in ``designContrast`` (:ref:`parameter_designContrast`).
 
 Details
-Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if :ref:`parameter_designContrast` is specified as "*~ Treatment + conditionSummary*", the corresponding types might be "Treatment:factor, conditionSummary:factor". If a data type is specified as either "logical" or "factor", the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). *conditionSummary* is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If *conditionSummary* is specified as "integer" or "numeric", however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.
+Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if ``designContrast`` (:ref:`parameter_designContrast`) is specified as "*~ Treatment + conditionSummary*", the corresponding types might be "Treatment:factor, conditionSummary:factor". If a data type is specified as either "logical" or "factor", the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). *conditionSummary* is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If *conditionSummary* is specified as "integer" or "numeric", however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.
 
   .. note:: Importantly, if the variable of interest is continuous-valued (i.e., marked as being integer or numeric), then the reported log2 fold change is per unit of change of that variable. That is, in the final circular plot, TFs displayed in the left side have a negative slope  per unit of change of that variable, while TFs at the right side have a positive one.
 
@@ -197,7 +197,7 @@ Summary
   Logical. true or false. Default false. Should RNA-Seq data be integrated into the pipeline?
 
 Details
-  If set to true, RNA-Seq counts as specified in the :ref:`parameter_RNASeqCounts` will be used to classify each TF into either “activator”, “repressor”, “unknown”, or “not-expressed” for the final circular visualization and the summary table.
+  If set to true, RNA-Seq counts as specified in ``RNASeqCounts`` (:ref:`parameter_RNASeqCounts`) will be used to classify each TF into either “activator”, “repressor”, “unknown”, or “not-expressed” for the final circular visualization and the summary table.
 
   .. note::RNA-Seq integration is only included in the very last step of the pipeline, so it can also be easily integrated later.
 
@@ -231,7 +231,7 @@ Summary
 Details
   If set to the empty string "", the pipeline will generate a consensus peaks out of the peak files from each individual sample. For this, you need to provide the following two things:
 
-  - a peak file for each sample in the metadata file in the column ``peaks``, see the section :ref:`section_metadata` for details.
+  - a peak file for each sample in the metadata file in the column *peaks*, see the section :ref:`section_metadata` for details.
   - The format of the peak files, as specified in ``peakType`` (:ref:`parameter_peakType`)
 
   If a file is provided, it must be a valid *BED* file with at least 3 columns:
@@ -259,7 +259,7 @@ Summary
   String. Default ``narrow``. Format of the peaks. Only relevant if no consensus peak file has been provided (i.e., the :ref:`parameter_consensusPeaks` is empty).
 
 Details
-  Only needed if no consensus peak set has been provided. All individual peak files must be in the same format. See the help for ``DiffBind`` ``dba`` for a full list of supported formats, the most common ones include:
+  Only needed if no consensus peak set has been provided. All individual peak files must be in the same format. See the help for *DiffBind dba* for a full list of supported formats, the most common ones include:
 
   - ``raw``: text file file; peak score is in fourth column
   - ``bed``: .bed file; peak score is in fifth column
@@ -272,10 +272,10 @@ PARAMETER ``minOverlap``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  Integer >= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the ``minOverlap`` argument in the ``dba`` function of ``DiffBind``. Only relevant if no consensus peak file has been provided (i.e., the :ref:`parameter_consensusPeaks` is empty).
+  Integer >= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the ``minOverlap`` argument in the *dba* function of *DiffBind*. Only relevant if no consensus peak file has been provided (i.e., ``consensusPeaks``, :ref:`parameter_consensusPeaks`, is empty).
 
 Details
-  Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the ``minOverlap`` argument in the ``dba`` function of ``DiffBind``  `(click here) <http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf>`_.
+  Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the ``minOverlap`` argument in the ``dba`` function of ``DiffBind``  `(see here) <http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf>`_.
 
 
 SECTION ``additionalInputFiles``
@@ -304,7 +304,7 @@ Summary
   String. Path to the directory where the TF-specific files for TFBS results are stored.
 
 Details
-  Each TF ``{TF}`` has to have one *BED* file, in the format ``{TF}.bed``.  Each file must be a valid *BED6* file with 6 columns, as follows:
+  Each TF *{TF}* has to have one *BED* file, in the format *{TF}.bed*.  Each file must be a valid *BED6* file with 6 columns, as follows:
 
   1. chromosome
   2. start
@@ -331,9 +331,9 @@ Summary
   String. Default “”. Path to the file with RNA-Seq counts.
 
 Details
-  If no RNA-Seq data is included, set to the empty string “”. Otherwise, if the :ref:`parameter_RNASeqIntegration` is set to true,  specify the path to a tab-separated file with normalized RNA-Seq counts. It does not matter whether the values have been variance-stabilized or not, as long as values across samples are comparable. Also, consider filtering lowly expressed genes. For guidance, you may want to read `Question 4 here <https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html>`_.
+  If no RNA-Seq data is included, set to the empty string “”. Otherwise, if ``RNASeqIntegration`` (:ref:`parameter_RNASeqIntegration`) is set to true,  specify the path to a tab-separated file with normalized RNA-Seq counts. It does not matter whether the values have been variance-stabilized or not, as long as values across samples are comparable. Also, consider filtering lowly expressed genes. For guidance, you may want to read `Question 4 here <https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html>`_.
 
-  The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (:ref:`parameter_summaryFile`). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then naturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., *ENSG00000028277*) without dots. The IDs are then matched to the IDs from the file as specified in the :ref:`parameter_HOCOMOCO_mapping`.
+  The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (``summaryFile``, :ref:`parameter_summaryFile`). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then naturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., *ENSG00000028277*) without dots. The IDs are then matched to the IDs from the file as specified in ``HOCOMOCO_mapping`` (:ref:`parameter_HOCOMOCO_mapping`).
 
 .. _parameter_HOCOMOCO_mapping:
 
@@ -366,7 +366,7 @@ This file summarizes the data and corresponding available metadata  that should 
 
   .. warning:: All *BAM* files must be valid *BAM* files with chromosome names with "*chr*" as prefix. The pipeline may crash if the "*chr*" part is missing.
 
-- ``peaks``: absolute path to the sample-specific peak file, in the format as given by the :ref:`parameter_peakType`. Only needed if no consensus peak file is provided.
+- ``peaks``: absolute path to the sample-specific peak file, in the format as given by ``peakType`` (:ref:`parameter_peakType`). Only needed if no consensus peak file is provided.
 - ``conditionSummary``: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., *mutated and unmutated*, *day0 and day10*, ...)
 - if applicable, all additional variables from the design formula except ``conditionSummary`` must also be present as a separate column.
 
@@ -375,7 +375,7 @@ Output
 
 The pipeline produces quite a large number of output files, only some of which are however relevant for the regular user.
 
-.. note:: In the following, the directory structure and the files are briefly outlined. As some directory or file names depend on specific parameters in the configuration file, curly brackets will be used to denote that the filename depends on a particular parameter or name. For example, ``{comparisonType}`` and ``{regionExtension}`` refer to the :ref:`parameter_comparisonType` and :ref:`parameter_regionExtension` as specified in the configuration file.
+.. note:: In the following, the directory structure and the files are briefly outlined. As some directory or file names depend on specific parameters in the configuration file, curly brackets will be used to denote that the filename depends on a particular parameter or name. For example, ``{comparisonType}`` and ``{regionExtension}`` refer to ``comparisonType`` (:ref:`parameter_comparisonType`) and ``regionExtension`` ( :ref:`parameter_regionExtension`) as specified in the configuration file.
 
 Most files have one of the following file formats:
 
@@ -394,7 +394,7 @@ In this folder, the final output files are stored. Most users want to examine th
 Sub-folder ``extension{regionExtension}``
 ----------------------------------------------
 
-Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
+Stores results related to the user-specified extension size (``regionExtension``, :ref:`parameter_regionExtension`)
 
 .. note:: In all output files, in the column ``permutation``, 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
 
@@ -497,7 +497,7 @@ FILES ``{comparisonType}.consensusPeaks.bed`` and ``consensusPeaks_lengthDistrib
 ----------------------------------------------------------------------------------------------
 
 Summary
-  Only present if no consensus peak file was provided (:ref:`parameter_consensusPeaks`). Produced in rule ``filterSexChromosomesAndSortPeaks``. Generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks.
+  Only present if no consensus peak file was provided (``consensusPeaks``, :ref:`parameter_consensusPeaks`). Produced in rule ``filterSexChromosomesAndSortPeaks``. Generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks.
 
 Details
   Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn\*, \*random*, \*hap|_gl\*
@@ -704,7 +704,7 @@ Stores sorted versions of the original *BAMs* that are optimized for fast count 
 Sub-folder ``extension{regionExtension}``
 ----------------------------------------------
 
-Stores results related to the user-specified extension size (:ref:`parameter_regionExtension`)
+Stores results related to the user-specified extension size (``regionExtension``, :ref:`parameter_regionExtension`)
 
 - ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. *BED* file containing all TFBS from all TF that overlap with the peaks after motif extension
 - ``{comparisonType}.{TF}.allTFBS.peaks.extension.saf`` for each TF {TF}: Produced in rule ``intersectTFBSAndBAM``. TF-specific file in SAF format needed for *featureCounts*

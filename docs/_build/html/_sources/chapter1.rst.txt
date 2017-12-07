@@ -69,7 +69,7 @@ Snakemake
 Please ensure that you have at least version 4.3 installed. Principally, there are `multiple ways to install Snakemake <http://snakemake.readthedocs.io/en/stable/getting_started/installation.html>`_. We recommend installing it, along with all the other required software, via conda.
 
 *samtools*, *bedtool*s, *Subread*
-----------------------------
+----------------------------------
 
 In addition, `samtools <http://www.htslib.org/download>`_, `bedtools <http://bedtools.readthedocs.io>`_ and `Subread <http://subread.sourceforge.net>`_ are needed to run *diffTF*. We recommend installing them, along with all the other required software, via conda.
 
