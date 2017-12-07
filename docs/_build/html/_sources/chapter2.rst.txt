@@ -275,7 +275,7 @@ Summary
   Integer >= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the ``minOverlap`` argument in the *dba* function of *DiffBind*. Only relevant if no consensus peak file has been provided (i.e., ``consensusPeaks``, :ref:`parameter_consensusPeaks`, is empty).
 
 Details
-  Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the ``minOverlap`` argument in the ``dba`` function of ``DiffBind``  `(see here) <http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf>`_.
+  Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the ``minOverlap`` argument in the *dba* function of *DiffBind*  `(see here) <http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf>`_.
 
 
 SECTION ``additionalInputFiles``
@@ -290,7 +290,8 @@ PARAMETER ``refGenome_fasta``
 Summary
   String. Default ‘hg19.fasta’. Path to the reference genome *fasta* file.
 Details
-  You need write access to the directory in which the *fasta* file is stored, make sure this is the case or copy the *fasta* file to a different directory. The reason is that the pipeline produces a *fasta* index file, which is put in the same directory as the corresponding *fasta* file. This is a limitation of *samtools faidx* and not our pipeline.
+
+  .. warning:: You need write access to the directory in which the *fasta* file is stored, make sure this is the case or copy the *fasta* file to a different directory. The reason is that the pipeline produces a *fasta* index file, which is put in the same directory as the corresponding *fasta* file. This is a limitation of *samtools faidx* and not our pipeline.
 
   .. note:: This file has to be in concordance with the input data; that is, the exact same genome assembly version must be used. In the first step of the pipeline, this is checked explicitly, and any mismatches will result in an error.
 
@@ -315,11 +316,11 @@ Details
 
   For user convenience, we provide these files as described in the publication as a separate download:
 
-  - hg19: For a pre-compiled list of 620 human TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for hg19, download this file: https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz
-  - hg38: For a pre-compiled list of 771 human TF with in-silico predicted TFBS based on the *HOCOMOCO 11* database and *FIMO* from the MEME suite1 for hg38, download this file: https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz
-  - mm10: For a pre-compiled list of 423 mouse TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for mm10, download this file: https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz
+  - hg19: For a pre-compiled list of 620 human TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for hg19, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz>`_
+  - hg38: For a pre-compiled list of 771 human TF with in-silico predicted TFBS based on the *HOCOMOCO 11* database and *FIMO* from the MEME suite1 for hg38, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz>`_
+  - mm10: For a pre-compiled list of 423 mouse TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for mm10, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz>`_
 
-  However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool.
+  However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as *FIMO* or *MOODS*.
 
 .. _parameter_RNASeqCounts:
 

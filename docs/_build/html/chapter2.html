@@ -160,7 +160,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#folder-tf-specific">FOLDER <code class="docutils literal"><span class="pre">TF-SPECIFIC</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id19">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id21">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary">FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.gz</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.summary</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-output-tsv">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-summary-rds">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summary.rds</span></code></a></li>
@@ -177,7 +177,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#folder-logs-and-benchmarks">FOLDER <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#folder-temp">FOLDER <code class="docutils literal"><span class="pre">TEMP</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sub-folder-sortedbam">Sub-folder <code class="docutils literal"><span class="pre">SortedBAM</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id20">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id22">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -275,14 +275,14 @@
 <span id="id1"></span><h1>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h1>
 <p>The workflow is illustrated by the following two Figures. First, we show a schematic of the diffTF workflow to illustrate concepts:</p>
 <blockquote>
-<div><div class="figure align-center" id="id22">
+<div><div class="figure align-center" id="id24">
 <a class="reference internal image-reference" href="_images/Workflow_transparent.png"><img alt="Schematic of the diffTF workflow" src="_images/Workflow_transparent.png" style="width: 666.0px; height: 739.5px;" /></a>
 <p class="caption"><span class="caption-text">Schematic of the diffTF workflow, with input and output of the pipeline highlighted.</span></p>
 </div>
 </div></blockquote>
 <p>We now show which rules are executed by Snakemake for a specific example (see the caption of the image):</p>
 <blockquote>
-<div><div class="figure align-center" id="id23">
+<div><div class="figure align-center" id="id25">
 <a class="reference internal image-reference" href="_images/DAG_transparent.png"><img alt="Directed acyclic graph of an example workflow" src="_images/DAG_transparent.png" style="width: 587.3px; height: 914.9px;" /></a>
 <p class="caption"><span class="caption-text">Exact workflow (a so-called directed acyclic graph, or DAG) that is executed when calling Snakemake for an easy of example with two TFs (CEBPB and CTCF) for the two samples GMP.WT1 and MPP.WT1. Each node represents a rule name as defined in the Snakefile, and each arrow a dependency.</span></p>
 </div>
@@ -512,7 +512,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dt>Summary</dt>
 <dd>Integer &gt;= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <em>dba</em> function of <em>DiffBind</em>. Only relevant if no consensus peak file has been provided (i.e., <code class="docutils literal"><span class="pre">consensusPeaks</span></code>, <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>, is empty).</dd>
 <dt>Details</dt>
-<dd>Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <code class="docutils literal"><span class="pre">dba</span></code> function of <code class="docutils literal"><span class="pre">DiffBind</span></code>  <a class="reference external" href="http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf">(see here)</a>.</dd>
+<dd>Only include peaks in at least this many peak sets in the main binding matrix. If set to a value between zero and one, peak will be included from at least this proportion of peak sets. For more information, see the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <em>dba</em> function of <em>DiffBind</em>  <a class="reference external" href="http://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf">(see here)</a>.</dd>
 </dl>
 </div>
 </div>
@@ -523,14 +523,18 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default ‘hg19.fasta’. Path to the reference genome <em>fasta</em> file.</dd>
-<dt>Details</dt>
-<dd><p class="first">You need write access to the directory in which the <em>fasta</em> file is stored, make sure this is the case or copy the <em>fasta</em> file to a different directory. The reason is that the pipeline produces a <em>fasta</em> index file, which is put in the same directory as the corresponding <em>fasta</em> file. This is a limitation of <em>samtools faidx</em> and not our pipeline.</p>
-<div class="last admonition note">
+</dl>
+<p>Details</p>
+<blockquote>
+<div><div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">You need write access to the directory in which the <em>fasta</em> file is stored, make sure this is the case or copy the <em>fasta</em> file to a different directory. The reason is that the pipeline produces a <em>fasta</em> index file, which is put in the same directory as the corresponding <em>fasta</em> file. This is a limitation of <em>samtools faidx</em> and not our pipeline.</p>
+</div>
+<div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This file has to be in concordance with the input data; that is, the exact same genome assembly version must be used. In the first step of the pipeline, this is checked explicitly, and any mismatches will result in an error.</p>
 </div>
-</dd>
-</dl>
+</div></blockquote>
 </div>
 <div class="section" id="parameter-dir-tfbs">
 <span id="id16"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_TFBS</span></code><a class="headerlink" href="#parameter-dir-tfbs" title="Permalink to this headline">¶</a></h4>
@@ -549,16 +553,16 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </ol>
 <p>For user convenience, we provide these files as described in the publication as a separate download:</p>
 <ul class="simple">
-<li>hg19: For a pre-compiled list of 620 human TF with in-silico predicted TFBS based on the <em>HOCOMOCO 10</em> database and <em>PWMScan</em> for hg19, download this file: <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz">https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz</a></li>
-<li>hg38: For a pre-compiled list of 771 human TF with in-silico predicted TFBS based on the <em>HOCOMOCO 11</em> database and <em>FIMO</em> from the MEME suite1 for hg38, download this file: <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz">https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz</a></li>
-<li>mm10: For a pre-compiled list of 423 mouse TF with in-silico predicted TFBS based on the <em>HOCOMOCO 10</em> database and <em>PWMScan</em> for mm10, download this file: <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz">https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz</a></li>
+<li>hg19: For a pre-compiled list of 620 human TF with in-silico predicted TFBS based on the <em>HOCOMOCO 10</em> database and <em>PWMScan</em> for hg19, <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz">download this file:</a></li>
+<li>hg38: For a pre-compiled list of 771 human TF with in-silico predicted TFBS based on the <em>HOCOMOCO 11</em> database and <em>FIMO</em> from the MEME suite1 for hg38, <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz">download this file:</a></li>
+<li>mm10: For a pre-compiled list of 423 mouse TF with in-silico predicted TFBS based on the <em>HOCOMOCO 10</em> database and <em>PWMScan</em> for mm10, <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz">download this file:</a></li>
 </ul>
-<p class="last">However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool.</p>
+<p class="last">However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as <em>FIMO</em> or <em>MOODS</em>.</p>
 </dd>
 </dl>
 </div>
 <div class="section" id="parameter-rnaseqcounts">
-<span id="id17"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqCounts</span></code><a class="headerlink" href="#parameter-rnaseqcounts" title="Permalink to this headline">¶</a></h4>
+<span id="id19"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqCounts</span></code><a class="headerlink" href="#parameter-rnaseqcounts" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “”. Path to the file with RNA-Seq counts.</dd>
@@ -569,7 +573,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </dl>
 </div>
 <div class="section" id="parameter-hocomoco-mapping">
-<span id="id18"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">HOCOMOCO_mapping</span></code><a class="headerlink" href="#parameter-hocomoco-mapping" title="Permalink to this headline">¶</a></h4>
+<span id="id20"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">HOCOMOCO_mapping</span></code><a class="headerlink" href="#parameter-hocomoco-mapping" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Path to the TF-Gene translation table.</dd>
@@ -822,8 +826,8 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <div class="section" id="folder-tf-specific">
 <h2>FOLDER <code class="docutils literal"><span class="pre">TF-SPECIFIC</span></code><a class="headerlink" href="#folder-tf-specific" title="Permalink to this headline">¶</a></h2>
 <p>Stores TF-specific files. For each TF <code class="docutils literal"><span class="pre">{TF}</span></code>, a separate sub-folder <code class="docutils literal"><span class="pre">{TF}</span></code> is created by the pipeline. Within this folder, the following structure is created:</p>
-<div class="section" id="id19">
-<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id21">
+<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary">
 <h4>FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.gz</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.summary</span></code><a class="headerlink" href="#files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
@@ -942,8 +946,8 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <li><code class="docutils literal"><span class="pre">{basenameBAM}.bam</span></code> for each input <em>BAM</em> file: Produced in rule <code class="docutils literal"><span class="pre">resortBAM</span></code>. Resorted <em>BAM</em> file</li>
 </ul>
 </div>
-<div class="section" id="id20">
-<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id22">
+<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
 <p>Stores results related to the user-specified extension size (<code class="docutils literal"><span class="pre">regionExtension</span></code>, <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>)</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">{comparisonType}.allTFBS.peaks.bed.gz</span></code>: Produced in rule <code class="docutils literal"><span class="pre">intersectPeaksAndTFBS</span></code>. <em>BED</em> file containing all TFBS from all TF that overlap with the peaks after motif extension</li>
