@@ -290,7 +290,7 @@ rule filterSexChromosomesAndSortPeaks:
     message: "{ruleDisplayMessage}Filter sex and unassembled chromosomes..."
     threads: 1
     shell: """
-            grep -vP "^chrX|^chrY|^chrM|^chrUn|random|hap|_gl" {input.consensusPeaks} > {output.consensusPeaks_filtered} &&
+            grep -v "^chrX\|^chrY\|^chrM\|^chrUn\|random\|hap\|_gl" {input.consensusPeaks} > {output.consensusPeaks_filtered} &&
             sort -k1,1 -k2,2n {output.consensusPeaks_filtered} > {output.consensusPeaks_sorted}
            """
 
@@ -409,7 +409,7 @@ rule intersectTFBSAndBAM:
         ulimitMax = ulimitMax
     shell:
         """ ulimit -n {params.ulimitMax} &&
-            zgrep -P "{wildcards.TF}_TFBS\.sorted" {input.bed} |
+            zgrep "{wildcards.TF}_TFBS\.sorted" {input.bed} |
             awk 'BEGIN {{ OFS = "\\t" }} {{print $4"_"$2"-"$3,$1,$2,$3,$6}}' | sort -u -k1,1  >{output.saf} &&
             featureCounts \
             -F SAF \
@@ -515,7 +515,7 @@ rule calcNucleotideContent:
     params: refGenome = config["additionalInputFiles"]["refGenome_fasta"]
     shell:
       """
-            zcat {input.motifsBed} | grep -P "^{wildcards.perm}\\t" | awk '{{OFS="\\t"}};{{print $3,$4,$5,$6,$2}}' | gzip -f > {output.bedTemp} &&
+            zcat {input.motifsBed} | grep "^{wildcards.perm}\\t" | awk '{{OFS="\\t"}};{{print $3,$4,$5,$6,$2}}' | gzip -f > {output.bedTemp} &&
             bedtools nuc -fi {params.refGenome} -bed {output.bedTemp}  | gzip -f > {output.bed}
         """
 
@@ -576,7 +576,7 @@ rule cleanUpLogFiles:
     params: dir = LOG_BENCHMARK_DIR
     shell:
       """
-        grep -iP "^WARN"  {params.dir}/*.log > {output.warnLog} || true &&
-        grep -iP "^FATAL" {params.dir}/*.log > {output.errorLog} || true &&
+        grep -i "^WARN"  {params.dir}/*.log > {output.warnLog} || true &&
+        grep -i "^FATAL" {params.dir}/*.log > {output.errorLog} || true &&
         rm {params.dir}/*.out {params.dir}/*.err || true
       """

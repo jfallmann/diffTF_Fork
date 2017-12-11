@@ -360,16 +360,20 @@ Details
 Input metadata
 =============================================
 
-This file summarizes the data and corresponding available metadata  that should be used for the analysis. The format is flexible and may contain additional columns that are ignored by the pipeline, so it can be used to capture all available information in a single place. Importantly, the file must be saved as tab-separated, the exact name does not matter as long as it is correctly specified in the configuration file. It must contain at least contain the following columns (the exact names do matter):
+This file summarizes the data and corresponding available metadata  that should be used for the analysis. The format is flexible and may contain additional columns that are ignored by the pipeline, so it can be used to capture all available information in a single place. Importantly, the file must be saved as tab-separated, the exact name does not matter as long as it is correctly specified in the configuration file.
+It must contain at least contain the following columns (the exact names do matter):
 
 - ``sampleID``: The ID of the sample
 - ``bamReads``:  path to the *BAM* file corresponding to the sample.
 
-  .. warning:: All *BAM* files must be valid *BAM* files with chromosome names with "*chr*" as prefix. The pipeline may crash if the "*chr*" part is missing.
+  .. warning:: All *BAM* files must meet *SAM* format specifications. You may use the program *ValidateSamFile* from the *Picard tools* to check and identify problems with your file. Chromosome names must have a "*chr*" as prefix, otherwise diffTF may crash.
 
 - ``peaks``: absolute path to the sample-specific peak file, in the format as given by ``peakType`` (:ref:`parameter_peakType`). Only needed if no consensus peak file is provided.
 - ``conditionSummary``: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., *mutated and unmutated*, *day0 and day10*, ...)
 - if applicable, all additional variables from the design formula except ``conditionSummary`` must also be present as a separate column.
+
+
+.. warning:: Do not change the samples data after you started an analysis. You may introduce inconsistencies that will result in error messages. If you need to alter the sample data, we strongly advise to recalculate all steps in the pipeline. 
 
 Output
 ************************************************************
