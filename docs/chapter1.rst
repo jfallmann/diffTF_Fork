@@ -3,19 +3,22 @@
 Try it out now!
 ============================================================
 
-The following quick start briefly summarizes the necessary steps to use our pipeline:
+diffTF runs on Linux and macOS. The following quick start briefly summarizes the necessary steps to use our pipeline:
 
 1. Install the necessary tools (*Snakemake*, *samtools*, *bedtools*, and *Subread*).
 
   .. note:: Note that all tools require Python 3.
 
-  We recommend installing them via conda, in which case the installation is as easy as
+  We recommend installing them via conda, in which case the installation then becomes as easy as
 
   .. code-block:: Bash
 
-    conda install -c bioconda snakemake bedtools samtools subread
+  conda config --add channels defaults
+  conda config --add channels conda-forge
+  conda config --add channels bioconda
+  conda install snakemake bedtools samtools subread
 
-  If conda is not yet installed, follow the `installation instructions <https://conda.io/docs/user-guide/install/index.html>`_. Installation is quick and easy.
+  If conda is not yet installed, follow the `installation instructions <https://conda.io/docs/user-guide/install/index.html>`_. Installation is quick and easy. Make sure to open a new terminal after installation, so that *conda* is available.
 
   .. note:: You do not need to uninstall other Python installations or packages in order to use conda. Even if you already have a system Python, another Python installation from a source such as the macOS Homebrew package manager and globally installed packages from pip such as pandas and NumPy, you do not need to uninstall, remove, or change any of them before using conda.
 

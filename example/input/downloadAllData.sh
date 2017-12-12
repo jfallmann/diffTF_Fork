@@ -2,10 +2,10 @@
 # Simply execute with "sh downloadAllData.sh"
 
 filename="exampleData.tar.gz"
-wget -O $filename https://www.embl.de/download/zaugg/diffTF/$filename && tar xvzf $filename --overwrite && rm $filename
+curl -0 https://www.embl.de/download/zaugg/diffTF/$filename -o $filename  && tar xvzf $filename  && rm $filename
 
 filename="mm10.fa.tar.gz"
-wget -O $filename https://www.embl.de/download/zaugg/diffTF/referenceGenome/$filename && mkdir referenceGenome && tar xvzf $filename -C referenceGenome --overwrite && rm $filename
+curl -0 $filename https://www.embl.de/download/zaugg/diffTF/referenceGenome/$filename -o $filename  && mkdir referenceGenome && tar xvzf $filename -C referenceGenome  && rm $filename
 
 filename="TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz"
-wget -O $filename https://www.embl.de/download/zaugg/diffTF/TFBS/$filename && tar xvzf $filename --overwrite && rm $filename
+curl -0 $filename https://www.embl.de/download/zaugg/diffTF/TFBS/$filename -o $filename  && tar xvzf $filename  && rm $filename

@@ -373,7 +373,7 @@ It must contain at least contain the following columns (the exact names do matte
 - if applicable, all additional variables from the design formula except ``conditionSummary`` must also be present as a separate column.
 
 
-.. warning:: Do not change the samples data after you started an analysis. You may introduce inconsistencies that will result in error messages. If you need to alter the sample data, we strongly advise to recalculate all steps in the pipeline. 
+.. warning:: Do not change the samples data after you started an analysis. You may introduce inconsistencies that will result in error messages. If you need to alter the sample data, we strongly advise to recalculate all steps in the pipeline.
 
 Output
 ************************************************************
@@ -841,8 +841,9 @@ Identify the cause
 
 To troubleshoot errors, you have to first locate the exact error. Depending on how you run Snakemake (i.e., in a cluster setting or not), check the following places:
 
-- in locale mode: the Snakemake output on the console. Errors from R script should also be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory.
+- in locale mode: the Snakemake output appears on the console. Check the output before the line "Error in rule", and try to identify what went wrong.  Errors from R script should in addition be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory.
 - in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it
+
 
 Fixing the error
 ==============================
