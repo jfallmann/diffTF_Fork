@@ -13,10 +13,10 @@ diffTF runs on Linux and macOS. The following quick start briefly summarizes the
 
   .. code-block:: Bash
 
-  conda config --add channels defaults
-  conda config --add channels conda-forge
-  conda config --add channels bioconda
-  conda install snakemake bedtools samtools subread
+    conda config --add channels defaults
+    conda config --add channels conda-forge
+    conda config --add channels bioconda
+    conda install snakemake bedtools samtools subread
 
   If conda is not yet installed, follow the `installation instructions <https://conda.io/docs/user-guide/install/index.html>`_. Installation is quick and easy. Make sure to open a new terminal after installation, so that *conda* is available.
 
@@ -29,6 +29,20 @@ diffTF runs on Linux and macOS. The following quick start briefly summarizes the
     .. code-block:: Bash
 
       git clone https://git.embl.de/grp-zaugg/diffTF
+
+    If you receive an error, *Git* may not be installed on your system. If you run Ubuntu, try the following command:
+
+    .. code-block:: Bash
+
+      sudo apt-get install git
+
+    For macOS, there are multiple ways of installing it. If you already have *Homebrew* (http://brew.sh) installed, simply type:
+
+    .. code-block:: Bash
+
+      brew install git
+
+    Otherwise, consult the internet on how to best install Git for your system.
 
 3. To run the example analysis for 50 TF, simply perform the following steps:
 
