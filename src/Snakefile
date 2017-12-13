@@ -389,7 +389,7 @@ rule intersectPeaksAndTFBS:
                 -sorted \
                 -filenames \
                 | gzip -f > {output.TFBSinPeaks_bed} &&
-            zcat {output.TFBSinPeaks_bed} | cut -f4,5,6,7,8,9,12 | uniq  | awk '{{OFS="\\t"}};{{ print $4, $5-{params.extension}, $6+{params.extension},$1,$2,$7,$3}}' | gzip -f > {output.TFBSinPeaksMod_bed}
+            gunzip -c {output.TFBSinPeaks_bed} | cut -f4,5,6,7,8,9,12 | uniq  | awk '{{OFS="\\t"}};{{ print $4, $5-{params.extension}, $6+{params.extension},$1,$2,$7,$3}}' | gzip -f > {output.TFBSinPeaksMod_bed}
         """
 
 rule intersectTFBSAndBAM:
