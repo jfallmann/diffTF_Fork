@@ -98,9 +98,9 @@ A working ``R`` installation is needed and a number of packages from either CRAN
 
 .. code-block:: R
 
-  install.packages(c("checkmate", "futile.logger", "tidyverse", "reshape2", "gridExtra", "scales", "jsonlite", "RcolorBrewer", "rlist", "ggrepel", "lsr", "modeest", "locfdr", "boot"))
+  install.packages(c("checkmate", "futile.logger", "tidyverse", "reshape2", "gridExtra", "scales", "jsonlite", "RColorBrewer", "rlist", "ggrepel", "lsr", "modeest", "locfdr", "boot"))
   source("https://bioconductor.org/biocLite.R")
-  biocLite(c("limma", "vsn", "csaw", "DESeq2", "DiffBind", "geneplotter", "Rsamtools"))
+  biocLite(c("limma", "vsn", "csaw", "DESeq2", "EDASeq", "DiffBind", "geneplotter", "Rsamtools"))
 
 
 

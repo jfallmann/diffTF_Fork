@@ -215,7 +215,7 @@ if config["peaks"]["consensusPeaks"]:
     if not os.path.isfile(filenameCur):
         raise IOError("File \"" + filenameCur + "\" not found.")
     # Check if it contains scientific notification
-    # the || true in the end ensures the exit status of grep is 0, because this would raise an error otherwise
+    # the || true in the end ensures the exit status of  is 0, because this would raise an error otherwise
     nHits = int(subprocess.check_output('grep -c "e+" ' + config["peaks"]["consensusPeaks"] + " || true", shell=True))
     if nHits > 0:
         raise AssertionError("File " + config["peaks"]["consensusPeaks"] + " contains at least one line with the scientific notation (e+). This will cause errors in subsequent steps. Check the file and transform all \"e+\" coordinates.")
@@ -515,7 +515,7 @@ rule calcNucleotideContent:
     params: refGenome = config["additionalInputFiles"]["refGenome_fasta"]
     shell:
       """
-            zcat {input.motifsBed} | grep "^{wildcards.perm}\\t" | awk '{{OFS="\\t"}};{{print $3,$4,$5,$6,$2}}' | gzip -f > {output.bedTemp} &&
+            zgrep "$(printf '^{wildcards.perm}\\t')" {input.motifsBed} | awk '{{OFS="\\t"}};{{print $3,$4,$5,$6,$2}}' | gzip -f > {output.bedTemp} &&
             bedtools nuc -fi {params.refGenome} -bed {output.bedTemp}  | gzip -f > {output.bed}
         """
 
