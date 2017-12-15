@@ -202,7 +202,13 @@ if (length(unique(sampleIDs)) != nrow(sampleData.df)) {
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
 } 
 
+if (length(sampleIDs) != ncol(coverageAll.m)) {
+  message = paste0("Mismatch between number of sample IDs (", length(sampleIDs), ") and number of columns in coverage file (", ncol(coverageAll.m), "). It appears that the number of samples been changed after running the pipeline the first time. Rerun the full pipeline from scratch.")
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+} 
+
 colnames(coverageAll.m) = sampleIDs
+
 rownames(coverageAll.m) = coverageAll.df$Geneid
 
 
@@ -378,7 +384,13 @@ runPermutation <- function(permutationCur, sampleDataOrig.df, variableToPermute,
                                       colData = sampleData.df,
                                       design = designFormula)
   
-  
+  # Recent versions of DeSeq seem to do this automatically, whereas older versions don't, so enforce it here
+  if (!identical(colnames(cds.peaks), colnames(coverageAll.m))) {
+      colnames(cds.peaks) = colnames(coverageAll.m)
+  }
+  if (!identical(rownames(cds.peaks), rownames(coverageAll.m))) {
+      rownames(cds.peaks) = rownames(coverageAll.m)
+  }
   
   # Do a regular size factor normalization
   if (!par.l$doCyclicLoess) {

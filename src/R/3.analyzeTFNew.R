@@ -250,6 +250,15 @@ for (permutationCur in 0:par.l$nPermutations) {
                                      colData = sampleData.df,
                                      design = designFormula)
     
+    # Recent versions of DeSeq seem to do this automatically, whereas older versions don't, so enforce it here
+    if (!identical(colnames(TF.cds), colnames(TF.table.m))) {
+        colnames(TF.cds) = colnames(TF.table.m)
+    }
+    if (!identical(rownames(TF.cds), rownames(TF.table.m))) {
+        rownames(TF.cds) = rownames(TF.table.m)
+    }
+    
+    TF.cds
    
     
   }, error = function(e) {
