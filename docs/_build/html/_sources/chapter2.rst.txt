@@ -28,7 +28,7 @@ We now show which rules are executed by *Snakemake* for a specific example (see 
 
 
    .. figure:: Figures/dag.png
-         :scale: 70 %
+         :scale: 50 %
          :alt: Directed acyclic graph of an example workflow
          :align: center
 

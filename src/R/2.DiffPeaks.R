@@ -373,71 +373,72 @@ countsNorm.df     = as.data.frame(countsNorm) %>%
   dplyr::mutate(peakID = rownames(cds.peaks.filt))  %>%
   dplyr::select(one_of("peakID", colnames(countsNorm)))
 
+# EDIT: FOR NOW, ALWAYS RUN DESEQ as it has to run only once anyway independent of the number of permutations and we can improve signal.
+# 
+# if (par.l$nPermutations > 0) {
+#   
+#   # Generate normalized counts for limma analysis
+#   countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
+#   rownames(countsNorm.transf) = rownames(cds.peaks.filt)
+#   
+#   sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary)
+#   
+#   designMatrix = model.matrix(designFormula, data = sampleData.df)
+#   
+#   if (nrow(designMatrix) < nrow(sampleData.df)) {
+#     missingRows = setdiff(1:nrow(sampleData.df), as.integer(row.names(designMatrix)))
+#     message = paste0("There is a problem with the specified design formula (parameter designContrast): The corresponding design matrix has fewer rows. This usually means that there are missing values in one of the specified variables. The problem comes from the following lines in the summary file: ", paste0(missingRows, collapse = ","), ".") 
+#     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+#   }
+#   
+#   fit        <- eBayes(lmFit(countsNorm.transf, design = designMatrix))
+#   results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
+#   
+#   final.peaks.df = data_frame(  
+#     "permutation" = 0,
+#     "peakID"      = rownames(results.df), 
+#     "limma_avgExpr"     = results.df$AveExpr,
+#     "l2FC"        = results.df$logFC,
+#     "limma_B"           = results.df$B,
+#     "limma_t_stat"      = results.df$t,
+#     "pval"        = results.df$P.Value, 
+#     "pval_adj"    = results.df$adj.P.Val
+#   )
+#   
+#   
+#   plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 10)
+#   
+#   
+# } else {
 
-if (par.l$nPermutations > 0) {
+# Deseq analysis
+cds.peaks.filt = tryCatch( {
+  DESeq(cds.peaks.filt, fitType = 'local', quiet = TRUE)
   
-  # Generate normalized counts for limma analysis
-  countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
-  rownames(countsNorm.transf) = rownames(cds.peaks.filt)
-  
-  sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary)
-  
-  designMatrix = model.matrix(designFormula, data = sampleData.df)
-  
-  if (nrow(designMatrix) < nrow(sampleData.df)) {
-    missingRows = setdiff(1:nrow(sampleData.df), as.integer(row.names(designMatrix)))
-    message = paste0("There is a problem with the specified design formula (parameter designContrast): The corresponding design matrix has fewer rows. This usually means that there are missing values in one of the specified variables. The problem comes from the following lines in the summary file: ", paste0(missingRows, collapse = ","), ".") 
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-  }
-  
-  fit        <- eBayes(lmFit(countsNorm.transf, design = designMatrix))
-  results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
-  
-  final.peaks.df = data_frame(  
-    "permutation" = 0,
-    "peakID"      = rownames(results.df), 
-    "limma_avgExpr"     = results.df$AveExpr,
-    "l2FC"        = results.df$logFC,
-    "limma_B"           = results.df$B,
-    "limma_t_stat"      = results.df$t,
-    "pval"        = results.df$P.Value, 
-    "pval_adj"    = results.df$adj.P.Val
-  )
-  
-  
-  plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 10)
-  
-  
-} else {
-
-  # Deseq analysis
-  cds.peaks.filt = tryCatch( {
-    DESeq(cds.peaks.filt, fitType = 'local', quiet = TRUE)
-    
-  }, error = function(e) {
-    message = "Warning: Could not run DESeq with local fitting, retry with default fitting type..."
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-    DESeq(cds.peaks.filt, quiet = TRUE)
-  }
-  )
-  
-  cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt))
-  
-  # TODO: "peakID"      = rownames(results.df), CHECK
-  final.peaks.df = data_frame( 
-    "permutation" = 0,
-    "peakID"    = rownames(cds.peaks.df), 
-    "DESeq_baseMean" = cds.peaks.df$baseMean,
-    "l2FC"     = cds.peaks.df$log2FoldChange,
-    "DESeq_ldcSE"    = cds.peaks.df$lfcSE,
-    "DESeq_stat"     = cds.peaks.df$stat,
-    "pval"     =  cds.peaks.df$pvalue, 
-    "pval_adj" =  cds.peaks.df$padj
-  )
-  
-  plotDiagnosticPlots(cds.peaks.filt, cds.peaks.filt, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
-  
+}, error = function(e) {
+  message = "Warning: Could not run DESeq with local fitting, retry with default fitting type..."
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+  DESeq(cds.peaks.filt, quiet = TRUE)
 }
+)
+
+cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt))
+
+# TODO: "peakID"      = rownames(results.df), CHECK
+final.peaks.df = data_frame( 
+  "permutation" = 0,
+  "peakID"    = rownames(cds.peaks.df), 
+  "DESeq_baseMean" = cds.peaks.df$baseMean,
+  "l2FC"     = cds.peaks.df$log2FoldChange,
+  "DESeq_ldcSE"    = cds.peaks.df$lfcSE,
+  "DESeq_stat"     = cds.peaks.df$stat,
+  "pval"     =  cds.peaks.df$pvalue, 
+  "pval_adj" =  cds.peaks.df$padj
+)
+
+plotDiagnosticPlots(cds.peaks.filt, cds.peaks.filt, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
+  
+# }
 
 
 saveRDS(cds.peaks.filt, file = par.l$file_output_DESeqObj)
