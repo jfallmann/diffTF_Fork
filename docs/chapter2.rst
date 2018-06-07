@@ -6,7 +6,7 @@ Workflow
 The workflow and conceptual idea behind *diffTF* is illustrated by the following three Figures. First, we give a high-level conceptual overview and a biological motivation:
 
    .. figure:: Figures/diffTF_Schematic.png
-         :scale: 70 %
+         :scale: 50 %
          :alt: diffTF schematics
          :align: center
 
@@ -27,7 +27,7 @@ The workflow and conceptual idea behind *diffTF* is illustrated by the following
 We now show which rules are executed by *Snakemake* for a specific example (see the caption of the image):
 
 
-   .. figure:: Figures/DAG_transparent.png
+   .. figure:: Figures/dag.png
          :scale: 70 %
          :alt: Directed acyclic graph of an example workflow
          :align: center
@@ -150,7 +150,7 @@ Summary
   String. Default  *conditionSummary:factor*.   The data types of all elements listed in ``designContrast`` (:ref:`parameter_designContrast`).
 
 Details
-Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if ``designContrast`` (:ref:`parameter_designContrast`) is specified as "*~ Treatment + conditionSummary*", the corresponding types might be "Treatment:factor, conditionSummary:factor". If a data type is specified as either "logical" or "factor", the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). *conditionSummary* is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If *conditionSummary* is specified as "integer" or "numeric", however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.
+  Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if ``designContrast`` (:ref:`parameter_designContrast`) is specified as "*~ Treatment + conditionSummary*", the corresponding types might be "Treatment:factor, conditionSummary:factor". If a data type is specified as either "logical" or "factor", the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). *conditionSummary* is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If *conditionSummary* is specified as "integer" or "numeric", however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.
 
   .. note:: Importantly, if the variable of interest is continuous-valued (i.e., marked as being integer or numeric), then the reported log2 fold change is per unit of change of that variable. That is, in the final circular plot, TFs displayed in the left side have a negative slope  per unit of change of that variable, while TFs at the right side have a positive one.
 
@@ -164,11 +164,11 @@ Summary
   Integer >=  0. Default 50. The number of random sample permutations.
 
 Details
-  If set to a value > 0, in addition to the real data, the sample conditions as specified in the sample table will be randomly permuted *nPermutations* times. This is the recommended way of computing statistical significances for each TF. Note that the maximum number of possible permutations is limited by the number of samples and can be computed with the binomial coefficient *n* over *k*. For example, if you have *n*=8 samples in total and they split up in the two conditions/groups as *k*=5 / *k*=3, the total number of permutations is 8 over 5 or 8 over 3 (they are both identical). We generally recommend setting this value to high values such as 1,000. If the value is set to a number higher than the number of possible permutations, it will be adjusted automatically to the maximum number of permutations as determined by the binomial coefficient.
+  If set to a value > 0, in addition to the real data, the sample conditions as specified in the sample table will be randomly permuted *nPermutations* times. This is the recommended way of computing statistical significances for each TF. Note that the maximum number of possible permutations is limited by the number of samples and can be computed with the binomial coefficient *n* over *k*. For example, if you have *n* = 8 samples in total and they split up in the two conditions/groups as *k* = 5 / *k* = 3, the total number of permutations is 8 over 5 or 8 over 3 (they are both identical). We generally recommend setting this value to high values such as 1,000. If the value is set to a number higher than the number of possible permutations, it will be adjusted automatically to the maximum number of permutations as determined by the binomial coefficient.
 
   If set to 0, an alternative way of computing significances that is not based on permutations is performed. First, in the CG normalization step, a Welch Two Sample t-test is performed for each bin and the overall significance by treating the T-statistics as z-scores is calculated, which allows to summarize them across the bins and convert them to one p-value per TF. For this conversion of z-scores per bin to p-value an estimate of the variance of the T-scores is approximated (see the publication for details). This procedure reduces the dependency of the p-value on the sample size (since the number of TFBS can range between a few dozen and multiple tens of thousands depending on the TF).
 
-    .. note:: If set to a value > 0, the parameter ``nBootstraps`` (:ref:`parameter_nBootstraps`) is ignored.
+  .. note:: If set to a value > 0, the parameter ``nBootstraps`` (:ref:`parameter_nBootstraps`) is ignored.
 
   .. note:: While using permutations is the recommended approach for assessing statistical significance, in some cases it might be useful to use the alternative approach: If the number of samples is small or the groups show a very uneven distributions, the number of possible permutations is very small and therefore also the permutation-based approach might not accurately assess significance.
 
@@ -176,6 +176,7 @@ Details
 
 .. warning:: Do not change the value of this parameter after (parts of) the pipeline have been run, some steps may fail due to this change. If you really need to change the value, rerun the pipeline from the *diffPeaks* step onwards.
 
+.. _parameter_nBootstraps:
 
 PARAMETER ``nBootstraps``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -321,6 +322,7 @@ PARAMETER ``refGenome_fasta``
 
 Summary
   String. Default ‘hg19.fasta’. Path to the reference genome *fasta* file.
+
 Details
 
   .. warning:: You need write access to the directory in which the *fasta* file is stored, make sure this is the case or copy the *fasta* file to a different directory. The reason is that the pipeline produces a *fasta* index file, which is put in the same directory as the corresponding *fasta* file. This is a limitation of *samtools faidx* and not our pipeline.
@@ -348,9 +350,9 @@ Details
 
   For user convenience, we provide these files as described in the publication as a separate download:
 
-  - hg19: For a pre-compiled list of 620 human TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for hg19, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz>`_
+  - hg19: For a pre-compiled list of 620 human TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for hg19, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz>`__
   - hg38: For a pre-compiled list of 771 human TF with in-silico predicted TFBS based on the *HOCOMOCO 11* database and *FIMO* from the MEME suite1 for hg38, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz>`_
-  - mm10: For a pre-compiled list of 423 mouse TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for mm10, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz>`_
+  - mm10: For a pre-compiled list of 423 mouse TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for mm10, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz>`__
 
   However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as *FIMO* or *MOODS*.
 
@@ -517,7 +519,7 @@ Details
 
 
 FILE ``{comparisonType}.allBams.peaks.overlaps.bed.gz``
-----------------------------------------------------
+--------------------------------------------------------
 
 Summary
   Produced in rule ``intersectPeaksAndBAM``. Counts for each consensus peak with each of the input *BAM* files.
@@ -605,7 +607,7 @@ Details
 
 
 FILE ``{TF}.{comparisonType}.output.tsv.gz``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
   Produced in rule ``analyzeTF``. A summary table for the *limma* analysis.
@@ -615,7 +617,7 @@ Details
 
 
 FILE ``{TF}.{comparisonType}.outputPerm.tsv.gz``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
   Produced in rule ``analyzeTF``. A subset of the file ``{TF}.{comparisonType}.output.tsv.gz`` that stores only the necessary permutation-specific results for subsequent steps.
@@ -663,7 +665,7 @@ Details
   No details provided yet.
 
 FILE ``{TF}.{comparisonType}.permutationSummary.tsv.gz``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
   Produced in rule ``binningTF``. A final summary table that summarizes the results across bins by calculating weighted means.
@@ -783,8 +785,8 @@ Some notes regarding the number of available cores:
 - you can use the ``--cores`` option when invoking *Snakemake* to specify the number of cores that are available for the analysis. If you specify 4 cores, for example, up to 4 rules can be run in parallel (if each of them occupies only 1 core), or 1 rule can use up to 4 cores.
 - we strongly recommend running diffTF in a cluster environment due to the massive parallelization. With Snakemake, it is easy to run diffTF in a cluster setting. Simply do the following:
 
-  - write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder ``src/clusterConfigurationTemplates`` for examples. Note that these are rough estimates only. See the `*Snakemake* documentation <http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration>`_ for details for how to use cluster configuration files.
-  - invoke *Snakemake* with one of the available cluster modes, which will depend on your cluster system. We used ``--cluster`` and tested the pipeline extensively with *LSF/BSUB* and *SLURM*. For more details, see the `*Snakemake* documentation <http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution>`_
+  - write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder ``src/clusterConfigurationTemplates`` for examples. Note that these are rough estimates only. See the `*Snakemake* documentation <http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration>`__ for details for how to use cluster configuration files.
+  - invoke *Snakemake* with one of the available cluster modes, which will depend on your cluster system. We used ``--cluster`` and tested the pipeline extensively with *LSF/BSUB* and *SLURM*. For more details, see the `*Snakemake* documentation <http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution>`__
 
 Total running time
 --------------------

@@ -95,7 +95,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Try it out now!</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#prerequisites">Prerequisites</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id1">Snakemake</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#samtools-bedtool-s-subread"><em>samtools</em>, <em>bedtool*s, *Subread</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#samtools-bedtools-subread"><em>samtools</em>, <em>bedtools</em>, <em>Subread</em></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#r-and-r-packages">R and R packages</a></li>
 </ul>
 </li>
@@ -181,7 +181,7 @@
             
   <div class="section" id="try-it-out-now">
 <span id="docs-quickstart"></span><h1>Try it out now!<a class="headerlink" href="#try-it-out-now" title="Permalink to this headline">¶</a></h1>
-<p>The following quick start briefly summarizes the necessary steps to use our pipeline:</p>
+<p>diffTF runs on Linux and macOS. The following quick start briefly summarizes the necessary steps to use our pipeline:</p>
 <ol class="arabic simple">
 <li>Install the necessary tools (<em>Snakemake</em>, <em>samtools</em>, <em>bedtools</em>, and <em>Subread</em>).</li>
 </ol>
@@ -190,11 +190,14 @@
 <p class="first admonition-title">Note</p>
 <p class="last">Note that all tools require Python 3.</p>
 </div>
-<p>We recommend installing them via conda, in which case the installation is as easy as</p>
-<div class="highlight-Bash"><div class="highlight"><pre><span></span>conda install -c bioconda snakemake bedtools samtools subread
+<p>We recommend installing them via conda, in which case the installation then becomes as easy as</p>
+<div class="highlight-Bash"><div class="highlight"><pre><span></span>conda config --add channels defaults
+conda config --add channels conda-forge
+conda config --add channels bioconda
+conda install snakemake bedtools samtools subread
 </pre></div>
 </div>
-<p>If conda is not yet installed, follow the <a class="reference external" href="https://conda.io/docs/user-guide/install/index.html">installation instructions</a>. Installation is quick and easy.</p>
+<p>If conda is not yet installed, follow the <a class="reference external" href="https://conda.io/docs/user-guide/install/index.html">installation instructions</a>. Installation is quick and easy. Make sure to open a new terminal after installation, so that <em>conda</em> is available.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">You do not need to uninstall other Python installations or packages in order to use conda. Even if you already have a system Python, another Python installation from a source such as the macOS Homebrew package manager and globally installed packages from pip such as pandas and NumPy, you do not need to uninstall, remove, or change any of them before using conda.</p>
@@ -207,6 +210,15 @@
 <div><div class="highlight-Bash"><div class="highlight"><pre><span></span>git clone https://git.embl.de/grp-zaugg/diffTF
 </pre></div>
 </div>
+<p>If you receive an error, <em>Git</em> may not be installed on your system. If you run Ubuntu, try the following command:</p>
+<div class="highlight-Bash"><div class="highlight"><pre><span></span>sudo apt-get install git
+</pre></div>
+</div>
+<p>For macOS, there are multiple ways of installing it. If you already have <em>Homebrew</em> (<a class="reference external" href="http://brew.sh">http://brew.sh</a>) installed, simply type:</p>
+<div class="highlight-Bash"><div class="highlight"><pre><span></span>brew install git
+</pre></div>
+</div>
+<p>Otherwise, consult the internet on how to best install Git for your system.</p>
 </div></blockquote>
 </li>
 <li><p class="first">To run the example analysis for 50 TF, simply perform the following steps:</p>
@@ -256,14 +268,14 @@
 <h2>Snakemake<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>Please ensure that you have at least version 4.3 installed. Principally, there are <a class="reference external" href="http://snakemake.readthedocs.io/en/stable/getting_started/installation.html">multiple ways to install Snakemake</a>. We recommend installing it, along with all the other required software, via conda.</p>
 </div>
-<div class="section" id="samtools-bedtool-s-subread">
-<h2><em>samtools</em>, <em>bedtool*s, *Subread</em><a class="headerlink" href="#samtools-bedtool-s-subread" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="samtools-bedtools-subread">
+<h2><em>samtools</em>, <em>bedtools</em>, <em>Subread</em><a class="headerlink" href="#samtools-bedtools-subread" title="Permalink to this headline">¶</a></h2>
 <p>In addition, <a class="reference external" href="http://www.htslib.org/download">samtools</a>, <a class="reference external" href="http://bedtools.readthedocs.io">bedtools</a> and <a class="reference external" href="http://subread.sourceforge.net">Subread</a> are needed to run <em>diffTF</em>. We recommend installing them, along with all the other required software, via conda.</p>
 </div>
 <div class="section" id="r-and-r-packages">
 <h2>R and R packages<a class="headerlink" href="#r-and-r-packages" title="Permalink to this headline">¶</a></h2>
 <p>A working <code class="docutils literal"><span class="pre">R</span></code> installation is needed and a number of packages from either CRAN or Bioconductor have to be installed.  Type the following in <code class="docutils literal"><span class="pre">R</span></code> to install them:</p>
-<div class="highlight-R"><div class="highlight"><pre><span></span>install.packages<span class="p">(</span><span class="kt">c</span><span class="p">(</span><span class="s">&quot;checkmate&quot;</span><span class="p">,</span> <span class="s">&quot;futile.logger&quot;</span><span class="p">,</span> <span class="s">&quot;tidyverse&quot;</span><span class="p">,</span> <span class="s">&quot;reshape2&quot;</span><span class="p">,</span> <span class="s">&quot;gridExtra&quot;</span><span class="p">,</span> <span class="s">&quot;scales&quot;</span><span class="p">,</span> <span class="s">&quot;jsonlite&quot;</span><span class="p">,</span> <span class="s">&quot;RcolorBrewer&quot;</span><span class="p">,</span> <span class="s">&quot;rlist&quot;</span><span class="p">,</span> <span class="s">&quot;ggrepel&quot;</span><span class="p">,</span> <span class="s">&quot;lsr&quot;</span><span class="p">,</span> <span class="s">&quot;modeest&quot;</span><span class="p">,</span> <span class="s">&quot;locfdr&quot;</span><span class="p">,</span> <span class="s">&quot;boot&quot;</span><span class="p">))</span>
+<div class="highlight-R"><div class="highlight"><pre><span></span>install.packages<span class="p">(</span><span class="kt">c</span><span class="p">(</span><span class="s">&quot;checkmate&quot;</span><span class="p">,</span> <span class="s">&quot;futile.logger&quot;</span><span class="p">,</span> <span class="s">&quot;tidyverse&quot;</span><span class="p">,</span> <span class="s">&quot;reshape2&quot;</span><span class="p">,</span> <span class="s">&quot;RColorBrewer&quot;</span><span class="p">,</span> <span class="s">&quot;ggrepel&quot;</span><span class="p">,</span> <span class="s">&quot;lsr&quot;</span><span class="p">,</span> <span class="s">&quot;modeest&quot;</span><span class="p">,</span> <span class="s">&quot;boot&quot;</span><span class="p">,</span> <span class="s">&quot;grDevices&quot;</span><span class="p">,</span> <span class="s">&quot;pheatmap&quot;</span><span class="p">,</span> <span class="s">&quot;matrixStats&quot;</span><span class="p">,</span> <span class="s">&quot;locfdr&quot;</span><span class="p">))</span>
 <span class="kn">source</span><span class="p">(</span><span class="s">&quot;https://bioconductor.org/biocLite.R&quot;</span><span class="p">)</span>
 biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span><span class="s">&quot;limma&quot;</span><span class="p">,</span> <span class="s">&quot;vsn&quot;</span><span class="p">,</span> <span class="s">&quot;csaw&quot;</span><span class="p">,</span> <span class="s">&quot;DESeq2&quot;</span><span class="p">,</span> <span class="s">&quot;DiffBind&quot;</span><span class="p">,</span> <span class="s">&quot;geneplotter&quot;</span><span class="p">,</span> <span class="s">&quot;Rsamtools&quot;</span><span class="p">))</span>
 </pre></div>
@@ -278,7 +290,7 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 <li>Modify the file <code class="docutils literal"><span class="pre">config.json</span></code> accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section <a class="reference internal" href="chapter2.html#configurationfile"><span class="std std-ref">General configuration file</span></a> for details about the meaning of the parameters. Do not delete or rename any parameters or sections.</li>
 <li>Create a tab-separated file that defines the input data, in analogy to the file <code class="docutils literal"><span class="pre">sampleData.tsv</span></code> from the example analysis, and refer to that in the file <code class="docutils literal"><span class="pre">config.json</span></code> (parameter <code class="docutils literal"><span class="pre">summaryFile</span></code>)</li>
 <li>Adapt the file <code class="docutils literal"><span class="pre">startAnalysis.sh</span></code> if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)</li>
-<li>Since running the pipeline might be computationally demanding, read Section <a class="reference internal" href="chapter2.html#timememoryrequirements"><span class="std std-ref">Executing diffTF - Running times and memory requirements</span></a> and decide on which machine to run the pipeline. In most cases, we recommend running <em>diffTF</em> in a cluster environment. The pipeline is written in Snakemake, and we strongly suggest to also read Section <a class="reference internal" href="chapter2.html#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a> to get a basic understanding of how the pipeline works.</li>
+<li>Since running the pipeline is often computationally demanding, read Section <a class="reference internal" href="chapter2.html#timememoryrequirements"><span class="std std-ref">Executing diffTF - Running times and memory requirements</span></a> and decide on which machine to run the pipeline. In most cases, we recommend running <em>diffTF</em> in a cluster environment (see Section <a class="reference internal" href="chapter2.html#clusterenvironment"><span class="std std-ref">Running diffTF in a cluster environment</span></a> for details). The pipeline is written in Snakemake, and we strongly suggest to also read Section <a class="reference internal" href="chapter2.html#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a> to get a basic understanding of how the pipeline works.</li>
 </ol>
 </div>
 

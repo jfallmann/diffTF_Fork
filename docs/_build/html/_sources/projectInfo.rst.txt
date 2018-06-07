@@ -2,7 +2,10 @@
 
 Biological motivation
 ============================
-Transcription factor (TF) activity constitutes an important readout of cellular signalling pathways and thus for assessing regulatory differences across conditions. However, current technologies lack the ability to simultaneously assessing activity changes for multiple TFs and surprisingly little is known about whether a TF acts as repressor or activator. To this end, we introduce the widely applicable genome-wide method diffTF to assess differential TF binding activity and classifying TFs as activator or repressor by integrating any type of genome-wide chromatin with RNA-Seq data and in-silico predicted TF binding sites
+Transcription factor (TF) activity constitutes an important readout of cellular signalling pathways and thus for assessing regulatory differences across conditions. However, current technologies lack the ability to simultaneously assessing activity changes for multiple TFs and surprisingly little is known about whether a TF acts as repressor or activator. To this end, we introduce the widely applicable genome-wide method diffTF to assess differential TF binding activity and classifying TFs as activator or repressor by integrating any type of genome-wide chromatin with RNA-Seq data and in-silico predicted TF binding sites.
+
+For a graphical summary of the idea, see the section :ref:`workflow`
+
 
 Help, contribute and contact
 ============================
@@ -16,7 +19,7 @@ Citation
 
 If you use this software, please cite the following reference:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Genome-wide quantification of differential transcription factor activity: diffTF*. 2017. submitted.
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Genome-wide quantification of differential transcription factor activity: diffTF*. 2018. submitted.
 
 
 Change log

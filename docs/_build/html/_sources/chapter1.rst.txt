@@ -3,19 +3,22 @@
 Try it out now!
 ============================================================
 
-The following quick start briefly summarizes the necessary steps to use our pipeline:
+diffTF runs on Linux and macOS. The following quick start briefly summarizes the necessary steps to use our pipeline:
 
 1. Install the necessary tools (*Snakemake*, *samtools*, *bedtools*, and *Subread*).
 
   .. note:: Note that all tools require Python 3.
 
-  We recommend installing them via conda, in which case the installation is as easy as
+  We recommend installing them via conda, in which case the installation then becomes as easy as
 
   .. code-block:: Bash
 
-    conda install -c bioconda snakemake bedtools samtools subread
+    conda config --add channels defaults
+    conda config --add channels conda-forge
+    conda config --add channels bioconda
+    conda install snakemake bedtools samtools subread
 
-  If conda is not yet installed, follow the `installation instructions <https://conda.io/docs/user-guide/install/index.html>`_. Installation is quick and easy.
+  If conda is not yet installed, follow the `installation instructions <https://conda.io/docs/user-guide/install/index.html>`_. Installation is quick and easy. Make sure to open a new terminal after installation, so that *conda* is available.
 
   .. note:: You do not need to uninstall other Python installations or packages in order to use conda. Even if you already have a system Python, another Python installation from a source such as the macOS Homebrew package manager and globally installed packages from pip such as pandas and NumPy, you do not need to uninstall, remove, or change any of them before using conda.
 
@@ -26,6 +29,20 @@ The following quick start briefly summarizes the necessary steps to use our pipe
     .. code-block:: Bash
 
       git clone https://git.embl.de/grp-zaugg/diffTF
+
+    If you receive an error, *Git* may not be installed on your system. If you run Ubuntu, try the following command:
+
+    .. code-block:: Bash
+
+      sudo apt-get install git
+
+    For macOS, there are multiple ways of installing it. If you already have *Homebrew* (http://brew.sh) installed, simply type:
+
+    .. code-block:: Bash
+
+      brew install git
+
+    Otherwise, consult the internet on how to best install Git for your system.
 
 3. To run the example analysis for 50 TF, simply perform the following steps:
 
@@ -68,7 +85,7 @@ Snakemake
 
 Please ensure that you have at least version 4.3 installed. Principally, there are `multiple ways to install Snakemake <http://snakemake.readthedocs.io/en/stable/getting_started/installation.html>`_. We recommend installing it, along with all the other required software, via conda.
 
-*samtools*, *bedtool*s, *Subread*
+*samtools*, *bedtools*, *Subread*
 ----------------------------------
 
 In addition, `samtools <http://www.htslib.org/download>`_, `bedtools <http://bedtools.readthedocs.io>`_ and `Subread <http://subread.sourceforge.net>`_ are needed to run *diffTF*. We recommend installing them, along with all the other required software, via conda.
@@ -81,11 +98,10 @@ A working ``R`` installation is needed and a number of packages from either CRAN
 
 .. code-block:: R
 
-  install.packages(c("checkmate", "futile.logger", "tidyverse", "reshape2", "gridExtra", "scales", "jsonlite", "RcolorBrewer", "rlist", "ggrepel", "lsr", "modeest", "locfdr", "boot"))
+  install.packages(c("checkmate", "futile.logger", "tidyverse", "reshape2", "RColorBrewer", "ggrepel", "lsr", "modeest", "boot", "grDevices", "pheatmap", "matrixStats", "locfdr"))
   source("https://bioconductor.org/biocLite.R")
   biocLite(c("limma", "vsn", "csaw", "DESeq2", "DiffBind", "geneplotter", "Rsamtools"))
-
-
+ 
 
 .. _docs-runOwnAnalysis:
 
@@ -98,4 +114,4 @@ Running your own analysis is almost as easy as running the example analysis. Car
 2. Modify the file ``config.json`` accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section :ref:`configurationFile` for details about the meaning of the parameters. Do not delete or rename any parameters or sections.
 3. Create a tab-separated file that defines the input data, in analogy to the file ``sampleData.tsv`` from the example analysis, and refer to that in the file ``config.json`` (parameter ``summaryFile``)
 4. Adapt the file ``startAnalysis.sh`` if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)
-5. Since running the pipeline might be computationally demanding, read Section :ref:`timeMemoryRequirements` and decide on which machine to run the pipeline. In most cases, we recommend running *diffTF* in a cluster environment. The pipeline is written in Snakemake, and we strongly suggest to also read Section :ref:`workingWithPipeline` to get a basic understanding of how the pipeline works.
+5. Since running the pipeline is often computationally demanding, read Section :ref:`timeMemoryRequirements` and decide on which machine to run the pipeline. In most cases, we recommend running *diffTF* in a cluster environment (see Section :ref:`clusterEnvironment` for details). The pipeline is written in Snakemake, and we strongly suggest to also read Section :ref:`workingWithPipeline` to get a basic understanding of how the pipeline works.

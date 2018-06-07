@@ -109,6 +109,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#parameter-designcontrast">PARAMETER <code class="docutils literal"><span class="pre">designContrast</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-designvariabletypes">PARAMETER <code class="docutils literal"><span class="pre">designVariableTypes</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-npermutations">PARAMETER <code class="docutils literal"><span class="pre">nPermutations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameter-nbootstraps">PARAMETER <code class="docutils literal"><span class="pre">nBootstraps</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-tfs">PARAMETER <code class="docutils literal"><span class="pre">TFs</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-dir-scripts">PARAMETER <code class="docutils literal"><span class="pre">dir_scripts</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-rnaseqintegration">PARAMETER <code class="docutils literal"><span class="pre">RNASeqIntegration</span></code></a></li>
@@ -140,8 +141,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#folder-final-output">FOLDER <code class="docutils literal"><span class="pre">FINAL_OUTPUT</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sub-folder-extension-regionextension">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-allmotifs-tsv-gz">FILE <code class="docutils literal"><span class="pre">{comparisonType}.allMotifs.tsv.gz</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-tf-vs-peak-distribution-tsv">FILE <code class="docutils literal"><span class="pre">{comparisonType}.TF_vs_peak_distribution.tsv</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-summary-tsv">FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.tsv</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-tf-vs-peak-distribution-tsv-gz">FILE <code class="docutils literal"><span class="pre">{comparisonType}.TF_vs_peak_distribution.tsv.gz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-summary-tsv-gz">FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.tsv.gz</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-summary-circular-pdf">FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.circular.pdf</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-comparisontype-diagnosticplots-pdf">FILE <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.pdf</span></code></a></li>
 </ul>
@@ -149,26 +150,25 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#folder-peaks">FOLDER <code class="docutils literal"><span class="pre">PEAKS</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#files-comparisontype-consensuspeaks-bed-and-consensuspeaks-lengthdistribution-pdf">FILES <code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.bed</span></code> and <code class="docutils literal"><span class="pre">consensusPeaks_lengthDistribution.pdf</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-allbams-peaks-overlaps-bed">FILE <code class="docutils literal"><span class="pre">{comparisonType}.allBams.peaks.overlaps.bed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#files-comparisontype-consensuspeaks-filtered-sorted-bed">FILES <code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.filtered.sorted.bed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-allbams-peaks-overlaps-bed-gz">FILE <code class="docutils literal"><span class="pre">{comparisonType}.allBams.peaks.overlaps.bed.gz</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-samplemetadata-rds">FILE <code class="docutils literal"><span class="pre">{comparisonType}.sampleMetadata.rds</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-peaks-rds">FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.rds</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-peaks-tsv">FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.tsv</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-peaks-tsv-gz">FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.tsv.gz</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-normfacs-rds">FILE <code class="docutils literal"><span class="pre">{comparisonType}.normFacs.rds</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#files-comparisontype-diagnosticplots-peaks-pdf-and-comparisontype-diagnosticplots-peaks-permutation-perm-pdf-for-each-permutation-perm">FILES <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code> and <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf</span></code> for each permutation <code class="docutils literal"><span class="pre">{perm}</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#files-comparisontype-diagnosticplots-peaks-pdf">FILES <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#file-comparisontype-deseq-object-rds">FILE <code class="docutils literal"><span class="pre">{comparisonType}.DESeq.object.rds</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#folder-tf-specific">FOLDER <code class="docutils literal"><span class="pre">TF-SPECIFIC</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id21">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id20">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary">FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.gz</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.summary</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-output-tsv">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-output-tsv-gz">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv.gz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-outputperm-tsv-gz">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.outputPerm.tsv.gz</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-summary-rds">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summary.rds</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#files-tf-comparisontype-diagnosticplots-pdf-and-tf-comparisontype-diagnosticplots-permutation-perm-pdf">FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.diagnosticPlots.pdf</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.diagnosticPlots_permutation{perm}.pdf</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#files-tf-comparisontype-summaryplots-pdf-and-tf-comparisontype-summaryplots-permutation-perm-pdf">FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summaryPlots.pdf</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-deseq-object-rds">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.DESeq.object.rds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#files-tf-comparisontype-diagnosticplots-pdf">FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.diagnosticPlots.pdf</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-permutationresults-rds">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.permutationResults.rds</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-permutationsummary-tsv">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.permutationSummary.tsv</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-permutationsummary-tsv-gz">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.permutationSummary.tsv.gz</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-covarianceresults-rds">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.covarianceResults.rds</span></code></a></li>
 </ul>
 </li>
@@ -177,7 +177,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#folder-logs-and-benchmarks">FOLDER <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#folder-temp">FOLDER <code class="docutils literal"><span class="pre">TEMP</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sub-folder-sortedbam">Sub-folder <code class="docutils literal"><span class="pre">SortedBAM</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id22">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id21">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -191,6 +191,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#total-running-time">Total running time</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#running-difftf-in-a-cluster-environment">Running <em>diffTF</em> in a cluster environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#frequently-asked-questions">Frequently asked questions</a></li>
 </ul>
 </li>
@@ -273,36 +274,44 @@
             
   <div class="section" id="workflow">
 <span id="id1"></span><h1>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h1>
-<p>The workflow is illustrated by the following two Figures. First, we show a schematic of the diffTF workflow to illustrate concepts:</p>
+<p>The workflow and conceptual idea behind <em>diffTF</em> is illustrated by the following three Figures. First, we give a high-level conceptual overview and a biological motivation:</p>
 <blockquote>
-<div><div class="figure align-center" id="id24">
-<a class="reference internal image-reference" href="_images/Workflow_transparent.png"><img alt="Schematic of the diffTF workflow" src="_images/Workflow_transparent.png" style="width: 666.0px; height: 739.5px;" /></a>
+<div><blockquote>
+<div><div class="figure align-center" id="id22">
+<a class="reference internal image-reference" href="_images/diffTF_Schematic.png"><img alt="diffTF schematics" src="_images/diffTF_Schematic.png" style="width: 810.0px; height: 494.5px;" /></a>
+<p class="caption"><span class="caption-text">Conceptual idea and workflow of <em>diffTF</em></span></p>
+</div>
+</div></blockquote>
+<p>Next, we show a schematic of the diffTF workflow from a more technical perspective by showing the actual steps that are performed:</p>
+<blockquote>
+<div><div class="figure align-center" id="id23">
+<a class="reference internal image-reference" href="_images/Workflow_transparent.png"><img alt="Schematic of the diffTF workflow" src="_images/Workflow_transparent.png" style="width: 762.0px; height: 755.0px;" /></a>
 <p class="caption"><span class="caption-text">Schematic of the diffTF workflow, with input and output of the pipeline highlighted.</span></p>
 </div>
 </div></blockquote>
-<p>We now show which rules are executed by Snakemake for a specific example (see the caption of the image):</p>
+</div></blockquote>
+<p>We now show which rules are executed by <em>Snakemake</em> for a specific example (see the caption of the image):</p>
 <blockquote>
-<div><div class="figure align-center" id="id25">
-<a class="reference internal image-reference" href="_images/DAG_transparent.png"><img alt="Directed acyclic graph of an example workflow" src="_images/DAG_transparent.png" style="width: 587.3px; height: 914.9px;" /></a>
-<p class="caption"><span class="caption-text">Exact workflow (a so-called directed acyclic graph, or DAG) that is executed when calling Snakemake for an easy of example with two TFs (CEBPB and CTCF) for the two samples GMP.WT1 and MPP.WT1. Each node represents a rule name as defined in the Snakefile, and each arrow a dependency.</span></p>
+<div><div class="figure align-center" id="id24">
+<a class="reference internal image-reference" href="_images/dag.png"><img alt="Directed acyclic graph of an example workflow" src="_images/dag.png" style="width: 1281.6999999999998px; height: 1754.1999999999998px;" /></a>
+<p class="caption"><span class="caption-text">Exact workflow (a so-called directed acyclic graph, or DAG) that is executed when calling <em>Snakemake</em> for an easy of example with two TFs (CEBPB and CTCF) for the two samples GMP.WT1 and MPP.WT1. Each node represents a rule name as defined in the Snakefile, and each arrow a dependency.</span></p>
 </div>
 </div></blockquote>
-<p>diffTF is implemented as a Snakemake pipeline. For a gentle introduction about Snakemake, see Section <a class="reference internal" href="#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a>. As you can see, the workflow consists of the following steps or <em>rules</em>:</p>
+<p>diffTF is implemented as a <em>Snakemake</em> pipeline. For a gentle introduction about Snakemake, see Section <a class="reference internal" href="#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a>. As you can see, the workflow consists of the following steps or <em>rules</em>:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">checkParameterValidity</span></code>: R script that checks whether the specified peak file has the correct format, whether the provided <em>fasta</em> file and the <em>BAM</em> files are compatible, and other checks</li>
 <li><code class="docutils literal"><span class="pre">produceConsensusPeaks</span></code>:  R script that generates the consensus peaks if none are provided</li>
 <li><code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>: Filters various chromosomes 8sex, unassembled ones, contigs, etc) from the peak file.</li>
-<li><code class="docutils literal"><span class="pre">sortTFBS</span></code>: Sort the TFBS lists by position</li>
+<li><code class="docutils literal"><span class="pre">sortTFBSParallel</span></code>: Sort the TFBS lists by position</li>
 <li><code class="docutils literal"><span class="pre">resortBAM</span></code>: Sort the <em>BAM</em> file for optimized processing</li>
 <li><code class="docutils literal"><span class="pre">intersectPeaksAndBAM</span></code>: Count all reads for peak regions across all input files</li>
 <li><code class="docutils literal"><span class="pre">intersectPeaksAndTFBS</span></code>: Intersect all TFBS with peak regions to retain only TFBS in peak regions</li>
 <li><code class="docutils literal"><span class="pre">intersectTFBSAndBAM</span></code>: Count all reads from all TFBS across all input files in a TF-specific manner</li>
-<li><code class="docutils literal"><span class="pre">DESeqPeaks</span></code>: R script that performs a differential accessibility analysis for the peak regions as well as sample permutations</li>
+<li><code class="docutils literal"><span class="pre">DiffPeaks</span></code>: R script that performs a differential accessibility analysis for the peak regions as well as sample permutations</li>
 <li><code class="docutils literal"><span class="pre">analyzeTF</span></code>: R script that performs a TF-specific differential accessibility analysis</li>
 <li><code class="docutils literal"><span class="pre">summary1</span></code>:  R script that summarizes the previous script for all TFs</li>
-<li><code class="docutils literal"><span class="pre">concatenateMotifs</span></code>: Concatenates previous results (TFBS motives)</li>
+<li><code class="docutils literal"><span class="pre">concatenateMotifs</span></code> and <code class="docutils literal"><span class="pre">concatenateMotifsPerm</span></code>: Concatenates previous results from either real or permuted data (TFBS motives)</li>
 <li><code class="docutils literal"><span class="pre">calcNucleotideContent</span></code>: Calculates the GC content for all TFBS</li>
-<li><code class="docutils literal"><span class="pre">prepareBinning</span></code>:  R script that prepares the binning procedure</li>
 <li><code class="docutils literal"><span class="pre">binningTF</span></code>:  R script that performs the binning approach in a TF-specific manner</li>
 <li><code class="docutils literal"><span class="pre">summaryFinal</span></code>:  R script that summarizes the analysis and calculates final statistics</li>
 <li><code class="docutils literal"><span class="pre">cleanUpLogFiles</span></code>: Cleans up the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> directory (mostly relevant if run in cluster mode)</li>
@@ -331,9 +340,9 @@
 <p class="first admonition-title">Note</p>
 <p>Please note the following important points:</p>
 <ul class="last simple">
-<li>the name of this file is irrelevant, but it must be in the right format (JSON) and it must be referenced correctly when calling Snakemake (via the <code class="docutils literal"><span class="pre">--configfile</span></code> parameter). We recommend naming it <code class="docutils literal"><span class="pre">config.json</span></code></li>
+<li>the name of this file is irrelevant, but it must be in the right format (JSON) and it must be referenced correctly when calling <em>Snakemake</em> (via the <code class="docutils literal"><span class="pre">--configfile</span></code> parameter). We recommend naming it <code class="docutils literal"><span class="pre">config.json</span></code></li>
 <li>neither section nor parameter names must be changed.</li>
-<li>For parameters that specify a path, both absolute and relative paths are possible.  We recommend specifying an absolute path. Relative paths must be specified relative to the Snakemake working directory.</li>
+<li>For parameters that specify a path, both absolute and relative paths are possible.  We recommend specifying an absolute path. Relative paths must be specified relative to the <em>Snakemake</em> working directory.</li>
 <li>For parameters that specify a directory, there should be no trailing slash.</li>
 </ul>
 </div>
@@ -371,7 +380,7 @@
 <span id="id5"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">designContrast</span></code><a class="headerlink" href="#parameter-designcontrast" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>String. Default  <em>conditionSummary</em>. Design formula for the differential accessibility analysis in <em>DESeq2</em>.</dd>
+<dd>String. Default  <em>conditionSummary</em>. Design formula for the differential accessibility analysis.</dd>
 <dt>Details</dt>
 <dd>This important parameter defines the actual contrast that is done in the differential analysis. That is, which groups of samples are being compared? Examples include mutant vs wild type, mutated vs. unmutated, etc. The last element in the formula must always be <em>conditionSummary</em>, which defines the two groups that are being compared. This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified. For example, for an analysis that also includes the batch number of the samples, you may specify this as “<em>~ Treatment + conditionSummary</em>”.</dd>
 </dl>
@@ -381,32 +390,62 @@
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default  <em>conditionSummary:factor</em>.   The data types of all elements listed in <code class="docutils literal"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>).</dd>
-</dl>
-<p>Details
-Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if <code class="docutils literal"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>) is specified as “<em>~ Treatment + conditionSummary</em>”, the corresponding types might be “Treatment:factor, conditionSummary:factor”. If a data type is specified as either “logical” or “factor”, the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). <em>conditionSummary</em> is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If <em>conditionSummary</em> is specified as “integer” or “numeric”, however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.</p>
-<blockquote>
-<div><div class="admonition note">
+<dt>Details</dt>
+<dd><p class="first">Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if <code class="docutils literal"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>) is specified as “<em>~ Treatment + conditionSummary</em>”, the corresponding types might be “Treatment:factor, conditionSummary:factor”. If a data type is specified as either “logical” or “factor”, the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). <em>conditionSummary</em> is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If <em>conditionSummary</em> is specified as “integer” or “numeric”, however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.</p>
+<div class="last admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Importantly, if the variable of interest is continuous-valued (i.e., marked as being integer or numeric), then the reported log2 fold change is per unit of change of that variable. That is, in the final circular plot, TFs displayed in the left side have a negative slope  per unit of change of that variable, while TFs at the right side have a positive one.</p>
 </div>
-</div></blockquote>
+</dd>
+</dl>
 </div>
 <div class="section" id="parameter-npermutations">
 <span id="id7"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">nPermutations</span></code><a class="headerlink" href="#parameter-npermutations" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Integer &gt;=  0. Default 0. The number of random sample permutations.</dd>
+<dd>Integer &gt;=  0. Default 50. The number of random sample permutations.</dd>
 <dt>Details</dt>
-<dd><p class="first">If set to a value &gt; 0, in addition to the real and non-permuted data, the sample conditions as specified in the sample table will be randomly permuted nPermutations times. Specifically, for the condition with fewer samples, 50% will be randomly chosen and switched with the same number of samples from the other condition. This procedure maximizes randomized conditions.</p>
+<dd><p class="first">If set to a value &gt; 0, in addition to the real data, the sample conditions as specified in the sample table will be randomly permuted <em>nPermutations</em> times. This is the recommended way of computing statistical significances for each TF. Note that the maximum number of possible permutations is limited by the number of samples and can be computed with the binomial coefficient <em>n</em> over <em>k</em>. For example, if you have <em>n</em> = 8 samples in total and they split up in the two conditions/groups as <em>k</em> = 5 / <em>k</em> = 3, the total number of permutations is 8 over 5 or 8 over 3 (they are both identical). We generally recommend setting this value to high values such as 1,000. If the value is set to a number higher than the number of possible permutations, it will be adjusted automatically to the maximum number of permutations as determined by the binomial coefficient.</p>
+<p>If set to 0, an alternative way of computing significances that is not based on permutations is performed. First, in the CG normalization step, a Welch Two Sample t-test is performed for each bin and the overall significance by treating the T-statistics as z-scores is calculated, which allows to summarize them across the bins and convert them to one p-value per TF. For this conversion of z-scores per bin to p-value an estimate of the variance of the T-scores is approximated (see the publication for details). This procedure reduces the dependency of the p-value on the sample size (since the number of TFBS can range between a few dozen and multiple tens of thousands depending on the TF).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If set to a value &gt; 0, the parameter <code class="docutils literal"><span class="pre">nBootstraps</span></code> (<a class="reference internal" href="#parameter-nbootstraps"><span class="std std-ref">PARAMETER nBootstraps</span></a>) is ignored.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">While using permutations is the recommended approach for assessing statistical significance, in some cases it might be useful to use the alternative approach: If the number of samples is small or the groups show a very uneven distributions, the number of possible permutations is very small and therefore also the permutation-based approach might not accurately assess significance.</p>
+</div>
 <div class="last admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The running time of the pipeline will be increased when using permutations because parts of the pipeline are run for each permutation.</p>
+<p class="last">The running time of the pipeline increases with the number of permutations.</p>
+</div>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Do not change the value of this parameter after (parts of) the pipeline have been run, some steps may fail due to this change. If you really need to change the value, rerun the pipeline from the <em>diffPeaks</em> step onwards.</p>
+</div>
+</div>
+<div class="section" id="parameter-nbootstraps">
+<span id="id8"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">nBootstraps</span></code><a class="headerlink" href="#parameter-nbootstraps" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Integer &gt;=  0. Default 1,000. The number of bootstrap for estimating the variance of the TF-specific T scores in the CG binning step.</dd>
+<dt>Details</dt>
+<dd><p class="first">To properly estimate the variance of the T scores for each TF in the CG binning step, we employ a bootstrap approach using the boot library in R with a user-adjustable number of bootstrap replicates (default 1,000), with resampling the bin-specific data and then performing the t-test against the full sample as described above. We then calculate the variance of the bootstrapped T scores for each bin. For more details, see the methods of the publication.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only relevant if the parameter <code class="docutils literal"><span class="pre">nPermutations</span></code> (<a class="reference internal" href="#parameter-npermutations"><span class="std std-ref">PARAMETER nPermutations</span></a>) is set to 0. If both are set to 0, an error is thrown.</p>
+</div>
+<div class="last admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If bootstraps are used, it is highly recommended to use a large number of bootstraps. We recommend at least a value of 1,000.</p>
 </div>
 </dd>
 </dl>
 </div>
 <div class="section" id="parameter-tfs">
-<span id="id8"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">TFs</span></code><a class="headerlink" href="#parameter-tfs" title="Permalink to this headline">¶</a></h4>
+<span id="id9"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">TFs</span></code><a class="headerlink" href="#parameter-tfs" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “all”. Either “all” or a comma-separated list of TF names of TFs to include. If set to “all”, all TFs that are found in the directory as specified in <code class="docutils literal"><span class="pre">dir_TFBS</span></code> (<a class="reference internal" href="#parameter-dir-tfbs"><span class="std std-ref">PARAMETER dir_TFBS</span></a>) will be used.</dd>
@@ -424,7 +463,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </dl>
 </div>
 <div class="section" id="parameter-dir-scripts">
-<span id="id9"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_scripts</span></code><a class="headerlink" href="#parameter-dir-scripts" title="Permalink to this headline">¶</a></h4>
+<span id="id10"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_scripts</span></code><a class="headerlink" href="#parameter-dir-scripts" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. The path to the directory where the R scripts for running the pipeline are stored.</dd>
@@ -437,7 +476,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </dl>
 </div>
 <div class="section" id="parameter-rnaseqintegration">
-<span id="id10"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqIntegration</span></code><a class="headerlink" href="#parameter-rnaseqintegration" title="Permalink to this headline">¶</a></h4>
+<span id="id11"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqIntegration</span></code><a class="headerlink" href="#parameter-rnaseqintegration" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Logical. true or false. Default false. Should RNA-Seq data be integrated into the pipeline?</dd>
@@ -449,7 +488,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <div class="section" id="section-samples">
 <h3>SECTION <code class="docutils literal"><span class="pre">samples</span></code><a class="headerlink" href="#section-samples" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="parameter-summaryfile">
-<span id="id11"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">summaryFile</span></code><a class="headerlink" href="#parameter-summaryfile" title="Permalink to this headline">¶</a></h4>
+<span id="id12"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">summaryFile</span></code><a class="headerlink" href="#parameter-summaryfile" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “samples.tsv”. Path to the sample metadata file.</dd>
@@ -461,7 +500,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <div class="section" id="section-peaks">
 <h3>SECTION <code class="docutils literal"><span class="pre">peaks</span></code><a class="headerlink" href="#section-peaks" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="parameter-consensuspeaks">
-<span id="id12"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">consensusPeaks</span></code><a class="headerlink" href="#parameter-consensuspeaks" title="Permalink to this headline">¶</a></h4>
+<span id="id13"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">consensusPeaks</span></code><a class="headerlink" href="#parameter-consensuspeaks" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “” (empty). Path to the consensus peak file.</dd>
@@ -492,22 +531,21 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </dl>
 </div>
 <div class="section" id="parameter-peaktype">
-<span id="id13"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">peakType</span></code><a class="headerlink" href="#parameter-peaktype" title="Permalink to this headline">¶</a></h4>
+<span id="id14"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">peakType</span></code><a class="headerlink" href="#parameter-peaktype" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>String. Default <code class="docutils literal"><span class="pre">narrow</span></code>. Format of the peaks. Only relevant if no consensus peak file has been provided (i.e., the <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a> is empty).</dd>
+<dd>String. Default <code class="docutils literal"><span class="pre">narrow</span></code>. File format of the individual, sample-specific peak files. Only relevant if no consensus peak file has been provided (i.e., the <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a> is empty).</dd>
 <dt>Details</dt>
-<dd><p class="first">Only needed if no consensus peak set has been provided. All individual peak files must be in the same format. See the help for <em>DiffBind dba</em> for a full list of supported formats, the most common ones include:</p>
+<dd><p class="first">Only needed if no consensus peak set has been provided. All individual peak files must be in the same format. We recommend the <code class="docutils literal"><span class="pre">narrow</span></code> format (files ending in <code class="docutils literal"><span class="pre">.narrowPeak</span></code>) that is a direct output from <em>MACS2</em>, but other formats are supported. See the help for <em>DiffBind dba</em> for a full list of supported formats, the most common ones include:</p>
 <ul class="last simple">
-<li><code class="docutils literal"><span class="pre">raw</span></code>: text file file; peak score is in fourth column</li>
 <li><code class="docutils literal"><span class="pre">bed</span></code>: .bed file; peak score is in fifth column</li>
-<li><code class="docutils literal"><span class="pre">narrow</span></code>: default peak.format: narrowPeaks file (from <em>MACS2</em>)</li>
+<li><code class="docutils literal"><span class="pre">narrow</span></code>: narrowPeaks file (from <em>MACS2</em>)</li>
 </ul>
 </dd>
 </dl>
 </div>
 <div class="section" id="parameter-minoverlap">
-<span id="id14"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">minOverlap</span></code><a class="headerlink" href="#parameter-minoverlap" title="Permalink to this headline">¶</a></h4>
+<span id="id15"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">minOverlap</span></code><a class="headerlink" href="#parameter-minoverlap" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Integer &gt;= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <em>dba</em> function of <em>DiffBind</em>. Only relevant if no consensus peak file has been provided (i.e., <code class="docutils literal"><span class="pre">consensusPeaks</span></code>, <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>, is empty).</dd>
@@ -519,7 +557,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <div class="section" id="section-additionalinputfiles">
 <h3>SECTION <code class="docutils literal"><span class="pre">additionalInputFiles</span></code><a class="headerlink" href="#section-additionalinputfiles" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="parameter-refgenome-fasta">
-<span id="id15"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">refGenome_fasta</span></code><a class="headerlink" href="#parameter-refgenome-fasta" title="Permalink to this headline">¶</a></h4>
+<span id="id16"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">refGenome_fasta</span></code><a class="headerlink" href="#parameter-refgenome-fasta" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default ‘hg19.fasta’. Path to the reference genome <em>fasta</em> file.</dd>
@@ -537,7 +575,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </div></blockquote>
 </div>
 <div class="section" id="parameter-dir-tfbs">
-<span id="id16"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_TFBS</span></code><a class="headerlink" href="#parameter-dir-tfbs" title="Permalink to this headline">¶</a></h4>
+<span id="id17"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_TFBS</span></code><a class="headerlink" href="#parameter-dir-tfbs" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Path to the directory where the TF-specific files for TFBS results are stored.</dd>
@@ -562,7 +600,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </dl>
 </div>
 <div class="section" id="parameter-rnaseqcounts">
-<span id="id19"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqCounts</span></code><a class="headerlink" href="#parameter-rnaseqcounts" title="Permalink to this headline">¶</a></h4>
+<span id="id18"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqCounts</span></code><a class="headerlink" href="#parameter-rnaseqcounts" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “”. Path to the file with RNA-Seq counts.</dd>
@@ -573,7 +611,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </dl>
 </div>
 <div class="section" id="parameter-hocomoco-mapping">
-<span id="id20"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">HOCOMOCO_mapping</span></code><a class="headerlink" href="#parameter-hocomoco-mapping" title="Permalink to this headline">¶</a></h4>
+<span id="id19"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">HOCOMOCO_mapping</span></code><a class="headerlink" href="#parameter-hocomoco-mapping" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Path to the TF-Gene translation table.</dd>
@@ -592,14 +630,21 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </div>
 <div class="section" id="input-metadata">
 <span id="section-metadata"></span><h2>Input metadata<a class="headerlink" href="#input-metadata" title="Permalink to this headline">¶</a></h2>
-<p>This file summarizes the data and corresponding available metadata  that should be used for the analysis. The format is flexible and may contain additional columns that are ignored by the pipeline, so it can be used to capture all available information in a single place. Importantly, the file must be saved as tab-separated, the exact name does not matter as long as it is correctly specified in the configuration file. It must contain at least contain the following columns (the exact names do matter):</p>
+<p>This file summarizes the data and corresponding available metadata  that should be used for the analysis. The format is flexible and may contain additional columns that are ignored by the pipeline, so it can be used to capture all available information in a single place. Importantly, the file must be saved as tab-separated, the exact name does not matter as long as it is correctly specified in the configuration file.</p>
+<blockquote>
+<div><div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Make sure that the line endings are correct. Different operating systems use different characters to mark the end of line, and the line ending character must be compatible with the operationg system in which you run <em>diffTF</em>. For example, if you created the file in MAC, but you run it in a Linux environment (e.g., a cluster system), you may have to convert line endings to make them compatible with Linux. For more information, see <a class="reference external" href="https://blog.shvetsov.com/2012/04/covert-unix-windows-mac-line-endings.html">here</a> .</p>
+</div>
+</div></blockquote>
+<p>It must contain at least contain the following columns (the exact names do matter):</p>
 <ul>
 <li><p class="first"><code class="docutils literal"><span class="pre">sampleID</span></code>: The ID of the sample</p>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">bamReads</span></code>:  path to the <em>BAM</em> file corresponding to the sample.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">All <em>BAM</em> files must be valid <em>BAM</em> files with chromosome names with “<em>chr</em>” as prefix. The pipeline may crash if the “<em>chr</em>” part is missing.</p>
+<p class="last">All <em>BAM</em> files must meet <em>SAM</em> format specifications. You may use the program <em>ValidateSamFile</em> from the <em>Picard tools</em> to check and identify problems with your file. Chromosome names must have a “<em>chr</em>” as prefix, otherwise diffTF may crash.</p>
 </div>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">peaks</span></code>: absolute path to the sample-specific peak file, in the format as given by <code class="docutils literal"><span class="pre">peakType</span></code> (<a class="reference internal" href="#parameter-peaktype"><span class="std std-ref">PARAMETER peakType</span></a>). Only needed if no consensus peak file is provided.</p>
@@ -609,6 +654,10 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <li><p class="first">if applicable, all additional variables from the design formula except <code class="docutils literal"><span class="pre">conditionSummary</span></code> must also be present as a separate column.</p>
 </li>
 </ul>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Do not change the samples data after you started an analysis. You may introduce inconsistencies that will result in error messages. If you need to alter the sample data, we strongly advise to recalculate all steps in the pipeline.</p>
+</div>
 </div>
 </div>
 <div class="section" id="output">
@@ -621,7 +670,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <p>Most files have one of the following file formats:</p>
 <ul class="simple">
 <li>.bed.gz (gzipped bed file)</li>
-<li>.tsv (tab-separated value, text file with tab as column separators)</li>
+<li>.tsv.gz (tab-separated value, text file with tab as column separators, gzipped)</li>
 <li>.rds (binary R format, read into with the function <code class="docutils literal"><span class="pre">readRDS</span></code>)</li>
 <li>.pdf (PDF format)</li>
 <li>.log (text format)</li>
@@ -644,56 +693,41 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dt>Details</dt>
 <dd><p class="first">Columns are as follows:</p>
 <ul class="last simple">
-<li><em>permutation</em>: The number of the permutation.</li>
+<li><em>permutation</em>: The number of the permutation. This will always be 0, so it can ignored essentially in this file.</li>
 <li><em>TF</em>: name of the TF</li>
 <li><em>chr</em>, <em>MSS</em>, <em>MES</em>, <em>strand</em>, <em>TFBSID</em>: Genomic location and identifier of the (extended) TFBS</li>
-<li><em>PSS</em>, <em>PES</em>, <em>peakID</em>:  Genomic location and annotation of the overlapping peak region</li>
-<li><em>baseMean</em>, <em>log2FoldChange</em>, <em>lfcSE</em>, <em>stat</em>, <em>pvalue</em>, <em>padj</em>: Results from the <em>DESeq2</em> analysis. See the <a class="reference external" href="https://www.bioconductor.org/help/course-materials/2015/LearnBioconductorFeb2015/B02.1.1_RNASeqLab.html">DESeq2 documentation</a> for details.</li>
+<li><em>peakID</em>:  Genomic location and annotation of the overlapping peak region</li>
+<li><em>l2FC</em>, <em>pval</em>, <em>pval_adj</em>: Results from the <em>limma</em> or <em>DESeq2</em> analysis, see the respective documentation for details (see below for links and further explanation). These column names are shared between <em>limma</em> and <em>DESeq2</em>.</li>
+<li><em>DESeq_baseMean</em>, <em>DESeq_ldcSE</em>, <em>DESeq_stat</em>: Results from the <em>DESeq2</em> analysis, see the <em>DESeq2</em> documentation for details (e.g., <em>?DESeq2::results</em>). If <em>DESeq2</em> was not run for calculating log2 fold-changes (i.e., if the value for the parameter <code class="docutils literal"><span class="pre">nPermutations</span></code> ( <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>) is &gt;0), these columns are set to NA.</li>
+<li><em>limma_avgExpr</em>, <em>limma_B</em>, <em>limma_t_stat</em>: Results from the <em>limma</em> analysis, see the <em>limma</em> documentation for details (e.g., <em>??topTable</em>). If <em>limma</em> was not run (i.e., if the value for the parameter <code class="docutils literal"><span class="pre">nPermutations</span></code> ( <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>) is 0), these columns are set to NA.</li>
 </ul>
 </dd>
 </dl>
 </div>
-<div class="section" id="file-comparisontype-tf-vs-peak-distribution-tsv">
-<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.TF_vs_peak_distribution.tsv</span></code><a class="headerlink" href="#file-comparisontype-tf-vs-peak-distribution-tsv" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="file-comparisontype-tf-vs-peak-distribution-tsv-gz">
+<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.TF_vs_peak_distribution.tsv.gz</span></code><a class="headerlink" href="#file-comparisontype-tf-vs-peak-distribution-tsv-gz" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>This summary table contains various results regarding TFs, their log2 fold change distribution across all TFBS and differences between all TFBS and the peaks</dd>
 <dt>Details</dt>
-<dd><p class="first">Columns are as follows:</p>
-<ul class="last simple">
-<li><em>TF</em>: name of the TF</li>
-<li><em>permutation</em>: The number of the permutation.</li>
-<li><em>Pos_l2FC</em>, <em>Mean_l2FC</em>, <em>Median_l2FC</em>, <em>sd_l2FC</em>, <em>Mode_l2FC</em>, <em>skewness_l2FC</em>: fraction of positive values, mean, median, standard deviation, mode value and Bickel’s measure of skewness of the log2 fold change distribution across all TFBS</li>
-<li><em>pvalue_raw</em> and <em>pvalue_adj</em>: raw and adjusted (fdr) p-value of the  t-test</li>
-<li><em>T_statistic</em>: the value of the T statistic from the t-test</li>
-<li><em>TFBS_num</em>: number of TFBS</li>
-<li><em>Diff_mean</em>, <em>Diff_median</em>, <em>Diff_mode</em>, <em>Diff_skew</em>: Difference of the mean, median, mode, and skewness between the log2 fold-change distribution across all TFBS and the peaks, respectively</li>
-</ul>
-</dd>
+<dd>See the description of the file <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summary.rds</span></code>. This file aggregates the data for all TF and adds the following additional columns:
+- <em>pvalue_adj</em>: adjusted (fdr aka BH) p-value (based on <em>pvalue_raw</em>)
+- <em>Diff_mean</em>, <em>Diff_median</em>, <em>Diff_mode</em>, <em>Diff_skew</em>: Difference of the mean, median, mode, and skewness between the log2 fold-change distribution across all TFBS and the peaks, respectively</dd>
 </dl>
 </div>
-<div class="section" id="file-comparisontype-summary-tsv">
-<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.tsv</span></code><a class="headerlink" href="#file-comparisontype-summary-tsv" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="file-comparisontype-summary-tsv-gz">
+<h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.tsv.gz</span></code><a class="headerlink" href="#file-comparisontype-summary-tsv-gz" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>The final summary table that is also used for the final circular visualization</dd>
+<dd>The final summary table that is also used for the final circular visualization.</dd>
 <dt>Details</dt>
 <dd><p class="first">The columns are as follows:</p>
 <ul class="last simple">
 <li><em>TF</em>: name of the TF</li>
-<li><em>permutation</em>: The number of the permutation.</li>
-<li><em>weighted_meanDifference</em>: the weighted mean difference of the real and background distribution across all CG bins. This value is the basis for the final calculation of the x-axis position for the circular plot. Without permutations, this value is shown, while for permutations, the weighted_meanDifference_enrichment is used.</li>
-<li><em>weighted_Tstat</em>: the weighted value of the T statistic across all CG bins.</li>
-<li><em>TFBS</em>: The number of TF binding sites that overlap with the peaks</li>
-<li><em>variance</em>: Estimated variance for the weighted_Tstat estimate that is incorporated to calculate the p-value</li>
-<li><em>weighted_meanDifference_enrichment</em>: If permutations are used, the enrichment over the background is calculated based on the weighted_meanDifference values for the real and permuted data, respectively. Specifically, by default, the minimum and maximum of the permuted weighted_meanDifference values is taken as permutation thresholds, and the real weighted_meanDifference values are then divided by these thresholds to calculate an enrichment.</li>
-<li><em>weighted_Tstat_centralized</em>: a centralized version of the weighted_Tstat values that is used to calculate raw p-values while including the variance also. If possible, the MLE estimate of the distribution median is used for centralization.</li>
-<li><em>pvalue</em>: raw p-values</li>
-<li><em>pvalueAdj</em>: adjusted p-values (FDR, Benjamini &amp; Hochberg (1995) correction)</li>
-<li><em>yValue</em>: the y-value for the plotting</li>
-<li><em>median.cor.tfs</em>: the median correlation, related to the RNA-Seq classification</li>
+<li><em>weighted_meanDifference</em>: the weighted mean difference of the real and background distribution across all CG bins. This value is the basis for the final calculation of the x-axis position for the circular plot.</li>
+<li><em>TFBS</em>: The number of TF binding sites for the particular TF that overlap with the peaks</li>
+<li><em>fdr</em>: the local FDR value that is derived from comparing the observed values against the permuted ones</li>
 <li><em>classification</em>: RNA-Seq classification (either activator, undetermined, repressor or not-expressed)</li>
-<li><em>Cohend_factor</em>     , <em>weighted_CD</em>, <em>weighted_median</em>, <em>weighted_sd</em>: Not used.</li>
 </ul>
 </dd>
 </dl>
@@ -702,30 +736,12 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.summary.circular.pdf</span></code><a class="headerlink" href="#file-comparisontype-summary-circular-pdf" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>The final visualization of the diffTF results</dd>
+<dd>The final (circular) visualization of the diffTF results.</dd>
 <dt>Details</dt>
-<dd><p class="first">The PDF contains multiple pages, the structure of which varies depending on the parameters:</p>
-<ul class="last simple">
-<li>Number of permutations &gt; 0<ul>
-<li>RNA-Seq integration: Within each of the two following sections, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)<ul>
-<li>Pages 1-15: Visualization of the results including the permutations</li>
-<li>Pages 16-30: Visualization of the results excluding the permutations</li>
-</ul>
-</li>
-<li>No RNA-Seq integration: Within each of the two following section, the structure is identical (varying combinations of FDR threshold and RNA-Seq categories, see below)<ul>
-<li>Pages 1-5: Visualization of the results including the permutations for different FDR thresholds</li>
-<li>Pages 6-10: Visualization of the results excluding the permutations for different FDR thresholds</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Number of permutations = 0<ul>
-<li>RNA-Seq integration: Pages 1-15 show the results in a format as described below for varying combinations of FDR threshold and RNA-Seq categories</li>
-<li>No RNA-Seq integration: Pages 1-5 show the results for different FDR thresholds</li>
-</ul>
-</li>
-<li>If RNA-Seq data is integrated, different combinations of categories are shown on each page (1: activator-undetermined-repressor-not-expressed, 2: activator-undetermined-repressor, 3: activator-repressor), which along with different FDR thresholds gives rise to multiple individual plots. The values on the x-axis denote the effect size (if permutations are incorporated enrichment over background, otherwise the mean difference between the two conditions), with higher values indicating a higher differential TF activity between the two conditions. TFs that are similarly active between the two conditions are close to 0, while TFs more active in either condition are located in the left and right part of the plot. The y-axis (radial position) denotes the statistical significance (adjusted p-values). The significance threshold is indicated as red circular line. TFs that pass the significance threshold are labeled and, if RNA-Seq data is integrated, colored according to their predicted role (see above).</li>
-</ul>
+<dd><p class="first">The PDF contains multiple pages and iterates over either one or two different parameters:
+- 1. Significance threshold based on adjusted p-values (0.001, 0.01, 0.05, 0.1 and 0.2.)
+- 2. If RNA classification is integrated, different combinations of categories are shown for each individual significance threshold (1: activator-undetermined-repressor-not-expressed, 2: activator-undetermined-repressor, 3: activator-repressor).</p>
+<p class="last">For each variant, the values on the x-axis denote the effect size (weighted mean difference). TFs that are similarly active between the two conditions are close to 0, while higher values indicate a higher differential TF activity between the two conditions and are therefore away from 0. The y-axis (radial position) denotes the statistical significance (adjusted p-values). The significance threshold is indicated as red circular line. TFs that pass the significance threshold are labeled and, if RNA-Seq data is integrated, colored according to their predicted role (see above).</p>
 </dd>
 </dl>
 </div>
@@ -733,7 +749,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <h4>FILE <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.pdf</span></code><a class="headerlink" href="#file-comparisontype-diagnosticplots-pdf" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Various diagnostic plots for the final TF activity values</dd>
+<dd>Various diagnostic plots for the final TF activity values. TODO UPDATE</dd>
 <dt>Details</dt>
 <dd>If the number of permutations is larger than 0, the first three pages show various versions of the permuted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation &gt; 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the <em>locfdr</em> package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.</dd>
 </dl>
@@ -743,17 +759,17 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <div class="section" id="folder-peaks">
 <h2>FOLDER <code class="docutils literal"><span class="pre">PEAKS</span></code><a class="headerlink" href="#folder-peaks" title="Permalink to this headline">¶</a></h2>
 <p>Stores peak-associated files.</p>
-<div class="section" id="files-comparisontype-consensuspeaks-bed-and-consensuspeaks-lengthdistribution-pdf">
-<h3>FILES <code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.bed</span></code> and <code class="docutils literal"><span class="pre">consensusPeaks_lengthDistribution.pdf</span></code><a class="headerlink" href="#files-comparisontype-consensuspeaks-bed-and-consensuspeaks-lengthdistribution-pdf" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="files-comparisontype-consensuspeaks-filtered-sorted-bed">
+<h3>FILES <code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.filtered.sorted.bed</span></code><a class="headerlink" href="#files-comparisontype-consensuspeaks-filtered-sorted-bed" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Only present if no consensus peak file was provided (<code class="docutils literal"><span class="pre">consensusPeaks</span></code>, <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>). Produced in rule <code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>. Generated consensus peaks, before filtering (see below) as well as a diagnostic plot showing the length distribution of the peaks.</dd>
+<dd>Only present if no consensus peak file was provided (<code class="docutils literal"><span class="pre">consensusPeaks</span></code>, <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>). Produced in rule <code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>. Generated consensus peaks, before filtering (see below).</dd>
 <dt>Details</dt>
 <dd>Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn*, *random*, *hap|_gl*</dd>
 </dl>
 </div>
-<div class="section" id="file-comparisontype-allbams-peaks-overlaps-bed">
-<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.allBams.peaks.overlaps.bed</span></code><a class="headerlink" href="#file-comparisontype-allbams-peaks-overlaps-bed" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="file-comparisontype-allbams-peaks-overlaps-bed-gz">
+<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.allBams.peaks.overlaps.bed.gz</span></code><a class="headerlink" href="#file-comparisontype-allbams-peaks-overlaps-bed-gz" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Produced in rule <code class="docutils literal"><span class="pre">intersectPeaksAndBAM</span></code>. Counts for each consensus peak with each of the input <em>BAM</em> files.</dd>
@@ -765,7 +781,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.sampleMetadata.rds</span></code><a class="headerlink" href="#file-comparisontype-samplemetadata-rds" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DiffPeaks</span></code>. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.</dd>
 <dt>Details</dt>
 <dd>No details provided yet.</dd>
 </dl>
@@ -774,16 +790,16 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.rds</span></code><a class="headerlink" href="#file-comparisontype-peaks-rds" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores all peaks that will be used in the analysis.</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DiffPeaks</span></code>. Stores all peaks that will be used in the analysis.</dd>
 <dt>Details</dt>
 <dd>No details provided yet.</dd>
 </dl>
 </div>
-<div class="section" id="file-comparisontype-peaks-tsv">
-<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.tsv</span></code><a class="headerlink" href="#file-comparisontype-peaks-tsv" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="file-comparisontype-peaks-tsv-gz">
+<h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.peaks.tsv.gz</span></code><a class="headerlink" href="#file-comparisontype-peaks-tsv-gz" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores the <em>DESeq2</em> results of the differential accessibility analysis for the peaks.</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DiffPeaks</span></code>. Stores the results of the differential accessibility analysis for the peaks.</dd>
 <dt>Details</dt>
 <dd>No details provided yet.</dd>
 </dl>
@@ -792,16 +808,16 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.normFacs.rds</span></code><a class="headerlink" href="#file-comparisontype-normfacs-rds" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Gene-specific normalization factors for each sample and peak.</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DiffPeaks</span></code>. Gene-specific normalization factors for each sample and peak.</dd>
 <dt>Details</dt>
-<dd>This file is produces after the differential accessibility analysis for the peaks. The normalization factors will be used for the TF-specific differential accessibility analysis.</dd>
+<dd>This file is produces after the differential accessibility analysis for the peaks. The normalization factors are used for the TF-specific differential accessibility analysis.</dd>
 </dl>
 </div>
-<div class="section" id="files-comparisontype-diagnosticplots-peaks-pdf-and-comparisontype-diagnosticplots-peaks-permutation-perm-pdf-for-each-permutation-perm">
-<h3>FILES <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code> and <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks_permutation{perm}.pdf</span></code> for each permutation <code class="docutils literal"><span class="pre">{perm}</span></code><a class="headerlink" href="#files-comparisontype-diagnosticplots-peaks-pdf-and-comparisontype-diagnosticplots-peaks-permutation-perm-pdf-for-each-permutation-perm" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="files-comparisontype-diagnosticplots-peaks-pdf">
+<h3>FILES <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code><a class="headerlink" href="#files-comparisontype-diagnosticplots-peaks-pdf" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Various diagnostic plots for the differential accessibility peak analysis for the real and permuted data, respectively</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DiffPeaks</span></code>. Various diagnostic plots for the differential accessibility peak analysis for the real data</dd>
 <dt>Details</dt>
 <dd><p class="first">The pages are as follows:</p>
 <ol class="last arabic simple">
@@ -817,69 +833,70 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <h3>FILE <code class="docutils literal"><span class="pre">{comparisonType}.DESeq.object.rds</span></code><a class="headerlink" href="#file-comparisontype-deseq-object-rds" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. The <em>DESeq2</em> object from the differential accessibility peak analysis.</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">DiffPeaks</span></code>. The <em>DESeq2</em> object from the differential accessibility peak analysis.</dd>
 <dt>Details</dt>
-<dd>No details provided yet.</dd>
+<dd>If the number of permutations (parameter <code class="docutils literal"><span class="pre">nPermutations</span></code> (<a class="reference internal" href="#parameter-npermutations"><span class="std std-ref">PARAMETER nPermutations</span></a>) is set to 0, <em>DESeq</em> is fully run, otherwise the objects does only contain the counts and metadata but no <em>results</em> slot.</dd>
 </dl>
 </div>
 </div>
 <div class="section" id="folder-tf-specific">
 <h2>FOLDER <code class="docutils literal"><span class="pre">TF-SPECIFIC</span></code><a class="headerlink" href="#folder-tf-specific" title="Permalink to this headline">¶</a></h2>
 <p>Stores TF-specific files. For each TF <code class="docutils literal"><span class="pre">{TF}</span></code>, a separate sub-folder <code class="docutils literal"><span class="pre">{TF}</span></code> is created by the pipeline. Within this folder, the following structure is created:</p>
-<div class="section" id="id21">
-<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id20">
+<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary">
 <h4>FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.gz</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.summary</span></code><a class="headerlink" href="#files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Overlap and <em>featureCounts</em> summary file of read counts across all TFBS for all input <em>BAM</em> files.</dd>
 <dt>Details</dt>
-<dd>No details provided yet.</dd>
+<dd>For more details, see the documentation of <em>featureCounts</em>.</dd>
 </dl>
 </div>
-<div class="section" id="file-tf-comparisontype-output-tsv">
-<h4>FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv</span></code><a class="headerlink" href="#file-tf-comparisontype-output-tsv" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="file-tf-comparisontype-output-tsv-gz">
+<h4>FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv.gz</span></code><a class="headerlink" href="#file-tf-comparisontype-output-tsv-gz" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A summary table for the <em>DESeq2</em> analysis.</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A summary table for the <em>limma</em> analysis.</dd>
 <dt>Details</dt>
 <dd>See the file <code class="docutils literal"><span class="pre">{comparisonType}.allMotifs.tsv.gz</span></code> in the <code class="docutils literal"><span class="pre">FINAL_OUTPUT</span></code> folder for a column description.</dd>
+</dl>
+</div>
+<div class="section" id="file-tf-comparisontype-outputperm-tsv-gz">
+<h4>FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.outputPerm.tsv.gz</span></code><a class="headerlink" href="#file-tf-comparisontype-outputperm-tsv-gz" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A subset of the file <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv.gz</span></code> that stores only the necessary permutation-specific results for subsequent steps.</dd>
+<dt>Details</dt>
+<dd>This file has the following columns (see the description for the file <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv.gz</span></code> for details):
+- <em>TF</em>
+- <em>permutation</em>
+- <em>TFBSID</em>
+- <em>l2FC</em></dd>
 </dl>
 </div>
 <div class="section" id="file-tf-comparisontype-summary-rds">
 <h4>FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summary.rds</span></code><a class="headerlink" href="#file-tf-comparisontype-summary-rds" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A summary table for the log2 fold-changes across all TFBS <em>DESeq2</em> results.</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A summary table for the log2 fold-changes across all TFBS <em>limma</em> results.</dd>
 <dt>Details</dt>
-<dd>No details provided yet.</dd>
+<dd>This file summarizes the TF-specific results for the differential analysis and has the following columns:
+- <em>TF</em>: name of the TF
+- <em>permutation</em>: The number of the permutation.
+- <em>Pos_l2FC</em>, <em>Mean_l2FC</em>, <em>Median_l2FC</em>, <em>sd_l2FC</em>, <em>Mode_l2FC</em>, <em>skewness_l2FC</em>: fraction of positive values, mean, median, standard deviation, mode value and Bickel’s measure of skewness of the log2 fold change distribution across all TFBS
+- <em>pvalue_raw</em> and <em>pvalue_adj</em>: raw and adjusted (fdr aka BH) p-value of the t-test
+- <em>T_statistic</em>: the value of the T statistic from the t-test
+- <em>TFBS_num</em>: number of TFBS</dd>
 </dl>
 </div>
-<div class="section" id="files-tf-comparisontype-diagnosticplots-pdf-and-tf-comparisontype-diagnosticplots-permutation-perm-pdf">
-<h4>FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.diagnosticPlots.pdf</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.diagnosticPlots_permutation{perm}.pdf</span></code><a class="headerlink" href="#files-tf-comparisontype-diagnosticplots-pdf-and-tf-comparisontype-diagnosticplots-permutation-perm-pdf" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="files-tf-comparisontype-diagnosticplots-pdf">
+<h4>FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.diagnosticPlots.pdf</span></code><a class="headerlink" href="#files-tf-comparisontype-diagnosticplots-pdf" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. Various diagnostic plots for the differential accessibility TFBS analysis for the real and permuted data, respectively.</dd>
+<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. Various diagnostic plots for the differential accessibility TFBS analysis for the real data.</dd>
 <dt>Details</dt>
-<dd>See the description of the file <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code> in the <code class="docutils literal"><span class="pre">PEAKS</span></code> folder, which has an identical structure.</dd>
-</dl>
-</div>
-<div class="section" id="files-tf-comparisontype-summaryplots-pdf-and-tf-comparisontype-summaryplots-permutation-perm-pdf">
-<h4>FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summaryPlots.pdf</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.summaryPlots_permutation{perm}.pdf</span></code><a class="headerlink" href="#files-tf-comparisontype-summaryplots-pdf-and-tf-comparisontype-summaryplots-permutation-perm-pdf" title="Permalink to this headline">¶</a></h4>
-<dl class="docutils">
-<dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. A PDF with a summary of the <em>DESeq2</em> analysis for the real and permuted data, respectively.</dd>
-<dt>Details</dt>
-<dd>Page 1 shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. Page 2 shows the same but in a cumulative representation.</dd>
-</dl>
-</div>
-<div class="section" id="file-tf-comparisontype-deseq-object-rds">
-<h4>FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.DESeq.object.rds</span></code><a class="headerlink" href="#file-tf-comparisontype-deseq-object-rds" title="Permalink to this headline">¶</a></h4>
-<dl class="docutils">
-<dt>Summary</dt>
-<dd>Produced in rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>. Original <em>DESeq2</em> object.</dd>
-<dt>Details</dt>
-<dd>No details provided yet.</dd>
+<dd>See the description of the file <code class="docutils literal"><span class="pre">{comparisonType}.diagnosticPlots.peaks.pdf</span></code> in the <code class="docutils literal"><span class="pre">PEAKS</span></code> folder, which has an identical structure. Here, the second last page shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. The last page shows the same but in a cumulative representation.</dd>
 </dl>
 </div>
 <div class="section" id="file-tf-comparisontype-permutationresults-rds">
@@ -891,8 +908,8 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <dd>No details provided yet.</dd>
 </dl>
 </div>
-<div class="section" id="file-tf-comparisontype-permutationsummary-tsv">
-<h4>FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.permutationSummary.tsv</span></code><a class="headerlink" href="#file-tf-comparisontype-permutationsummary-tsv" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="file-tf-comparisontype-permutationsummary-tsv-gz">
+<h4>FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.permutationSummary.tsv.gz</span></code><a class="headerlink" href="#file-tf-comparisontype-permutationsummary-tsv-gz" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Produced in rule <code class="docutils literal"><span class="pre">binningTF</span></code>. A final summary table that summarizes the results across bins by calculating weighted means.</dd>
@@ -921,12 +938,11 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">*.log</span></code> files from R scripts: Each log file is produced by the corresponding R script and contains debugging information as well as warnings and errors:<ul>
 <li><code class="docutils literal"><span class="pre">1.produceConsensusPeaks.R.log</span></code></li>
-<li><code class="docutils literal"><span class="pre">2.DESeqPeaks.R.log</span></code></li>
+<li><code class="docutils literal"><span class="pre">2.DiffPeaks.R.log</span></code></li>
 <li><code class="docutils literal"><span class="pre">3.analyzeTF.{TF}.R.log</span></code> for each TF <code class="docutils literal"><span class="pre">{TF}</span></code></li>
 <li><code class="docutils literal"><span class="pre">4.summary1.R.log</span></code></li>
-<li><code class="docutils literal"><span class="pre">5.prepareBinning.log</span></code></li>
-<li><code class="docutils literal"><span class="pre">6.binningTF.{TF}.log</span></code>  for each TF <code class="docutils literal"><span class="pre">{TF}</span></code></li>
-<li><code class="docutils literal"><span class="pre">7.summaryFinal.R.log</span></code></li>
+<li><code class="docutils literal"><span class="pre">5.binningTF.{TF}.log</span></code>  for each TF <code class="docutils literal"><span class="pre">{TF}</span></code></li>
+<li><code class="docutils literal"><span class="pre">6.summaryFinal.R.log</span></code></li>
 </ul>
 </li>
 <li><code class="docutils literal"><span class="pre">*.log</span></code> summary files: Summary logs for user convenience, produced at very end of the pipeline only. They should contain all errors and warnings from the pipeline run.<ul>
@@ -946,18 +962,15 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <li><code class="docutils literal"><span class="pre">{basenameBAM}.bam</span></code> for each input <em>BAM</em> file: Produced in rule <code class="docutils literal"><span class="pre">resortBAM</span></code>. Resorted <em>BAM</em> file</li>
 </ul>
 </div>
-<div class="section" id="id22">
-<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id21">
+<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
 <p>Stores results related to the user-specified extension size (<code class="docutils literal"><span class="pre">regionExtension</span></code>, <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>)</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">{comparisonType}.allTFBS.peaks.bed.gz</span></code>: Produced in rule <code class="docutils literal"><span class="pre">intersectPeaksAndTFBS</span></code>. <em>BED</em> file containing all TFBS from all TF that overlap with the peaks after motif extension</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.{TF}.allTFBS.peaks.extension.saf</span></code> for each TF {TF}: Produced in rule <code class="docutils literal"><span class="pre">intersectTFBSAndBAM</span></code>. TF-specific file in SAF format needed for <em>featureCounts</em></li>
-<li><code class="docutils literal"><span class="pre">conditionComparison.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">DESeqPeaks</span></code>. Stores the condition comparison as a string. Some steps in diffTF need this file as input.</li>
+<li><code class="docutils literal"><span class="pre">conditionComparison.rds</span></code>: Produced in rule <code class="docutils literal"><span class="pre">DiffPeaks</span></code>. Stores the condition comparison as a string. Some steps in diffTF need this file as input.</li>
 <li><code class="docutils literal"><span class="pre">{comparisonType}.motifs.coord.permutation{perm}.bed.gz</span></code> and <code class="docutils literal"><span class="pre">{comparisonType}.motifs.coord.nucContent.permutation{perm}.bed.gz</span></code> for each permutation <code class="docutils literal"><span class="pre">{perm}</span></code>: Produced in rule <code class="docutils literal"><span class="pre">calcNucleotideContent</span></code>, and needed subsequently for the binning. Temporary and result file of <em>bedtools nuc</em>, respectively. The latter contains the GC content for all TFBS.</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.allTFData_processedForPermutations.rd</span></code> and <code class="docutils literal"><span class="pre">{comparisonType}.allTFUniqueData_processedForPermutations.rds</span></code>. Produced in rule <code class="docutils literal"><span class="pre">prepareBinning</span></code>, and needed subsequently for each <code class="docutils literal"><span class="pre">6.binningTF.R</span></code> step.</li>
-<li><code class="docutils literal"><span class="pre">{comparisonType}.consensusPeaks.*</span></code>: Produced in rule <code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>. Various temporary files related to the consensus peaks</li>
 <li><code class="docutils literal"><span class="pre">{comparisonType}.checkParameterValidity.done</span></code>: temporary flag file</li>
-<li><code class="docutils literal"><span class="pre">{TF}_TFBS.sorted.bed</span></code> for each TF <code class="docutils literal"><span class="pre">{TF}</span></code>: Produced in rule <code class="docutils literal"><span class="pre">sortPWM</span></code>. Coordinate-sorted version of the input TFBS.</li>
+<li><code class="docutils literal"><span class="pre">{TF}_TFBS.sorted.bed</span></code> for each TF <code class="docutils literal"><span class="pre">{TF}</span></code>: Produced in rule <code class="docutils literal"><span class="pre">sortTFBSParallel</span></code>. Coordinate-sorted version of the input TFBS.</li>
 <li><code class="docutils literal"><span class="pre">{comparisonType}.allTFBS.peaks.bed.gz</span></code>: Produced in rule <code class="docutils literal"><span class="pre">intersectPeaksAndTFBS</span></code>. <em>BED</em> file containing all TFBS from all TF that overlap with the peaks before motif extension</li>
 </ul>
 </div>
@@ -967,21 +980,20 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <span id="workingwithpipeline"></span><h1>Working with <em>diffTF</em> and FAQs<a class="headerlink" href="#working-with-difftf-and-faqs" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="general-remarks">
 <h2>General remarks<a class="headerlink" href="#general-remarks" title="Permalink to this headline">¶</a></h2>
-<p><cite>diffTF</cite> is programmed as a Snakemake pipeline. Snakemake is a bioinformatics workflow manager that uses workflows that are described via a human readable, Python based language. It offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and workflows can be seamlessly scaled to server, cluster, grid and cloud environments, without the need to modify the workflow definition or only minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no Snakemake experience. For a deeper understanding and troubleshooting errors, some knowledge of Snakemake is invaluable.</p>
-<p>Simply put, Snakemake executes various <em>rules</em>. Each <em>rule</em> can be thought of as a single <em>recipe</em> or task such as sorting a file, running an R script, etc. Each rule has, among other features, a name, an input, an output, and the command that is executed. You can see in the <code class="docutils literal"><span class="pre">Snakefile</span></code> what these rules are and what they do. During the execution, the rule name is displayed, so you know exactly at which step the pipeline is at the given moment. Different rules are connected through their input and output files, so that the output of one rule becomes the input for a subsequent rule, thereby creating <em>dependencies</em>, which ultimately leads to the directed acyclic graph (<em>DAG</em>) that describes the whole workflow. You have seen such a graph in Section <a class="reference internal" href="#workflow"><span class="std std-ref">Workflow</span></a>.</p>
+<p><cite>diffTF</cite> is programmed as a <em>Snakemake</em> pipeline. <em>Snakemake</em> is a bioinformatics workflow manager that uses workflows that are described via a human readable, Python based language. It offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and workflows can be seamlessly scaled to server, cluster, grid and cloud environments, without the need to modify the workflow definition or only minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no <em>Snakemake</em> experience. For a deeper understanding and troubleshooting errors, some knowledge of <em>Snakemake</em> is invaluable.</p>
+<p>Simply put, <em>Snakemake</em> executes various <em>rules</em>. Each <em>rule</em> can be thought of as a single <em>recipe</em> or task such as sorting a file, running an R script, etc. Each rule has, among other features, a name, an input, an output, and the command that is executed. You can see in the <code class="docutils literal"><span class="pre">Snakefile</span></code> what these rules are and what they do. During the execution, the rule name is displayed, so you know exactly at which step the pipeline is at the given moment. Different rules are connected through their input and output files, so that the output of one rule becomes the input for a subsequent rule, thereby creating <em>dependencies</em>, which ultimately leads to the directed acyclic graph (<em>DAG</em>) that describes the whole workflow. You have seen such a graph in Section <a class="reference internal" href="#workflow"><span class="std std-ref">Workflow</span></a>.</p>
 <p>In diffTF, a rule is typically executed separately for each TF. One example for a particular rule is sorting the TFBS list for the TF CTCF.</p>
-<p>In diffTF, the total number of <em>jobs</em> or rules to execute can roughly be calculated as 4 * <code class="docutils literal"><span class="pre">nTF</span></code>, where <code class="docutils literal"><span class="pre">nTF</span></code> stands for the number of TFs that are included in the analysis. For each TF, four rules are executed:</p>
+<p>In diffTF, the total number of <em>jobs</em> or rules to execute can roughly be approximated as 3 * <code class="docutils literal"><span class="pre">nTF</span></code>, where <code class="docutils literal"><span class="pre">nTF</span></code> stands for the number of TFs that are included in the analysis. For each TF, four rules are executed:</p>
 <ol class="arabic simple">
-<li>Sorting the TFBS list (rule <code class="docutils literal"><span class="pre">sortTFBS</span></code>)</li>
 <li>Calculating read counts for each TFBS within the peak regions (rule <code class="docutils literal"><span class="pre">intersectTFBSAndBAM</span></code>)</li>
 <li>Differential accessibility analysis  (rule <code class="docutils literal"><span class="pre">analyzeTF</span></code>)</li>
 <li>Binning step (rule <code class="docutils literal"><span class="pre">binningTF</span></code>)</li>
 </ol>
-<p>In addition, a few other rules are executed that however do not add up much more to the overall rule count.</p>
+<p>In addition, one rule per permuation is executed, so an additional <code class="docutils literal"><span class="pre">nPermutations</span></code> rules are performed. Lastly, a few other rules are executed that however do not add up much more to the overall rule count.</p>
 </div>
 <div class="section" id="executing-difftf-running-times-and-memory-requirements">
 <span id="timememoryrequirements"></span><h2>Executing diffTF - Running times and memory requirements<a class="headerlink" href="#executing-difftf-running-times-and-memory-requirements" title="Permalink to this headline">¶</a></h2>
-<p><em>diffTF</em> is computationally demanding, and depending on the sample size and the number of peaks, a rather high amount of resources may be required to run it. In the following, we discuss various issues related to time and memory requirements and we provide some general guidelines that worked well for us.</p>
+<p><em>diffTF</em> can be computationally demanding depending on the sample size and the number of peaks. In the following, we discuss various issues related to time and memory requirements and we provide some general guidelines that worked well for us.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">We generally advise to run diffTF in a cluster environment. For small analysis, a local analysis on your machine might work just fine (see the example analysis in the Git repository), but running time increases substantially due to limited amount of available cores.</p>
@@ -999,8 +1011,8 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <h3>Memory<a class="headerlink" href="#memory" title="Permalink to this headline">¶</a></h3>
 <p>Some notes regarding memory:</p>
 <ul class="simple">
-<li>Disk space: Make sure you have enough space left on your device. As a guideline, analysis with 8 samples need around 12 GB of disk space, while a large analysis with 84 samples needs around 45 GB.</li>
-<li>Machine memory: Although most steps of the pipeline have a modest memory footprint, depending on the analysis size, some others (e.g., rule <code class="docutils literal"><span class="pre">prepareBinning</span></code>) may need a lot of RAM during execution. We recommend having at least 16 GB available for large analysis (see above)</li>
+<li>Disk space: Make sure you have enough space left on your device. As a guideline, analysis with 8 samples need around 12 GB of disk space, while a large analysis with 84 samples needs around 45 GB. The number of permutations also has an influence on the (temporary) required storage and a high number of permutations (&gt; 500) may substantially increase the memory footprint. Note that most space is occupied in the <em>TEMP</em> folder, which can be deleted after an analysis has been run successfully. We note, however, that rerunning (parts of) the analysis will require regenerating files from the TEMP folder, so only delete the folder or files if you are sure that you do not need them anymore.</li>
+<li>Machine memory: Although most steps of the pipeline have a modest memory footprint of less than 4 GB or so, depending on the analysis size, some may need 10+ GB of RAM during execution. We therefore recommend having at least 10 GB available for large analysis (see above).</li>
 </ul>
 </div>
 <div class="section" id="number-of-cores">
@@ -1008,10 +1020,10 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <p>Some notes regarding the number of available cores:</p>
 <ul class="simple">
 <li>diffTF can be invoked in a highly parallelized manner, so the more CPUs are available, the better.</li>
-<li>you can use the <code class="docutils literal"><span class="pre">--cores</span></code> option when invoking Snakemake to specify the number of cores that are available for the analysis. If you specify 4 cores, for example, up to 4 rules can be run in parallel (if each of them occupies only 1 core), or 1 rule can use up to 4 cores.</li>
+<li>you can use the <code class="docutils literal"><span class="pre">--cores</span></code> option when invoking <em>Snakemake</em> to specify the number of cores that are available for the analysis. If you specify 4 cores, for example, up to 4 rules can be run in parallel (if each of them occupies only 1 core), or 1 rule can use up to 4 cores.</li>
 <li>we strongly recommend running diffTF in a cluster environment due to the massive parallelization. With Snakemake, it is easy to run diffTF in a cluster setting. Simply do the following:<ul>
-<li>write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder <code class="docutils literal"><span class="pre">src/clusterConfigurationTemplates</span></code> for examples. Note that these are rough estimates only. See the <a class="reference external" href="http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration">Snakemake documentation</a> for details for how to use cluster configuration files.</li>
-<li>invoke Snakemake with one of the available cluster modes, which will depend on your cluster system. We used <code class="docutils literal"><span class="pre">--cluster</span></code> and tested the pipeline extensively with <em>LSF/BSUB</em> and <em>SLURM</em>. For more details, see the <a class="reference external" href="http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution">Snakemake documentation</a></li>
+<li>write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder <code class="docutils literal"><span class="pre">src/clusterConfigurationTemplates</span></code> for examples. Note that these are rough estimates only. See the <a class="reference external" href="http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration">*Snakemake* documentation</a> for details for how to use cluster configuration files.</li>
+<li>invoke <em>Snakemake</em> with one of the available cluster modes, which will depend on your cluster system. We used <code class="docutils literal"><span class="pre">--cluster</span></code> and tested the pipeline extensively with <em>LSF/BSUB</em> and <em>SLURM</em>. For more details, see the <a class="reference external" href="http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution">*Snakemake* documentation</a></li>
 </ul>
 </li>
 </ul>
@@ -1026,6 +1038,18 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </ul>
 </div>
 </div>
+<div class="section" id="running-difftf-in-a-cluster-environment">
+<span id="clusterenvironment"></span><h2>Running <em>diffTF</em> in a cluster environment<a class="headerlink" href="#running-difftf-in-a-cluster-environment" title="Permalink to this headline">¶</a></h2>
+<p>If <em>diffTF</em> should be run in a cluster environment, the changes are minimal due to the flexibility of <em>Snakemake</em>. You only need to change the following:</p>
+<ul class="simple">
+<li>create a cluster configuration file in JSON format. See the files in the <em>clusterConfigurationTemplates</em> folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via Snakemake.</li>
+<li>invoke <em>Snakemake</em> with a cluster parameter. As an example, we use the following for our <em>SLURM</em> cluster:</li>
+</ul>
+<div class="highlight-Bash"><div class="highlight"><pre><span></span>snakemake -s path/to/Snakefile --reason --configfile path/to/configfile --latency-wait <span class="m">30</span> --notemp --printshellcmds --rerun-incomplete --timestamp --cores <span class="m">16</span>  --keep-going --jobs <span class="m">400</span> --cluster-config path/to/clusterconfigfile --cluster <span class="s2">&quot; sbatch -p {cluster.queueSLURM} -J {cluster.name} -A {cluster.group} -C {cluster.nodes} --cpus-per-task {cluster.nCPUs} --mem {cluster.memory} --time {cluster.maxTime} -o &quot;</span><span class="o">{</span>cluster.output<span class="o">}</span><span class="s2">&quot; -e &quot;</span><span class="o">{</span>cluster.error<span class="o">}</span><span class="s2">&quot;   --mail-type=None --parsable &quot;</span> --local-cores <span class="m">1</span>
+</pre></div>
+</div>
+<p>Note that the <em>–cluster</em> string is the only part that has to be adjusted for your cluster system.</p>
+</div>
 <div class="section" id="frequently-asked-questions">
 <h2>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h2>
 <p>Here a few typical use cases, which we will extend regularly in the future if the need arises:</p>
@@ -1038,12 +1062,17 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <li>I want to rerun a specific part of the pipeline only.</li>
 </ol>
 <blockquote>
-<div>This common scenario is also easy to solve: Just invoke Snakemake with <code class="docutils literal"><span class="pre">--forcerun</span> <span class="pre">{rulename}</span></code>, where <code class="docutils literal"><span class="pre">{rulename}</span></code> is the name of the rule as defined in the Snakefile. Snakemake will then rerun the  specified run and all parts downstream of the rule. If you want to avoid rerunning downstream parts (think carefully about it, as there might be changes from the rerunning that might have consequences for downstream parts also), you can combine <code class="docutils literal"><span class="pre">--forcerun</span></code> with <code class="docutils literal"><span class="pre">--until</span></code> and specify the same rule name for both.</div></blockquote>
+<div>This common scenario is also easy to solve: Just invoke <em>Snakemake</em> with <code class="docutils literal"><span class="pre">--forcerun</span> <span class="pre">{rulename}</span></code>, where <code class="docutils literal"><span class="pre">{rulename}</span></code> is the name of the rule as defined in the Snakefile. <em>Snakemake</em> will then rerun the  specified run and all parts downstream of the rule. If you want to avoid rerunning downstream parts (think carefully about it, as there might be changes from the rerunning that might have consequences for downstream parts also), you can combine <code class="docutils literal"><span class="pre">--forcerun</span></code> with <code class="docutils literal"><span class="pre">--until</span></code> and specify the same rule name for both.</div></blockquote>
 <ol class="arabic simple" start="3">
 <li>I want to modify the workflow.</li>
 </ol>
 <blockquote>
 <div>Simply add or modify rules to the Snakefile, it is as easy as that.</div></blockquote>
+<ol class="arabic simple" start="4">
+<li>I want to change the value of a parameter.</li>
+</ol>
+<blockquote>
+<div>TODO</div></blockquote>
 <p><strong>If you feel that a particular use case is missing, let us know and we will add it here!</strong></p>
 </div>
 </div>
@@ -1051,7 +1080,7 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <span id="docs-errors"></span><h1>Handling errors<a class="headerlink" href="#handling-errors" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="error-types">
 <h2>Error types<a class="headerlink" href="#error-types" title="Permalink to this headline">¶</a></h2>
-<p>Errors occur during the Snakemake run can principally be divided into:</p>
+<p>Errors occur during the <em>Snakemake</em> run can principally be divided into:</p>
 <ul class="simple">
 <li>Temporary errors (often when running in a cluster setting)<ul>
 <li>might occur due to temporary problems such as bad nodes, file system issues or latencies</li>
@@ -1067,9 +1096,9 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 </div>
 <div class="section" id="identify-the-cause">
 <h2>Identify the cause<a class="headerlink" href="#identify-the-cause" title="Permalink to this headline">¶</a></h2>
-<p>To troubleshoot errors, you have to first locate the exact error. Depending on how you run Snakemake (i.e., in a cluster setting or not), check the following places:</p>
+<p>To troubleshoot errors, you have to first locate the exact error. Depending on how you run <em>Snakemake</em> (i.e., in a cluster setting or not), check the following places:</p>
 <ul class="simple">
-<li>in locale mode: the Snakemake output on the console. Errors from R script should also be written to the corresponding R log files in the in the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> directory.</li>
+<li>in locale mode: the <em>Snakemake</em> output appears on the console. Check the output before the line “Error in rule”, and try to identify what went wrong.  Errors from R script should in addition be written to the corresponding R log files in the in the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> directory.</li>
 <li>in cluster mode: either error, output or log file of the corresponding rule that threw the error in the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it</li>
 </ul>
 </div>
@@ -1079,9 +1108,10 @@ Names must be separated by commas, spaces are allowed and will be eliminated aut
 <ul class="simple">
 <li>Errors related to erroneous input: These errors are easy to fix, and the error message should be indicative. If not, please let us know, and we improve the error message in the pipeline.</li>
 <li>Errors of technical nature: Errors related to memory, missing programs, R libraries etc can be fixed easily by making sure the necessary tools are installed and by executing the pipeline in an environment that provides the required technical requirements. For example, if you receive a memory-related error, try to increase the available memory. In a cluster setting, adjust the cluster configuration file accordingly by either increasing the default memory or (preferably) or by overriding the default values for the specific rule.</li>
+<li>Errors related to Snakemake: In rare cases, the error can be due to <em>Snakemake</em> (corrupt metadata, missing files, etc). If you suspect this to be the case, you may delete the .*Snakemake* directory in the folder froom which you started the analysis. <em>Snakemake</em> will regenerate it the next time you invoke it then.</li>
 <li>Errors related to the input data: Error messages that indicate the problem might be located in the data are more difficult to fix, and we cannot provide guidelines here. Feel free to contact us.</li>
 </ul>
-<p>After fixing the error, rerun Snakemake. Snakemake will continue at the point at which the error message occurred, without rerunning already successfully computed previous steps (unless specified otherwise).</p>
+<p>After fixing the error, rerun Snakemake. <em>Snakemake</em> will continue at the point at which the error message occurred, without rerunning already successfully computed previous steps (unless specified otherwise).</p>
 </div>
 </div>
 
