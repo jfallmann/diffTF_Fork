@@ -85,7 +85,7 @@ Snakemake
 
 Please ensure that you have at least version 4.3 installed. Principally, there are `multiple ways to install Snakemake <http://snakemake.readthedocs.io/en/stable/getting_started/installation.html>`_. We recommend installing it, along with all the other required software, via conda.
 
-*samtools*, *bedtool*s, *Subread*
+*samtools*, *bedtools*, *Subread*
 ----------------------------------
 
 In addition, `samtools <http://www.htslib.org/download>`_, `bedtools <http://bedtools.readthedocs.io>`_ and `Subread <http://subread.sourceforge.net>`_ are needed to run *diffTF*. We recommend installing them, along with all the other required software, via conda.
@@ -98,11 +98,10 @@ A working ``R`` installation is needed and a number of packages from either CRAN
 
 .. code-block:: R
 
-  install.packages(c("checkmate", "futile.logger", "tidyverse", "reshape2", "gridExtra", "scales", "jsonlite", "RColorBrewer", "rlist", "ggrepel", "lsr", "modeest", "locfdr", "boot"))
+  install.packages(c("checkmate", "futile.logger", "tidyverse", "reshape2", "RColorBrewer", "ggrepel", "lsr", "modeest", "boot", "grDevices", "pheatmap", "matrixStats", "locfdr"))
   source("https://bioconductor.org/biocLite.R")
-  biocLite(c("limma", "vsn", "csaw", "DESeq2", "EDASeq", "DiffBind", "geneplotter", "Rsamtools"))
-
-
+  biocLite(c("limma", "vsn", "csaw", "DESeq2", "DiffBind", "geneplotter", "Rsamtools"))
+ 
 
 .. _docs-runOwnAnalysis:
 
@@ -115,4 +114,4 @@ Running your own analysis is almost as easy as running the example analysis. Car
 2. Modify the file ``config.json`` accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section :ref:`configurationFile` for details about the meaning of the parameters. Do not delete or rename any parameters or sections.
 3. Create a tab-separated file that defines the input data, in analogy to the file ``sampleData.tsv`` from the example analysis, and refer to that in the file ``config.json`` (parameter ``summaryFile``)
 4. Adapt the file ``startAnalysis.sh`` if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)
-5. Since running the pipeline might be computationally demanding, read Section :ref:`timeMemoryRequirements` and decide on which machine to run the pipeline. In most cases, we recommend running *diffTF* in a cluster environment. The pipeline is written in Snakemake, and we strongly suggest to also read Section :ref:`workingWithPipeline` to get a basic understanding of how the pipeline works.
+5. Since running the pipeline is often computationally demanding, read Section :ref:`timeMemoryRequirements` and decide on which machine to run the pipeline. In most cases, we recommend running *diffTF* in a cluster environment (see Section :ref:`clusterEnvironment` for details). The pipeline is written in Snakemake, and we strongly suggest to also read Section :ref:`workingWithPipeline` to get a basic understanding of how the pipeline works.

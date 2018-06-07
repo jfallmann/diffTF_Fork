@@ -1,0 +1,513 @@
+start.time  <-  Sys.time()
+
+
+#########################
+# LIBRARY AND FUNCTIONS #
+#########################
+
+
+# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
+# Replace {outputFolder} and {TF} correspondingly.
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/3.analyzeTF.{TF}.R.rds")
+
+library("checkmate")
+assertClass(snakemake, "Snakemake")
+assertDirectoryExists(snakemake@config$par_general$dir_scripts)
+source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
+
+initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "modeest", "checkmate", "limma", "geneplotter", "RColorBrewer", "tools"), verbose = FALSE)
+
+########################################################################
+# SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
+########################################################################
+
+
+createDebugFile(snakemake)
+
+###################
+#### PARAMETERS ###
+###################
+
+par.l = list()
+
+par.l$verbose = TRUE
+par.l$log_minlevel = "INFO"
+par.l$maxPairwiseComparisonsDiagnosticPermutations = 2
+par.l$pseudocountAddition = 1
+par.l$minNoDatapoints = 10
+par.l$roundLog2FCDigits = 5
+
+#####################
+# VERIFY PARAMETERS #
+#####################
+
+assertClass(snakemake, "Snakemake")
+
+## INPUT ##
+assertList(snakemake@input, min.len = 1)
+assertSubset(names(snakemake@input), c("", "overlapFile", "sampleDataR", "peakFile", "peakFile2", "normFacs", "condComp"))
+
+par.l$file_input_peakTFOverlaps  = snakemake@input$overlapFile
+assertFileExists(par.l$file_input_peakTFOverlaps, access = "r")
+
+par.l$file_input_metadata = snakemake@input$sampleDataR
+assertFileExists(par.l$file_input_metadata, access = "r")
+
+par.l$file_input_peaks = snakemake@input$peakFile
+assertFileExists(par.l$file_input_peaks, access = "r")
+
+par.l$file_input_peak2 = snakemake@input$peakFile2
+assertFileExists(par.l$file_input_peak2, access = "r")
+
+par.l$file_input_normFacs = snakemake@input$normFacs
+assertFileExists(par.l$file_input_normFacs, access = "r")
+
+par.l$file_input_conditionComparison = snakemake@input$condComp
+assertFileExists(par.l$file_input_conditionComparison, access = "r")
+
+## OUTPUT ##
+assertList(snakemake@output, min.len = 1)
+assertSubset(names(snakemake@output), c("", "outputTSV", "outputPermTSV", "outputRDS", "plot_diagnostic"))
+
+par.l$file_output_summaryAll      = snakemake@output$outputTSV
+par.l$file_outputPerm_summaryAll  = snakemake@output$outputPermTSV
+par.l$file_output_summaryStats    = snakemake@output$outputRDS
+par.l$file_output_plot_diagnostic = snakemake@output$plot_diagnostic
+
+
+
+## WILDCARDS ##
+assertList(snakemake@wildcards, min.len = 1)
+assertSubset(names(snakemake@wildcards), c("", "TF"))
+
+par.l$TF = snakemake@wildcards$TF
+assertCharacter(par.l$TF, len = 1, min.chars = 1)
+
+## CONFIG ##
+assertList(snakemake@config, min.len = 1)
+
+par.l$designFormula = snakemake@config$par_general$designContrast
+checkAndLogWarningsAndErrors(par.l$designFormula, checkCharacter(par.l$designFormula, len = 1, min.chars = 3))
+
+par.l$designFormulaVariableTypes = snakemake@config$par_general$designVariableTypes
+checkAndLogWarningsAndErrors(par.l$designFormulaVariableTypes, checkCharacter(par.l$designFormulaVariableTypes, len = 1, min.chars = 3))
+
+par.l$nPermutations = snakemake@config$par_general$nPermutations
+assertIntegerish(par.l$nPermutations, lower = 0)
+
+## PARAMS ##
+assertList(snakemake@params, min.len = 1)
+assertSubset(names(snakemake@params), c("", "doCyclicLoess", "allBAMS"))
+
+par.l$doCyclicLoess = as.logical(snakemake@params$doCyclicLoess)
+assertFlag(par.l$doCyclicLoess)
+
+par.l$allBAMS = snakemake@params$allBAMS
+for (fileCur in par.l$allBAMS) {
+  checkAndLogWarningsAndErrors(fileCur, checkFileExists(fileCur))
+}
+
+## LOG ##
+assertList(snakemake@log, min.len = 1)
+par.l$file_log = snakemake@log[[1]]
+
+
+allDirs = c(dirname(par.l$file_output_summaryAll), 
+            dirname(par.l$file_outputPerm_summaryAll),
+            dirname(par.l$file_output_summaryStats), 
+            dirname(par.l$file_log)
+)
+
+
+testExistanceAndCreateDirectoriesRecursively(allDirs)
+
+######################
+# FINAL PREPARATIONS #
+######################
+startLogger(par.l$file_log, par.l$log_minlevel, removeOldLog = TRUE)
+printParametersLog(par.l)
+
+#################
+# READ METADATA #
+#################
+
+
+sampleData.l = readRDS(par.l$file_input_metadata)
+
+if (length(sampleData.l) == 0) {
+    message = "Length of sampleData.l list is 0 but is has to be at least 1. Rerun the rule DiffPeaks."
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+}
+
+
+sampleData.df = sampleData.l[["permutation0"]]
+colnamesNew = sampleData.df$SampleID[which(sampleData.df$bamReads %in% par.l$allBAMS)]
+if (length(colnamesNew) != nrow(sampleData.df)) {
+    message = "Could not grep sampleIDs from filenames."
+    checkAndLogWarningsAndErrors(NULL,  message, isWarning = FALSE)
+}
+
+# Initiate data structures that are populated hereafter
+TF_output.df  = tribble(~permutation, ~TF, ~chr, ~MSS, ~MES, ~TFBSID, ~strand, ~peakID, ~limma_avgExpr, ~l2FC, ~limma_B, ~limma_t_stat, ~DESeq_ldcSE, ~DESeq_stat, ~DESeq_baseMean, ~pval, ~pval_adj)
+TF_outputInclPerm.df  = tribble(~permutation, ~TF, ~TFBSID, ~l2FC)
+outputSummary.df  = tribble(~permutation, ~TF, ~Pos_l2FC, ~Mean_l2FC, ~Median_l2FC, ~Mode_l2FC, ~sd_l2FC, ~pvalue_raw, ~skewness_l2FC, ~T_statistic, ~TFBS_num)
+
+
+#####################
+# READ OVERLAP FILE #
+#####################
+
+overlapsAll.df = read_tsv(par.l$file_input_peakTFOverlaps, col_names = TRUE, col_types = cols(), comment = "#")
+
+if (nrow(problems(overlapsAll.df)) > 0) {
+  flog.fatal(paste0("Parsing errors: "), problems(overlapsAll.df), capture = TRUE)
+  stop("Error when parsing the file ", fileCur, ", see errors above")
+}
+
+colnames(overlapsAll.df) = c("annotation", "chr","MSS","MES", "strand","length", colnamesNew)
+
+overlapsAll.df = overlapsAll.df %>%
+                  dplyr::mutate(TFBSID = paste0(chr,":", MSS, "-",MES),
+                                mean = apply(dplyr::select(overlapsAll.df, one_of(colnamesNew)), 1, mean), 
+                                peakID = sapply(strsplit(overlapsAll.df$annotation, split = "_", fixed = TRUE),"[[", 1)) %>%
+                  dplyr::distinct(TFBSID, .keep_all = TRUE) %>%
+                  dplyr::select(-one_of("length"))
+    
+
+nTFBS = nrow(overlapsAll.df)
+skipTF = FALSE
+
+
+
+if (nTFBS >= par.l$minNoDatapoints) {
+
+  
+  # Group by ID
+  # take only the maximum row mean of all samples, sample with biggest coverage
+  coverageAll_grouped.df = overlapsAll.df %>%
+    dplyr::group_by(peakID) %>%
+    dplyr::slice(which.max(mean))
+  
+  TF.table.m = as.matrix(coverageAll_grouped.df[,sampleData.df$SampleID])
+  colnames(TF.table.m) = sampleData.df$SampleID
+  rownames(TF.table.m) = coverageAll_grouped.df$TFBSID
+  
+} else {
+  message <- paste0("The number of overlaps (TFBS) with the peaks is smaller than ", par.l$minNoDatapoints, ". This TF will be ignored in subsequent steps")
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+  skipTF = TRUE
+}
+
+if (skipTF) {
+  
+  # write a dummy pdf file
+  pdf(par.l$file_output_plot_diagnostic)
+  plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+  message = paste0("Insufficient data to run analysis.\n", message, "\nThis TF will be ignored in subsequent steps.")
+  text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
+  dev.off()
+  
+} else {
+  
+  # Create formula based on user-defined design
+  designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
+  
+  normFacs = readRDS(par.l$file_input_normFacs)
+  
+  
+  TF.cds = tryCatch( {
+      
+      # create Deseq object from the TF specific data
+      TF.cds <- DESeqDataSetFromMatrix(countData = TF.table.m,
+                                       colData = sampleData.df,
+                                       design = designFormula)
+      
+      # Recent versions of DeSeq seem to do this automatically, whereas older versions don't, so enforce it here
+      if (!identical(colnames(TF.cds), colnames(TF.table.m))) {
+          colnames(TF.cds) = colnames(TF.table.m)
+      }
+      if (!identical(rownames(TF.cds), rownames(TF.table.m))) {
+          rownames(TF.cds) = rownames(TF.table.m)
+      }
+      
+      TF.cds
+      
+  }, error = function(e) {
+      errorMessage = "Could not initiate DESeq."
+      checkAndLogWarningsAndErrors(NULL, errorMessage, isWarning = FALSE)
+  }
+  )
+  
+  
+  # We here again take the gene-specific normalization factors from the previously calculated ones based on the peaks,
+  # but subset this to only those corresponding to the TF of interest
+  
+  
+  # Sanity check
+  if (length(which(!coverageAll_grouped.df$peakID %in% rownames(normFacs))) > 0) {
+      errorMessage = "Inconsistency detected between the normalization factor rownames and the object coverageAll_grouped.df"
+      checkAndLogWarningsAndErrors(NULL,  errorMessage, isWarning = FALSE)
+  }
+  
+  if (!identical(colnames(TF.cds), colnames(normFacs))) {
+      errorMessage = "Column names different between TF.cds and normFacs"
+      checkAndLogWarningsAndErrors(NULL,  errorMessage, isWarning = FALSE)
+  }
+  
+  if (!identical(coverageAll_grouped.df$TFBSID, rownames(TF.cds))) {
+      errorMessage = "Row names different between coverageAll_grouped.df and TF.cds"
+      checkAndLogWarningsAndErrors(NULL,  errorMessage, isWarning = FALSE)
+  }
+  
+  
+  if (par.l$doCyclicLoess) {
+      
+      # coverageAll_grouped.df$TFBSID and rownames(TF.cds) are identical
+      matchingOrder = match(coverageAll_grouped.df$peakID,rownames(normFacs))
+      normalizationFactors(TF.cds) <- normFacs[matchingOrder,, drop = FALSE]
+      
+  } else {
+      sizeFactors(TF.cds) = normFacs
+  }
+  
+  # low RC, check by rowMean
+  TF.cds.filt = TF.cds[rowMeans(counts(TF.cds)) > 0, ]
+
+  peaks.df = read_tsv(par.l$file_input_peak2, col_types = cols())
+  if (nrow(problems(peaks.df)) > 0) {
+    flog.fatal(paste0("Parsing errors: "), problems(peaks.df), capture = TRUE)
+    stop("Error when parsing the file ", par.l$file_input_peak2, ", see errors above")
+  }
+  
+  peaksFiltered.df = readRDS(par.l$file_input_peaks)
+  
+  ################################
+  # ITERATE THROUGH PERMUTATIONS #
+  ################################
+  
+    
+    # Adjust the number of permutations in case less have been computed
+    if (par.l$nPermutations + 1 < length(sampleData.l)) {
+      message = paste0("In the output objects, more permutations seem to be stored. They will be ignored and the uoriginal value of nPermutations will be used")
+      checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    } else if (par.l$nPermutations + 1 > length(sampleData.l)) {
+      valueNew = length(sampleData.l) - 1
+      message = paste0("The value of the parameter nPermutations differs from what is saved in the output objects. The value of nPermutations will be adjusted to ", valueNew)
+      checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+      par.l$nPermutations = valueNew
+    }
+    
+    for (permutationCur in 0:par.l$nPermutations) {
+      
+      if (permutationCur == 0) {
+        flog.info(paste0("Running for real data"))
+      } else {
+        flog.info(paste0("Running for permutation ", permutationCur))
+      }
+      sampleData.df = sampleData.l[[paste0("permutation", permutationCur)]]
+      
+      ##############################
+      # RUN EITHER LIMMA OR DESEQ2 #
+      ##############################
+      if (par.l$nPermutations > 0) {
+        
+        # Generate normalized counts for limma analysis
+        countsNorm        = counts(TF.cds.filt, norm = TRUE)
+        countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
+        rownames(countsNorm.transf) = rownames(TF.cds.filt)
+
+        fit <- eBayes(lmFit(countsNorm.transf, design = model.matrix(designFormula, data = sampleData.df)))
+        results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
+        
+        final.TF.df = data_frame("TFBSID"      = rownames(results.df), 
+                                 "limma_avgExpr"     = results.df$AveExpr,
+                                 "l2FC"        = results.df$logFC,
+                                 "limma_B"           = results.df$B,
+                                 "limma_t_stat"      = results.df$t,
+                                 "pval"        = results.df$P.Value, 
+                                 "pval_adj"    = results.df$adj.P.Val,
+                                 "DESeq_ldcSE" = NA, 
+                                 "DESeq_stat" = NA,
+                                 "DESeq_baseMean" = NA
+        )
+        
+      } else {
+        
+        sampleData.df = sampleData.l[[paste0("permutation0")]]
+        
+        # Run the local fit first, if that throws an error try the default fit type
+        
+        res_DESeq = tryCatch( {
+          suppressMessages(DESeq(TF.cds.filt,fitType = 'local'))
+          
+        }, error = function(e) {
+          message = "Could not run DESeq with local fitting, retry with default fitting type..."
+          checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+          
+          res_DESeq = tryCatch( {
+            suppressMessages(DESeq(TF.cds.filt))
+            
+          }, error = function(e) {
+            errorMessage <<- "Could not run DESeq with regular fitting either, set all values to NA."
+            checkAndLogWarningsAndErrors(NULL, errorMessage, isWarning = TRUE)
+          }
+          )
+          
+        }
+        )
+        
+        
+        res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq))
+        
+
+        final.TF.df = data_frame("TFBSID"    = rownames(res_DESeq.df), 
+                                 "DESeq_baseMean" = res_DESeq.df$baseMean,
+                                 "l2FC"     = res_DESeq.df$log2FoldChange,
+                                 "DESeq_ldcSE"    = res_DESeq.df$lfcSE,
+                                 "DESeq_stat"     = res_DESeq.df$stat,
+                                 "pval"     = res_DESeq.df$pvalue, 
+                                 "pval_adj" = res_DESeq.df$padj,
+                                 "limma_avgExpr" = NA,
+                                 "limma_B" = NA,
+                                 "limma_t_stat" = NA
+        )
+      }
+      
+      ##################################
+      # SUMMARIZE AND MERGE WITH PEAKS #
+      ##################################
+      order  = c("permutation", "TF", "chr", "MSS", "MES", "TFBSID", "strand", "peakID", "l2FC", "limma_avgExpr", "limma_B", "limma_t_stat", "DESeq_ldcSE", "DESeq_stat", "DESeq_baseMean", "pval", "pval_adj")
+      
+      # dplyr::mutate(TF = par.l$TF) gives the following weird error message: Error: Unsupported type NILSXP for column "TF"
+      TFCur = par.l$TF
+      
+      TF_outputCur.df = final.TF.df %>%
+        dplyr::left_join(overlapsAll.df,by = c("TFBSID")) %>%
+        dplyr::left_join(peaksFiltered.df, by = c("peakID" = "annotation")) %>%
+        dplyr::rename(chr = chr.x) %>%
+        dplyr::filter(!(is.na(limma_avgExpr) & is.na(DESeq_baseMean))) %>%
+        dplyr::arrange(chr)  %>%
+        dplyr::mutate(TF = TFCur, permutation = permutationCur, l2FC = signif(l2FC, par.l$roundLog2FCDigits)) %>%
+        dplyr::select(one_of(order)) 
+
+      
+      if (permutationCur == 0) {
+        
+        TF_output.df = rbind(TF_output.df, TF_outputCur.df)
+        
+        ######################
+        ## DIAGNOSTIC PLOTS ##
+        ######################
+        conditionComparison = readRDS(par.l$file_input_conditionComparison)
+        
+        
+        pdf(par.l$file_output_plot_diagnostic)
+        if (par.l$nPermutations == 0) {
+          plotDiagnosticPlots(TF.cds.filt, res_DESeq, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 
+        } else {
+          plotDiagnosticPlots(TF.cds.filt, fit, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 
+        }
+        
+        
+        
+        # Density plot
+        conditionComparison = paste0(conditionComparison[1], " vs. ", conditionComparison[2])
+        xlabLabel = paste0(" log2 FC ", conditionComparison)
+        TF_dens = ggplot(peaks.df, aes(l2FC)) + geom_density(aes(fill = "Peaks" ),alpha = .5, color = "black") +
+          geom_density(data = final.TF.df, aes(x = l2FC, fill = "TF"),size = 1, alpha = .7) +
+          xlab(xlabLabel) +
+          theme(axis.text.x = element_text(face = "bold", color = "black", size = 12),
+                axis.text.y = element_text(face = "bold", color = "black", size = 12),
+                axis.title.x = element_text(face = "bold", colour = "black", size = 10, margin = margin(25,0,0,0)),
+                axis.title.y = element_text(face = "bold", colour = "black", size = 10, margin = margin(0,25,0,0)),
+                axis.line.x = element_line(color = "black"), axis.line.y = element_line(color = "black"),
+                panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                panel.border = element_blank(),
+                panel.background = element_blank(),
+                legend.position = c(0.9,0.9),
+                legend.justification = "center",
+                legend.title = element_blank()) +
+          scale_fill_manual(values = c("Peaks" = "grey50" , "TF" = "blue"), labels = c("PEAKS", par.l$TF))
+        
+        plot(TF_dens)
+        
+        # create ecdf plots for each TF
+        ECDF_TF = ggplot(final.TF.df, aes(l2FC)) +
+          stat_ecdf(aes(colour = "TF")) +
+          stat_ecdf(data = peaks.df, aes(x = l2FC, colour = "Peaks")) +
+          xlab(xlabLabel) +
+          scale_fill_manual(values = c("Peaks" = "grey50" , "TF" = "blue"), labels = c("PEAKS", par.l$TF))
+        
+        plot(ECDF_TF)
+        
+        dev.off()
+        
+      } 
+      
+      # Execute this ALWAYS, as also the values for the real data should be stored for easier later retrieval
+      TF_outputCurFiltered.df = dplyr::select(TF_outputCur.df, one_of("permutation", "TF", "TFBSID", "l2FC"))
+      TF_outputInclPerm.df = rbind(TF_outputInclPerm.df, TF_outputCurFiltered.df)
+      
+      
+      # d) Comparisons between peaks and binding sites
+      
+      modeNum     = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)
+      
+      # We have to filter now by NAs because for some permutations, limma might have been unable to calculate the coefficients
+      final.TF.filtered.df = dplyr::filter(final.TF.df, !is.na(l2FC))
+      nRowFilt = nrow(final.TF.filtered.df)
+      if (nRowFilt > 0) {
+        
+        if (nRowFilt >= par.l$minNoDatapoints) {
+          Ttest   = t.test(final.TF.df$l2FC, peaks.df$l2FC)
+          tTest_pVal = Ttest$p.value
+          tTest_stat = Ttest$statistic[[1]]
+        } else {
+          message = paste0("Skipping t-test due to insufficient number of TFBS (<", par.l$minNoDatapoints, "). The columns T_statistic and pvalue_raw will be set to NA.")
+          checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+          tTest_pVal = tTest_stat = NA
+        }
+        
+        
+        outputSummary.df = add_row(outputSummary.df,
+                                   permutation     = permutationCur,
+                                   TF              = par.l$TF,
+                                   Pos_l2FC        = nrow(final.TF.df[final.TF.df$l2FC > 0,]) / nrow(final.TF.df),
+                                   Mean_l2FC       = mean(final.TF.df$l2FC, na.rm = TRUE),
+                                   Median_l2FC     = median(final.TF.df$l2FC, na.rm = TRUE),
+                                   Mode_l2FC       = modeNum[[1]],
+                                   sd_l2FC         = sd(final.TF.df$l2FC, na.rm = TRUE),
+                                   pvalue_raw      = tTest_pVal,
+                                   skewness_l2FC   = modeNum[[2]], 
+                                   T_statistic     = tTest_stat, 
+                                   TFBS_num        = nrow(final.TF.df)
+        )
+        
+      } else {
+        
+        # Rest will be NA
+        outputSummary.df = add_row(outputSummary.df,
+                                   permutation     = permutationCur,
+                                   TF              = par.l$TF,
+                                   TFBS_num        = nrow(final.TF.df)               
+        )
+      }
+      
+
+   }  # end for each permutation
+
+} # end if !skipTF
+
+TF_output.df = mutate_if(TF_output.df, is.numeric, as.character)
+write_tsv(TF_output.df,     path = par.l$file_output_summaryAll)
+TF_outputInclPerm.dfv = mutate_if(TF_outputInclPerm.df, is.numeric, as.character)
+write_tsv(TF_outputInclPerm.df, path = par.l$file_outputPerm_summaryAll)
+saveRDS(outputSummary.df,   file = par.l$file_output_summaryStats)
+
+# saveRDS(res_DESeq.l, file = par.l$file_output_DESeq)
+
+.printExecutionTime(start.time)
+
+flog.info("Session info: ", sessionInfo(), capture = TRUE)

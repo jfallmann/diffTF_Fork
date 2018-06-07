@@ -7,7 +7,7 @@ start.time  <-  Sys.time()
 
 # Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
 # Replace {outputFolder} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/2.DESeqPeaks.R.rds")
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/2.DiffPeaks.R.rds")
 
 library("checkmate")
 assertClass(snakemake, "Snakemake")
@@ -22,7 +22,7 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
-checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "csaw", "checkmate", "limma", "tools", "EDASeq", "geneplotter", "RColorBrewer", "BiocParallel", "rlist"), verbose = FALSE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "csaw", "checkmate", "limma", "tools"), verbose = FALSE)
 
 
 
@@ -32,6 +32,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "csaw", "c
 
 par.l = list()
 
+par.l$pseudocountAddition = 1
 par.l$verbose = TRUE
 par.l$log_minlevel = "INFO"
 
@@ -39,36 +40,39 @@ par.l$log_minlevel = "INFO"
 # VERIFY PARAMETERS #
 #####################
 
-checkAndLogWarningsAndErrors(snakemake, checkClass(snakemake, "Snakemake"))
+checkAndLogWarningsAndErrors(snakemake, checkmate::checkClass(snakemake, "Snakemake"))
 
 ## INPUT ##
-checkAndLogWarningsAndErrors(snakemake@input, checkList(snakemake@input, min.len = 1))
-checkAndLogWarningsAndErrors(snakemake@input, checkSubset(names(snakemake@input), c("", "sampleData", "BAMPeakoverlaps")))
+checkAndLogWarningsAndErrors(snakemake@input, checkmate::checkList(snakemake@input, min.len = 1))
+checkAndLogWarningsAndErrors(snakemake@input, checkmate::checkSubset(names(snakemake@input), c("", "sampleData", "BAMPeakoverlaps")))
 
 par.l$file_input_sampleData = snakemake@input$sampleData
-checkAndLogWarningsAndErrors(par.l$file_input_sampleData, checkFileExists(par.l$file_input_sampleData, access = "r"))
+checkAndLogWarningsAndErrors(par.l$file_input_sampleData, checkmate::checkFileExists(par.l$file_input_sampleData, access = "r"))
 
   
 par.l$file_input_peakOverlaps = snakemake@input$BAMPeakoverlaps
 
 for (fileCur in par.l$files_input_TF_summary) {
-  checkAndLogWarningsAndErrors(fileCur, checkFileExists(fileCur, access = "r"))
+  checkAndLogWarningsAndErrors(fileCur, checkmate::checkFileExists(fileCur, access = "r"))
 }
 
 ## OUTPUT ##
-checkAndLogWarningsAndErrors(snakemake@output, checkList(snakemake@output, min.len = 1))
-checkAndLogWarningsAndErrors(names(snakemake@output), checkSubset(names(snakemake@output), c("", "sampleDataR", "peakFile", "peaks_tsv", "condComp", "normFacs", "plots", "plotsPerm", "DESeqObj")))
+checkAndLogWarningsAndErrors(snakemake@output, checkmate::checkList(snakemake@output, min.len = 1))
+checkAndLogWarningsAndErrors(names(snakemake@output), checkmate::checkSubset(c("", "sampleDataR", "peakFile", "peaks_tsv", "condComp", "normFacs", "normCounts", "plots", "DESeqObj"), names(snakemake@output)))
 
-par.l$file_output_metadata  = snakemake@output$sampleDataR
-par.l$file_output_peaks     = snakemake@output$peakFile
-par.l$file_output_peaksTSV  = snakemake@output$peaks_tsv
-par.l$file_output_condComp  = snakemake@output$condComp  
-par.l$file_output_normFacs  = snakemake@output$normFacs
-par.l$file_output_plots     = snakemake@output$plots
-par.l$file_output_DESeq     = snakemake@output$DESeqObj
+par.l$file_output_metadata     = snakemake@output$sampleDataR
+par.l$file_output_peaks        = snakemake@output$peakFile
+par.l$file_output_peaksTSV     = snakemake@output$peaks_tsv
+# par.l$file_output_peaksPermTSV = snakemake@output$peaksPerm_tsv
+par.l$file_output_condComp     = snakemake@output$condComp  
+par.l$file_output_normFacs     = snakemake@output$normFacs
+par.l$file_output_normCounts   = snakemake@output$normCounts
+par.l$file_output_plots        = snakemake@output$plots
+par.l$file_output_DESeqObj     = snakemake@output$DESeqObj
+
 
 ## CONFIG ##
-checkAndLogWarningsAndErrors(snakemake@config, checkList(snakemake@config, min.len = 1))
+checkAndLogWarningsAndErrors(snakemake@config,checkmate::checkList(snakemake@config, min.len = 1))
 
 par.l$designFormula = snakemake@config$par_general$designContrast
 checkAndLogWarningsAndErrors(par.l$designFormula, checkCharacter(par.l$designFormula, len = 1, min.chars = 3))
@@ -79,25 +83,25 @@ checkAndLogWarningsAndErrors(par.l$designFormulaVariableTypes, checkCharacter(pa
 par.l$nPermutations = snakemake@config$par_general$nPermutations
 checkAndLogWarningsAndErrors(par.l$nPermutations, checkIntegerish(par.l$nPermutations, lower = 0))
 
+par.l$conditionComparison  = snakemake@config$par_general$conditionComparison
+checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$conditionComparison, len = 1, min.chars = 3))
 
 ## PARAMS ##
-checkAndLogWarningsAndErrors(snakemake@params, checkList(snakemake@params, min.len = 1))
+checkAndLogWarningsAndErrors(snakemake@params,checkmate::checkList(snakemake@params, min.len = 1))
 checkAndLogWarningsAndErrors(names(snakemake@params), checkSubset(names(snakemake@params), c("", "doCyclicLoess")))
 
 par.l$doCyclicLoess = as.logical(snakemake@params$doCyclicLoess)
 checkAndLogWarningsAndErrors(par.l$doCyclicLoess, checkFlag(par.l$doCyclicLoess))
 
 ## LOG ##
-checkAndLogWarningsAndErrors(snakemake@log, checkList(snakemake@log, min.len = 1))
+checkAndLogWarningsAndErrors(snakemake@log,checkmate::checkList(snakemake@log, min.len = 1))
 par.l$file_log = snakemake@log[[1]]
 
 
 allDirs = c(dirname(par.l$file_output_metadata), 
             dirname(par.l$file_output_peaks), 
             dirname(par.l$file_output_normFacs), 
-            dirname(par.l$file_output_plots), 
             dirname(par.l$file_output_peaksTSV),
-            dirname(par.l$file_output_DESeq),
             dirname(par.l$file_log)
             )
 
@@ -106,9 +110,9 @@ testExistanceAndCreateDirectoriesRecursively(allDirs)
 
 ######################
 # FINAL PREPARATIONS #
+######################
 startLogger(par.l$file_log, par.l$log_minlevel,  removeOldLog = TRUE)
 printParametersLog(par.l)
-
 
 
 #################
@@ -119,8 +123,17 @@ sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_type
 
 checkAndLogWarningsAndErrors(colnames(sampleData.df), checkSubset(c("bamReads"), colnames(sampleData.df)))
 
+conditionsVec = strsplit(par.l$conditionComparison, ",")[[1]]
+if (!testSubset(sampleData.df$conditionSummary, conditionsVec)) {
+  message = "The parameter conditionComparison does not correspond to the sample summary table"
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+}
+
 designFormula = as.formula(par.l$designFormula)
 formulaVariables = attr(terms(designFormula), "term.labels")
+
+# Extract the variable that defines the contrast. Always the last element in the formula
+variableToPermute = formulaVariables[length(formulaVariables)]
 
 par.l$designFormulaVariableTypes = gsub(" ", "", par.l$designFormulaVariableTypes)
 components = strsplit(par.l$designFormulaVariableTypes, ",")[[1]]
@@ -136,7 +149,7 @@ if (!all(sapply(components2,length) == 2)) {
 }
 
 components3 = unlist(lapply(components2, "[[", 1))
-variableToPermute = components3[length(components3)]
+
 components3types = tolower(unlist(lapply(components2, "[[", 2)))
 names(components3types) = components3
 checkAndLogWarningsAndErrors(sort(formulaVariables), checkSetEqual(sort(formulaVariables), sort(components3)))
@@ -167,6 +180,10 @@ for (colnameCur in names(components3types)) {
   
 }
 
+# Change the conditionSummary specifically and enforce the direction as specified in the config file
+sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary, levels = conditionsVec)
+
+
 # If variable to permute is a factor, check that is has 2 levels 
 nLevels = length(unique(unlist(sampleData.df[,variableToPermute])))
 if (datatypeVariableToPermute == "factor" & nLevels != 2) {
@@ -182,8 +199,12 @@ if (datatypeVariableToPermute == "factor" & nLevels != 2) {
 # ITERATE THROUGH PEAK FILES #
 ##############################
 
-coverageAll.df = read_tsv(par.l$file_input_peakOverlaps, col_names = TRUE, comment = "#")
+coverageAll.df = read_tsv(par.l$file_input_peakOverlaps, col_names = TRUE, comment = "#", col_types = cols())
 
+if (nrow(problems(coverageAll.df)) > 0) {
+    flog.fatal(paste0("Parsing errors: "), problems(coverageAll.df), capture = TRUE)
+    stop("Error when parsing the file ", fileCur, ", see errors above")
+}
 
 if (nrow(coverageAll.df) == 0) {
     
@@ -228,40 +249,22 @@ saveRDS(peaks.filtered.df, file = par.l$file_output_peaks)
 # SAMPLE LABEL PERMUTATIONS #
 #############################
 
-sampleDataOrig.df = sampleData.df
+sampleData.l = list()
+nSamples = nrow(sampleData.df)
+sampleData.l[["permutation0"]] = sampleData.df
 
-samplesRare.l = NA
+conditionCounter = table(sampleData.df[,variableToPermute])
 
-
-conditionCounter = table(sampleDataOrig.df[,variableToPermute])
-
+# Record the frequency of the conditions to determine how many permutations are possibler
 nSamplesRareCondition     = min(conditionCounter)
 nSamplesFrequentCondition = max(conditionCounter)
-
-# Always take only the first element of the vectors, as conditions can have equal lengths
-nameRareCondition      = names(conditionCounter)[conditionCounter == min(conditionCounter)][1]
-nameFrequentCondition  = names(conditionCounter)[which(names(conditionCounter) != nameRareCondition)]
-indexRareCondition     = which(sampleDataOrig.df[,variableToPermute] == nameRareCondition)
-indexFrequentCondition = which(sampleDataOrig.df[,variableToPermute] == nameFrequentCondition)
-
-nSamples = nrow(sampleData.df)
-
-# Determine the number of permutations
-
-if (datatypeVariableToPermute == "factor") {
-  
-  nSwaps = ceiling(nSamplesRareCondition / 2)
-  nPermutationsTotal = choose(nSamplesRareCondition, nSwaps) * choose(nSamplesFrequentCondition, nSwaps)
-
-} else {
-  
-  nPermutationsTotal = factorial(nSamples)
-  
-}
+nameRareCondition         = names(conditionCounter)[conditionCounter == min(conditionCounter)][1]
+nameFrequentCondition     = names(conditionCounter)[which(names(conditionCounter) != nameRareCondition)]
+nPermutationsTotal        = choose(nSamples, nSamplesFrequentCondition) # same as choose(nSamples, nSamplesRareCondition)
 
 if (nPermutationsTotal < par.l$nPermutations) {
   
-  message = paste0("The total number of possible permutations is only ", nPermutationsTotal, ", but more have been requested. The value for the paramter nPermutations will be adjusted.")
+  message = paste0("The total number of possible permutations is only ", nPermutationsTotal, ", but more have been requested. The value for the parameter nPermutations will be adjusted.")
   checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
   par.l$nPermutations = nPermutationsTotal
 }
@@ -269,64 +272,23 @@ if (nPermutationsTotal < par.l$nPermutations) {
 
 # Permute samples beforehand here so that each call to a permutation is unique
 permutationsList.l = list()
-samplesRare.l = list()
 nPermutationsDone = 0
 failsafeCounter   = 0
-while (nPermutationsDone < (par.l$nPermutations + 1)) {
+while (nPermutationsDone < par.l$nPermutations) {
 
-  #permutation 0 is always the original, non-permuted data
-  if (nPermutationsDone == 0) {
-    
-    if (datatypeVariableToPermute == "factor") {
-      indexRareConditionCur = indexRareCondition
-    } else {
-      
-      # don't draw a sample just take the original vector
-      indexRareConditionCur = unlist(sampleDataOrig.df[,variableToPermute])
-    }
-
-    
-  } else {
-    
-    if (datatypeVariableToPermute == "factor") {
-      
-      indexRareConditionCur     = indexRareCondition
-      indexFrequentConditionCur = indexFrequentCondition
-      
-      # Pick around 50% of the number of cases for the rare condition and swap
-      sampleRareConditionSwap     = sort(sample(seq_len(nSamplesRareCondition), nSwaps))
-      sampleFrequentConditionSwap = sort(sample(seq_len(nSamplesFrequentCondition), nSwaps))
-      
-      # Swap indexes
-      temp = indexRareConditionCur[sampleRareConditionSwap]
-      indexRareConditionCur[sampleRareConditionSwap] = indexFrequentConditionCur[sampleFrequentConditionSwap]
-      indexFrequentConditionCur[sampleFrequentConditionSwap] = temp
-      
-      # Sort
-      indexRareConditionCur     = sort(indexRareConditionCur)
-      indexFrequentConditionCur = sort(indexFrequentConditionCur)
-      
-      stopifnot(length(unique(c(indexRareConditionCur, indexFrequentConditionCur))) == nSamples)
-      
-    } else {
-      
-      # Just draw a sample from the full vector
-      indexRareConditionCur = sample(seq_len(nSamples), nSamples)
-    }
-    
-
-  }
-
+  sampleCur = sample.int(nSamples)
+  samplesRareCondShuffled  = sampleData.df$SampleID[which(sampleData.df$conditionSummary[sampleCur] == nameRareCondition)]
+  indexNameCur = paste0(sort(samplesRareCondShuffled), collapse = ",")
   
   # Check if this permutation has already been used. If yes, produce a different one
-  permutationNameStr = paste0(indexRareConditionCur, collapse = ",")
-  if (!permutationNameStr %in% names(samplesRare.l)) {
+
+  if (!indexNameCur %in% names(permutationsList.l)) {
     failsafeCounter   = 0
-    samplesRare.l[[permutationNameStr]] = indexRareConditionCur
+    permutationsList.l[[indexNameCur]] = sampleCur
     nPermutationsDone = nPermutationsDone + 1
   } else {
     failsafeCounter   =  failsafeCounter + 1
-    if (failsafeCounter > 1000) {
+    if (failsafeCounter > 5000) {
       message = "Could not generate more permutations. This looks like a bug."
       checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
     } 
@@ -334,72 +296,34 @@ while (nPermutationsDone < (par.l$nPermutations + 1)) {
   
 }
 
-  
-#Rename so it is easier to address in the following code
-listNames = paste0("permutation", 0:par.l$nPermutations)
-names(samplesRare.l) = listNames
+##############################################
+# RUN DESEQ TO OBTAIN NORMALIZED COUNTS ONLY #
+##############################################
 
+designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
 
-runPermutation <- function(permutationCur, sampleDataOrig.df, variableToPermute, datatypeVariableToPermute, nameRareCondition, nameFrequentCondition, samplesRare.l, 
-                           par.l, coverageAll.m) {
-  
-  sampleData.df = sampleDataOrig.df
-  nSamples = nrow(sampleData.df)
-  permutationName = paste0("permutation", permutationCur)
-  
-  ###################
-  # PERMUTE SAMPLES #
-  ###################
-  
-  if (permutationCur > 0) {
-    flog.info(paste0("Running for permutation ", permutationCur))
-    
-    if (datatypeVariableToPermute == "factor") {
-      
-      rareConditionSamplesCur = samplesRare.l[[permutationName]]
-      sampleData.df[rareConditionSamplesCur                            ,variableToPermute] = nameRareCondition
-      sampleData.df[setdiff(seq_len(nSamples), rareConditionSamplesCur),variableToPermute] = nameFrequentCondition 
-      
-      
-    } else if (datatypeVariableToPermute == "integer") {
-    
-      sampleData.df[,variableToPermute] = samplesRare.l[[permutationName]]
-      
-    }
-   
-    
-  } else {
-    flog.info(paste0("Running for original data"))
-  }
- 
-  
+cds.peaks <- DESeqDataSetFromMatrix(countData = coverageAll.m,
+                                    colData = sampleData.df,
+                                    design = designFormula)
 
-  #############
-  # RUN DESEQ #
-  #############
-  
-  designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
-  
-  cds.peaks <- DESeqDataSetFromMatrix(countData = coverageAll.m,
-                                      colData = sampleData.df,
-                                      design = designFormula)
-  
-  # Recent versions of DeSeq seem to do this automatically, whereas older versions don't, so enforce it here
-  if (!identical(colnames(cds.peaks), colnames(coverageAll.m))) {
-      colnames(cds.peaks) = colnames(coverageAll.m)
-  }
-  if (!identical(rownames(cds.peaks), rownames(coverageAll.m))) {
-      rownames(cds.peaks) = rownames(coverageAll.m)
-  }
-  
-  # Do a regular size factor normalization
-  if (!par.l$doCyclicLoess) {
+# Recent versions of DeSeq seem to do this automatically, whereas older versions don't, so enforce it here
+if (!identical(colnames(cds.peaks), colnames(coverageAll.m))) {
+    colnames(cds.peaks) = colnames(coverageAll.m)
+}
+if (!identical(rownames(cds.peaks), rownames(coverageAll.m))) {
+    rownames(cds.peaks) = rownames(coverageAll.m)
+}
+
+# Do a regular size factor normalization
+if (!par.l$doCyclicLoess) {
     
     cds.peaks <- estimateSizeFactors(cds.peaks)
     
     normFacs = sizeFactors(cds.peaks)
     
-  } else {
+    # TODO: NormFacts identical between different permutations? yes or?
+    
+} else {
     
     # Perform a cyclic loess normalization
     # We use a slighlty more complicated setup to derive size factors for library normalization
@@ -419,7 +343,6 @@ runPermutation <- function(permutationCur, sampleDataOrig.df, variableToPermute,
                                 type = "loess"))
     
     # sanity check: is the geometric mean across samples equal to one?
-    
     #library("psych")
     #all.equal(geometric.mean(t(normFacs)), rep(1, dim(cds.peaks)[1]))
     
@@ -429,13 +352,64 @@ runPermutation <- function(permutationCur, sampleDataOrig.df, variableToPermute,
     # We now provide gene-specific normalization factors for each sample as a matrix, which will preempt sizeFactors
     normalizationFactors(cds.peaks) <- normFacs
     
+}
+
+
+# Filter peaks with zero counts
+cds.peaks.filt   = cds.peaks[rowMeans(counts(cds.peaks)) > 0, ]
+
+
+# model.matrix uses the first level in the specified column as reference, and so the corresponding column name and values are relative to that reference.
+# That is, if the levels are "GMP" and "MPP", then all log2 fc will be the log2fc of MPP as compared to GMP.
+# The levels have to be reversed because the first element is the one appering at the right of the plot, with positive values as. compared to the reference
+comparisonDESeq = rev(levels(sampleData.df$conditionSummary))
+
+##############
+# GET LOG2FC #
+##############
+
+countsNorm        = counts(cds.peaks.filt, norm = TRUE)
+countsNorm.df     = as.data.frame(countsNorm) %>%
+  dplyr::mutate(peakID = rownames(cds.peaks.filt))  %>%
+  dplyr::select(one_of("peakID", colnames(countsNorm)))
+
+
+if (par.l$nPermutations == 0) {
+  
+  # Generate normalized counts for limma analysis
+  countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
+  rownames(countsNorm.transf) = rownames(cds.peaks.filt)
+  
+  sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary)
+  
+  designMatrix = model.matrix(designFormula, data = sampleData.df)
+  
+  if (nrow(designMatrix) < nrow(sampleData.df)) {
+    missingRows = setdiff(1:nrow(sampleData.df), as.integer(row.names(designMatrix)))
+    message = paste0("There is a problem with the specified design formula (parameter designContrast): The corresponding design matrix has fewer rows. This usually means that there are missing values in one of the specified variables. The problem comes from the following lines in the summary file: ", paste0(missingRows, collapse = ","), ".") 
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
   }
   
+  fit        <- eBayes(lmFit(countsNorm.transf, design = designMatrix))
+  results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
   
-  # Filter peaks with zero counts
-  cds.peaks.filt = cds.peaks[rowMeans(counts(cds.peaks)) > 0, ]
+  final.peaks.df = data_frame(  
+    "permutation" = 0,
+    "peakID"      = rownames(results.df), 
+    "limma_avgExpr"     = results.df$AveExpr,
+    "l2FC"        = results.df$logFC,
+    "limma_B"           = results.df$B,
+    "limma_t_stat"      = results.df$t,
+    "pval"        = results.df$P.Value, 
+    "pval_adj"    = results.df$adj.P.Val
+  )
   
   
+  plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
+  
+  
+} else {
+
   # Deseq analysis
   cds.peaks.filt = tryCatch( {
     DESeq(cds.peaks.filt, fitType = 'local', quiet = TRUE)
@@ -449,76 +423,89 @@ runPermutation <- function(permutationCur, sampleDataOrig.df, variableToPermute,
   
   cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt))
   
+  # TODO: "peakID"      = rownames(results.df), CHECK
   final.peaks.df = data_frame( 
-                           "permutation" = permutationCur,
-                           "position"    = rownames(cds.peaks.df), 
-                           "D2_baseMean" = cds.peaks.df$baseMean,
-                           "D2_l2FC"     = cds.peaks.df$log2FoldChange,
-                           "D2_ldcSE"    = cds.peaks.df$lfcSE,
-                           "D2_stat"     = cds.peaks.df$stat,
-                           "D2_pval"     =  cds.peaks.df$pvalue, 
-                           "D2_padj"     =  cds.peaks.df$padj
-                  )
+    "permutation" = 0,
+    "peakID"    = rownames(cds.peaks.df), 
+    "DESeq_baseMean" = cds.peaks.df$baseMean,
+    "l2FC"     = cds.peaks.df$log2FoldChange,
+    "DESeq_ldcSE"    = cds.peaks.df$lfcSE,
+    "DESeq_stat"     = cds.peaks.df$stat,
+    "pval"     =  cds.peaks.df$pvalue, 
+    "pval_adj" =  cds.peaks.df$padj
+  )
   
+  plotDiagnosticPlots(cds.peaks.filt, cds.peaks.filt, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
   
-  ##################
-  # PLOTS AND SAVE #
-  ##################
+}
+
+
+saveRDS(cds.peaks.filt, file = par.l$file_output_DESeqObj)
+
+####################
+# RUN PERMUTATIONS #
+####################
+
+if (par.l$nPermutations > 0) {
+  #Rename so it is easier to address in the following code
+  listNames = paste0("permutation", seq_len(par.l$nPermutations))
+  names(permutationsList.l) = listNames
   
-  if (permutationCur == 0) {
+  # we don't need permuted peaks l2fc actually so this can be skipped
+  
+  # final.peaks.perm.df = tribble(~permutation, ~peakID, ~l2FC)
+  sampleDataOrig.df = sampleData.df
+  
+  for (permutationCur in names(permutationsList.l)) {
     
-
-    # Save the comparison that DeSeq made for later scripts
-    comparisonDESeq = getComparisonFromDeSeqObject(cds.peaks.filt, par.l$designFormula, datatypeVariableToPermute)
-    saveRDS(comparisonDESeq, file = par.l$file_output_condComp)
-    saveRDS(cds.peaks.filt, file = par.l$file_output_DESeq)
+    flog.info(paste0("Running for permutation ", permutationCur))
     
-    computeDESeqDiagnosticPlots(cds.peaks.filt, par.l$file_output_plots)
-    # pdf(par.l$file_output_plots)
-    # dev.off()
-  
-  } else {
-   
-    filenameCur = paste0(file_path_sans_ext(par.l$file_output_plots), "_permutation", permutationCur, ".pdf")
-    computeDESeqDiagnosticPlots(cds.peaks.filt, filenameCur, maxPairwiseComparisons = 5)
-    # pdf(filenameCur)
-    # dev.off()
-  }
-  
-  if (permutationCur > 0) {
-    flog.info(paste0("Finished permutation ", permutationCur))
-  } else {
-    flog.info(paste0("Finished original data"))
-  }
-  
-  
-  return(list(peaks = final.peaks.df, normFacs = normFacs, sampleData = sampleData.df))
-  
-  
-} # end of for each permutation
+    sampleData.df = sampleDataOrig.df
+    sampleData.df[,variableToPermute] = unlist(sampleData.df[,variableToPermute]) [permutationsList.l[[permutationCur]]]
+    
+    sampleData.l[[permutationCur]] = sampleData.df
+    
+    # TODO: Why is limma not run for the permutations?
+    
+    # Calculate log2 fold changes using limma
+    # https://support.bioconductor.org/p/66251/
+    
+    # fit <- eBayes(lmFit(countsNorm.transf, design = model.matrix(designFormula, data = sampleData.df)))
+    # results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
+    
+    #  final.peaks.perm.df = add_row(final.peaks.perm.df,
+    #                          "permutation" = permutationCur,
+    #                          "peakID"      = rownames(results.df),
+    #                          "l2FC"        = results.df$logFC
+    # )
+    
+    
+  } # end for each permutation
+}
 
-nCores = snakemake@threads
-results.l = .execInParallelGen(nCores, 
-                               returnAsList = TRUE, listNames = listNames, 
-                               iteration = 0:par.l$nPermutations, 
-                               abortIfErrorParallel = TRUE, 
-                               verbose = TRUE,
-                               runPermutation, sampleDataOrig.df, variableToPermute, datatypeVariableToPermute, nameRareCondition, nameFrequentCondition, samplesRare.l, 
-                               par.l, coverageAll.m)
 
-final.peaks.df = bind_rows(list.map(results.l, peaks))
-sampleData.l   = list.map(results.l, sampleData)
-normFacts.l    = list.map(results.l, normFacs)
 
 
 ################
 # WRITE OUTPUT #
 ################
 
+saveRDS(sampleData.l, par.l$file_output_metadata)
+
+final.peaks.df = mutate_if(final.peaks.df, is.numeric, as.character)
 write_tsv(final.peaks.df, path = par.l$file_output_peaksTSV)
 
-saveRDS(sampleData.l, par.l$file_output_metadata)
-saveRDS(normFacts.l, par.l$file_output_normFacs)
+#final.peaks.perm.df = mutate_if(final.peaks.perm.df, is.numeric, as.character)
+#write_tsv(final.peaks.perm.df, path = par.l$file_output_peaksPermTSV)
+
+saveRDS(comparisonDESeq, file = par.l$file_output_condComp)
+
+saveRDS(normFacs, par.l$file_output_normFacs)
+
+# Deactivated, because column names starting with numbers will cause problems and crash. Since the names come from the sample file, this cannot be excluded.
+#countsNorm.df = mutate_if(countsNorm.df, is.numeric, as.character)
+write_tsv(countsNorm.df, path = par.l$file_output_normCounts)
+
 
 
 .printExecutionTime(start.time)

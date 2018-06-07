@@ -45,6 +45,8 @@ assertList(snakemake@config, min.len = 1)
 
 file_peaks = snakemake@config$peaks$consensusPeaks
 
+conditionComparison = strsplit(snakemake@config$par_general$conditionComparison, ",")[[1]]
+assertVector(conditionComparison, len = 2)
 
 TFBS_dir = snakemake@config$additionalInputFiles$dir_TFBS
 assertDirectoryExists(dirname(TFBS_dir), access = "r")
@@ -52,6 +54,13 @@ assertDirectoryExists(dirname(TFBS_dir), access = "r")
 fastaFile = snakemake@config$additionalInputFiles$refGenome_fasta
 assertFileExists(fastaFile)
 assertDirectoryExists(dirname(fastaFile), access = "w")
+
+
+par.l$nPermutations = snakemake@config$par_general$nPermutations
+assertIntegerish(par.l$nPermutations, lower = 0, len = 1)
+
+par.l$nBootstraps = as.integer(snakemake@config$par_general$nBootstraps)
+assertIntegerish(par.l$nBootstraps, len = 1)
 
 par.l$file_input_sampleData = snakemake@config$samples$summaryFile
 checkAndLogWarningsAndErrors(par.l$file_input_sampleData, checkFileExists(par.l$file_input_sampleData, access = "r"))
@@ -81,7 +90,7 @@ printParametersLog(par.l)
 checkAndLoadPackages(c("tidyverse", "futile.logger", "DiffBind", "checkmate", "stats"), verbose = FALSE)
 
 # Step 2
-checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "csaw", "checkmate", "limma", "tools", "EDASeq", "geneplotter", "RColorBrewer", "BiocParallel", "rlist"), verbose = FALSE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "csaw", "checkmate", "limma", "tools", "geneplotter", "RColorBrewer"), verbose = FALSE)
 
 # Step 3
 checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "modeest", "checkmate", "limma", "geneplotter", "RColorBrewer", "tools"), verbose = FALSE)
@@ -90,17 +99,42 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "modeest",
 checkAndLoadPackages(c("tidyverse", "futile.logger", "modeest", "checkmate", "ggrepel"), verbose = FALSE)
 
 # Step 5
-checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "methods"), verbose = FALSE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "methods", "boot"), verbose = FALSE)
 
 # Step 6
-checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmate", "tools", "methods", "boot"), verbose = TRUE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmate", "tools", "methods", "grDevices", "pheatmap"), verbose = TRUE)
 
+
+
+# Check the version of readr, at least 1.1.0 is required to properly write gz files
+
+if (packageVersion("readr") < "1.1.0") {
+  message = paste0("Version of readr library is too old, at least version 1.1.0 is required). Execute the following in R: install.packages('readr') ") 
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+}
+
+
+if (par.l$nPermutations == 0 && par.l$nBootstraps < 1000) {
+  flog.warn(paste0("The value for nBootstraps is < 1000. We strongly recommend using a higher value in order to reliably estimate the statistical variance."))
+}
 
 #############################
 # CHECK FASTA AND BAM FILES #
 #############################
 
 sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_types = cols())
+
+# Check the sample table
+nDistValues = length(unique(sampleData.df$conditionSummary))
+if (nDistValues != 2) {
+    message = paste0("The column 'conditionSummary' must contain exactly 2 different values, but ", nDistValues, " were found.") 
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+}
+
+if (!testSubset(unique(sampleData.df$conditionSummary), conditionComparison)) {
+    message = paste0("The elements specified in 'conditionComparison' in the config file must be a subset of the values in the column 'conditionSummary' in the sample file") 
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+}
 
 # Build the fasta index. Requires write access to the folder where the fasta is stored (limitation of samtools faidx)
 
@@ -146,6 +180,8 @@ for (bamCur in sampleData.df$bamReads) {
     }
     
 }
+
+flog.info(paste0("Check peak files..."))
 
 ###################
 # CHECK PEAK FILE #
@@ -218,6 +254,8 @@ if (file_peaks != "") {
   cat("DUMMY FILE, DO NOT DELETE", file = par.l$output_peaksClean) 
   
 }
+
+flog.info(paste0("Check TF-specific TFBS files..."))
 
 TFs = createFileList(TFBS_dir, "_TFBS.bed", verbose = FALSE)
 

@@ -421,101 +421,34 @@ myMAPlot <- function(M, idx, main, minMean = 0) {
 }
 
 
-printMultipleGraphsPerPage <- function(plots.l, nCol = 1, nRow = 1, pdfFile = NULL, height = NULL, width = NULL, verbose = FALSE) {
+plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, filename = NULL, maxPairwiseComparisons = 5, alpha = 0.05) {
   
-  checkAndLoadPackages(c("grDevices", "gridExtra"), verbose = verbose)  
-  
-  assertList(plots.l, min.len = 1)
-  assertInt(nCol, lower = 1)
-  assertInt(nRow, lower = 1)
-  assert(checkNull(pdfFile), checkCharacter(pdfFile))
-  if (!testNull(pdfFile)) assertDirectory(dirname(pdfFile), access = "r")
-  assert(checkNull(height), checkNumber(height, lower = 1))
-  assert(checkNull(width), checkNumber(width, lower = 1))
-  
-  if (testNull(height)) {
-    height = 7
-  }
-  
-  if (testNull(width)) {
-    width = 7
-  }
-  
-  
-  for (i in seq_len(length(plots.l))) {
-    assertClass(plots.l[[i]], classes = c("ggplot", "gg"))
-  }
-  
-  
-  nPlotsPerPage =  nCol * nRow
-  
-  plotsNew.l = list()
-  
-  if (!testNull(pdfFile))  {
-    clearOpenDevices()
-    pdf(pdfFile, height = height, width = width)
-  }
-  
-  index = 0
-  
-  for (indexAll in 1:length(plots.l)) {
-    
-    index = index + 1
-    plotsNew.l[[index]] = plots.l[[indexAll]]
-    
-    # Print another page
-    if (index %% nPlotsPerPage == 0) { ## print 8 plots on a page
-      suppressMessages(print(do.call(grid.arrange,  c(plotsNew.l, list(ncol = nCol, nrow = nRow)))))
-      plotsNew.l = list() # reset plot 
-      index = 0 # reset index
-    }
-    
-  }
-  
-  # Print the remainding plots in case they don't perfectly fit with the layout
-  if (length(plotsNew.l) != 0) { 
-    suppressMessages(print(do.call(grid.arrange,  c(plotsNew.l, list(ncol = nCol, nrow = nRow)))))
-  }
-  
-  if (!testNull(pdfFile)) 
-    dev.off()
-  
-  cat("Finished writing plots to file ", pdfFile, "\n")
-}
-
-
-
-
-computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparisons = 5) {
-  
-  checkAndLoadPackages(c("tidyverse", "checkmate", "geneplotter", "DESeq2", "vsn", "RColorBrewer"), verbose = FALSE)
+  checkAndLoadPackages(c("tidyverse", "checkmate", "geneplotter", "DESeq2", "vsn", "RColorBrewer", "limma"), verbose = FALSE)
   
   
   assertClass(dd, "DESeqDataSet")
+  
+  assert(testClass(differentialResults, "MArrayLM"), testClass(differentialResults, "DESeqDataSet"))
+  assertVector(conditionComparison, len = 2)
   assert(checkNull(filename), checkDirectory(dirname(filename), access = "w"))
   
   if (!is.null(filename)) {
     pdf(filename)
   }
   
-  # 1. MA plots: An MA-plot (R. Dudoit et al. 2002) provides a useful overview for the distribution of the estimated coefficients in the model, e.g. the comparisons of interest, across all genes. On the y-axis, the “M” stands for “minus” – subtraction of log values is equivalent to the log of the ratio – and on the x-axis, the “A” stands for “average”. You may hear this plot also referred to as a mean-difference plot, or a Bland-Altman plot.
+  if (testClass(differentialResults, "MArrayLM")) {
+    title = paste0("limma results\n", conditionComparison[1], " vs. ", conditionComparison[2])
+    isSign = ifelse(p.adjust(differentialResults$p.value[,ncol(differentialResults$p.value)], method = "BH") < alpha, paste0("sign. (BH, ", alpha, ")"), "not-significant")
+    
+    limma::plotMA(differentialResults, main = title, status = isSign)
   
- #  Before making the MA-plot, we use the lfcShrink function to shrink the log2 fold changes for the comparison of dex treated vs untreated samples:
-  
-  # The log2 fold change for a particular comparison is plotted on the y-axis and the average of the counts normalized by size factor is shown on the x-axis. Each gene is represented with a dot. Genes with an adjusted p value below a threshold (here 0.1, the default) are shown in red.
-  
-  # The DESeq2 package uses a Bayesian procedure to moderate (or “shrink”) log2 fold changes from genes with very low counts and highly variable counts, as can be seen by the narrowing of the vertical spread of points on the left side of the MA-plot. As shown above, the lfcShrink function performs this operation. For a detailed explanation of the rationale of moderated fold changes, please see the DESeq2 paper (Love, Huber, and Anders 2014).
-  
-  # TODO: dd2 <- lfcShrink(dds, contrast=c("dex","trt","untrt"), res=res)
-  # vary alpha from 0.01 to 0.2
-  for (alphaCur in c(0.001, 0.01, 0.05, 0.1, 0.2)) {
-      suppressWarnings(DESeq2::plotMA(dd, alpha = alphaCur, main = paste0("MA plot for alpha = ", alphaCur)))
+    } else {
+      
+    # TODO: DeSEQ diagnostic plots
+    
   }
-  
-  # Another useful diagnostic plot is the histogram of the p values (figure below). 
-  # This plot is best formed by excluding genes with very small counts, which otherwise generate spikes in the histogram.
-  
-  # TODO: hist(res$pvalue[res$baseMean > 1], breaks = 0:20/20, col = "grey50", border = "white")
+ 
+
   
   # 2. Densities of counts for the different samples. 
   # Since most of the genes are (heavily) affected by the experimental conditions, a succesful normalization will lead to overlapping densities
@@ -552,7 +485,7 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
 
   if (nrow(MA.idx) > maxPairwiseComparisons) {
     
-    flog.info("The number of pairwise comparisons to plot exceeds the current maximum of ", maxPairwiseComparisons, ". Only ", maxPairwiseComparisons, " pairwise comparisons will be shown in the PDF.")
+    flog.info(paste0("The number of pairwise comparisons to plot exceeds the current maximum of ", maxPairwiseComparisons, ". Only ", maxPairwiseComparisons, " pairwise comparisons will be shown in the PDF."))
     MA.idx.filt = MA.idx[1:maxPairwiseComparisons,, drop = FALSE]
 
   } else {
@@ -561,11 +494,12 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
   
   for (i in seq_along(MA.idx.filt[,1])) { 
     
-    
+    flog.info(paste0(" Plotting pairwise comparison ", i, " out of ", nrow(MA.idx.filt)))
     label = paste0(colnames(dd)[MA.idx.filt[i,1]], " vs ", colnames(dd)[MA.idx.filt[i,2]])
     suppressWarnings(print(myMAPlot(counts(dd, normalized = TRUE), c(MA.idx[i,1], MA.idx.filt[i,2]), main =  label)))
   }
   
+  # Show an empty page with a warning if plots have been omitted
   if (nrow(MA.idx) > nrow(MA.idx.filt)) {
     
     plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
@@ -573,7 +507,7 @@ computeDESeqDiagnosticPlots <- function(dd, filename = NULL, maxPairwiseComparis
     text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
   }
   
-  # Show an empty page with a warning if plots have been omitted
+  
   
   # 4. Mean SD plot: Plot row standard deviations versus row means
   notAllZeroPeaks <- (rowSums(counts(dd)) > 0)

@@ -36,11 +36,6 @@
     "memory": 5000
   },
 
-  "prepareBinning":
-  {
-    "memory": 50000,
-  },
-
   "analyzeTF":
   {
     "memory": 20000

@@ -41,7 +41,7 @@ assertClass(snakemake, "Snakemake")
 
 ## INPUT ##
 assertList(snakemake@input, min.len = 1)
-assertSubset(names(snakemake@input), c("", "peaks", "checkFlag"))
+assertSubset(names(snakemake@input), c("", "peaks", "checkFlag", "sampleFile"))
 
 par.l$file_input_peaks = snakemake@input$peaks
 
@@ -127,6 +127,7 @@ consensusPeaks.df$annotation = paste0(consensusPeaks.df$chr, ":", consensusPeaks
 # Reorganize columns
 consensusPeaks.df = consensusPeaks.df[,c("chr", "start", "end", "annotation", "pvalue")]
 
+consensusPeaks.df = mutate_if(consensusPeaks.df, is.numeric, as.character)
 write_tsv(consensusPeaks.df, path = par.l$file_output_consensusPeaks, col_names = FALSE)
 
 .printExecutionTime(start.time)

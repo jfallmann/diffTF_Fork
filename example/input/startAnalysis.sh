@@ -17,4 +17,4 @@ echo "# INCREASING THE NUMBER OF CORES SPEEDS UP THE ANALYSIS #"
 echo "#########################################################"
 
 # Real run, using 2 cores
-snakemake --snakefile ../../src/Snakefile --cores 2 --configfile config.json --timestamp --directory .
+snakemake --snakefile ../../src/Snakefile --cores 2 --configfile config.json --timestamp

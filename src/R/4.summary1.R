@@ -99,8 +99,6 @@ for (fileCur in par.l$files_input_TF_summary) {
 
 peaks.df = read_tsv(par.l$file_input_peaks, col_types = cols())
 
-assertSubset(colnames(peaks.df), c("permutation", "position", "D2_baseMean", "D2_l2FC", "D2_ldcSE", "D2_stat", "D2_pval", "D2_padj"))
-
 summary.df = NULL
 
 nTFs = length(par.l$filesTransl.l)
@@ -149,18 +147,18 @@ if (nTFMissing == nrow(summary.df)) {
 summary.df$pvalue_raw[summary.df$pvalue_raw == 0] = .Machine$double.xmin
 
 
-mode_peaks = mlv(peaks.df$D2_l2FC, method = "mfv", na.rm = TRUE)
+mode_peaks = mlv(peaks.df$l2FC, method = "mfv", na.rm = TRUE)
 
 summary.df = summary.df %>%
               dplyr::mutate(
-                  adj_pvalue = p.adjust(pvalue_raw, method = "fdr"),
-                  Diff_mean  = Mean_l2FC    -   mean(peaks.df$D2_l2FC, na.rm = TRUE), 
-                  DiffMedian = Median_l2FC  - median(peaks.df$D2_l2FC, na.rm = TRUE),
-                  Diff_mode  = Mode_l2FC    - mode_peaks[[1]],    
-                  Diff_skew  = skewness_l2FC - mode_peaks[[2]])  %>%
+                  adj_pvalue  = p.adjust(pvalue_raw, method = "fdr"),
+                  Diff_mean   = Mean_l2FC    -   mean(peaks.df$l2FC, na.rm = TRUE), 
+                  Diff_median = Median_l2FC  - median(peaks.df$l2FC, na.rm = TRUE),
+                  Diff_mode   = Mode_l2FC    - mode_peaks[[1]],    
+                  Diff_skew   = skewness_l2FC - mode_peaks[[2]])  %>%
               na.omit(summary.df)
 
-
+summary.df = mutate_if(summary.df, is.numeric, as.character)
 write_tsv(summary.df, par.l$file_output_table) # TODO: check the dec = "." parameter
 
 .printExecutionTime(start.time)
