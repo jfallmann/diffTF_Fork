@@ -374,7 +374,7 @@ countsNorm.df     = as.data.frame(countsNorm) %>%
   dplyr::select(one_of("peakID", colnames(countsNorm)))
 
 
-if (par.l$nPermutations == 0) {
+if (par.l$nPermutations > 0) {
   
   # Generate normalized counts for limma analysis
   countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
@@ -405,7 +405,7 @@ if (par.l$nPermutations == 0) {
   )
   
   
-  plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
+  plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 10)
   
   
 } else {
