@@ -428,7 +428,7 @@ plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, fi
   assertClass(dd, "DESeqDataSet")
   
   assert(testClass(differentialResults, "MArrayLM"), testClass(differentialResults, "DESeqDataSet"))
-  assertVector(conditionComparison, len = 2)
+  assert(testNull(conditionComparison), testVector(conditionComparison, len = 2))
   assert(checkNull(filename), checkDirectory(dirname(filename), access = "w"))
   
   
@@ -438,7 +438,13 @@ plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, fi
   }
   
   if (testClass(differentialResults, "MArrayLM")) {
-    title = paste0("limma results\n", conditionComparison[1], " vs. ", conditionComparison[2])
+    
+    if (!is.null(conditionComparison)) {
+      title = paste0("limma results\n", conditionComparison[1], " vs. ", conditionComparison[2])
+    } else {
+      title = paste0("limma results\n")
+    }
+    
     
     for (alphaCur in alpha) {
       isSign = ifelse(p.adjust(differentialResults$p.value[,ncol(differentialResults$p.value)], method = "BH") < alphaCur, 

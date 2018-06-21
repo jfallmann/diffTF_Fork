@@ -123,11 +123,6 @@ sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_type
 
 checkAndLogWarningsAndErrors(colnames(sampleData.df), checkSubset(c("bamReads"), colnames(sampleData.df)))
 
-conditionsVec = strsplit(par.l$conditionComparison, ",")[[1]]
-if (!testSubset(sampleData.df$conditionSummary, conditionsVec)) {
-  message = "The parameter conditionComparison does not correspond to the sample summary table"
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-}
 
 designFormula = as.formula(par.l$designFormula)
 formulaVariables = attr(terms(designFormula), "term.labels")
@@ -157,6 +152,8 @@ checkAndLogWarningsAndErrors(components3types, checkSubset(components3types, c("
 
 datatypeVariableToPermute = components3types[variableToPermute]
 
+
+
 # Read and modify samples metadata
 sampleData.df = mutate(sampleData.df, name = file_path_sans_ext(basename(sampleData.df$bamReads)))
   
@@ -180,17 +177,28 @@ for (colnameCur in names(components3types)) {
   
 }
 
-# Change the conditionSummary specifically and enforce the direction as specified in the config file
-sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary, levels = conditionsVec)
 
-
-# If variable to permute is a factor, check that is has 2 levels 
-nLevels = length(unique(unlist(sampleData.df[,variableToPermute])))
-if (datatypeVariableToPermute == "factor" & nLevels != 2) {
-  message = paste0("The variable ", variableToPermute, " was specified as a factor, but it does not have two different levels but instead ", nLevels, ".")
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+if (datatypeVariableToPermute %in% c("factor", "logical")) {
+  
+  conditionsVec = strsplit(par.l$conditionComparison, ",")[[1]]
+  if (!testSubset(sampleData.df$conditionSummary, conditionsVec)) {
+    message = "The parameter conditionComparison does not correspond to the sample summary table"
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  }
+  
+  # If variable to permute is a factor, check that is has 2 levels 
+  nLevels = length(unique(unlist(sampleData.df[,variableToPermute])))
+  if (datatypeVariableToPermute == "factor" & nLevels != 2) {
+    message = paste0("The variable ", variableToPermute, " was specified as a factor, but it does not have two different levels but instead ", nLevels, ".")
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  }
+  
+  # Change the conditionSummary specifically and enforce the direction as specified in the config file
+  sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary, levels = conditionsVec)
+  
+} else {
+  
 }
-
 
 
 
@@ -361,7 +369,10 @@ cds.peaks.filt   = cds.peaks[rowMeans(counts(cds.peaks)) > 0, ]
 
 # model.matrix uses the first level in the specified column as reference, and so the corresponding column name and values are relative to that reference.
 # That is, if the levels are "GMP" and "MPP", then all log2 fc will be the log2fc of MPP as compared to GMP.
-# The levels have to be reversed because the first element is the one appering at the right of the plot, with positive values as. compared to the reference
+# The levels have to be reversed because the first element is the one appearing at the right of the plot, with positive values as. compared to the reference
+# TODO: Double-check because limma and DeSEQ are different: post vs pre and pre vs post (DESeq). This has a big influence in the final visualization!
+# dds$condition <- relevel(dds$condition, ref = "untreated") 
+# limma: whatever comes first for model.matrix is taken as first value, then log2fc is of the second condition over the first
 comparisonDESeq = rev(levels(sampleData.df$conditionSummary))
 
 ##############

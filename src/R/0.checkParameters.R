@@ -65,6 +65,8 @@ assertIntegerish(par.l$nBootstraps, len = 1)
 par.l$file_input_sampleData = snakemake@config$samples$summaryFile
 checkAndLogWarningsAndErrors(par.l$file_input_sampleData, checkFileExists(par.l$file_input_sampleData, access = "r"))
 
+par.l$designFormulaVariableTypes = snakemake@config$par_general$designVariableTypes
+par.l$designFormula = snakemake@config$par_general$designContrast
 ## LOG ##
 assertList(snakemake@log, min.len = 1)
 par.l$file_log = snakemake@log[[1]]
@@ -119,22 +121,75 @@ if (par.l$nPermutations == 0 && par.l$nBootstraps < 1000) {
 }
 
 #############################
-# CHECK FASTA AND BAM FILES #
+#  CHECK PARAMETER VALIDITY #
 #############################
 
 sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_types = cols())
 
 # Check the sample table
-nDistValues = length(unique(sampleData.df$conditionSummary))
-if (nDistValues != 2) {
-    message = paste0("The column 'conditionSummary' must contain exactly 2 different values, but ", nDistValues, " were found.") 
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+
+designFormula = as.formula(par.l$designFormula)
+formulaVariables = attr(terms(designFormula), "term.labels")
+
+# Extract the variable that defines the contrast. Always the last element in the formula
+variableToPermute = formulaVariables[length(formulaVariables)]
+
+par.l$designFormulaVariableTypes = gsub(" ", "", par.l$designFormulaVariableTypes)
+components = strsplit(par.l$designFormulaVariableTypes, ",")[[1]]
+checkAndLogWarningsAndErrors(components, checkVector(components, len = length(formulaVariables)))
+# Split further
+components2 = strsplit(components, ":")
+
+
+
+
+par.l$designFormulaVariableTypes = gsub(" ", "", par.l$designFormulaVariableTypes)
+components = strsplit(par.l$designFormulaVariableTypes, ",")[[1]]
+checkAndLogWarningsAndErrors(components, checkVector(components, len = length(formulaVariables)))
+# Split further
+components2 = strsplit(components, ":")
+
+if (!all(sapply(components2,length) == 2)) {
+  
+  message = "The parameter \"designVariableTypes\" has not been specified correctly. It must contain all the variables that appear in the parameter \"designContrast\". See the documentation for details"
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  
 }
 
-if (!testSubset(unique(sampleData.df$conditionSummary), conditionComparison)) {
+components3 = unlist(lapply(components2, "[[", 1))
+
+components3types = tolower(unlist(lapply(components2, "[[", 2)))
+names(components3types) = components3
+checkAndLogWarningsAndErrors(sort(formulaVariables), checkSetEqual(sort(formulaVariables), sort(components3)))
+checkAndLogWarningsAndErrors(components3types, checkSubset(components3types, c("factor", "integer", "numeric", "logical")))
+
+datatypeVariableToPermute = components3types[variableToPermute]
+nDistValues = length(unique(sampleData.df$conditionSummary))
+
+if (datatypeVariableToPermute %in% c("integer", "numeric")) {
+  
+  if (nDistValues < 3) {
+    message = paste0("The column 'conditionSummary' must contain at least 3 different values for the linear model, but ", nDistValues, " were found.") 
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  }
+  
+} else {
+  
+  if (nDistValues != 2) {
+    message = paste0("The column 'conditionSummary' must contain exactly 2 different values, but ", nDistValues, " were found.") 
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  }
+  
+  if (!testSubset(unique(sampleData.df$conditionSummary), conditionComparison)) {
     message = paste0("The elements specified in 'conditionComparison' in the config file must be a subset of the values in the column 'conditionSummary' in the sample file") 
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  }
+  
 }
+
+#############################
+# CHECK FASTA AND BAM FILES #
+#############################
 
 # Build the fasta index. Requires write access to the folder where the fasta is stored (limitation of samtools faidx)
 
