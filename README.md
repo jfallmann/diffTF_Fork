@@ -20,6 +20,14 @@ Installation and Quick Start
 
 [Please see the Documentation for easy "Installation and Quick Start" instructions.](http://difftf.readthedocs.io/en/latest/chapter1.html)
 
+Changelog
+----------
+
+Version 1.0.1 (2018-07-25)
+    - fixed a bug in 2.DiffPeaks.R that sometimes caused the step to fail, thanks to Jonas Ungerbeck for letting us know
+    
+Version 1.0 (2018-07-01)
+    - released stable version
 
 Citation
 --------
