@@ -204,7 +204,7 @@ if (skipTF) {
   # write a dummy pdf file
   pdf(par.l$file_output_plot_diagnostic)
   plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-  message = paste0("Insufficient data to run analysis.\n", message, "\nThis TF will be ignored in subsequent steps.")
+  message = paste0("Insufficient data to run analysis.\n", message)
   text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
   dev.off()
   
@@ -310,6 +310,7 @@ if (skipTF) {
       ##############################
       # RUN EITHER LIMMA OR DESEQ2 #
       ##############################
+      skipTF = FALSE
       if (par.l$nPermutations > 0) {
         
         # Generate normalized counts for limma analysis
@@ -351,151 +352,169 @@ if (skipTF) {
           }, error = function(e) {
             errorMessage <<- "Could not run DESeq with regular fitting either, set all values to NA."
             checkAndLogWarningsAndErrors(NULL, errorMessage, isWarning = TRUE)
+
           }
           )
+          
+          res_DESeq
           
         }
         )
         
+        if (class(res_DESeq) == "character") skipTF = TRUE
         
-        res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq))
-        
-
-        final.TF.df = data_frame("TFBSID"    = rownames(res_DESeq.df), 
-                                 "DESeq_baseMean" = res_DESeq.df$baseMean,
-                                 "l2FC"     = res_DESeq.df$log2FoldChange,
-                                 "DESeq_ldcSE"    = res_DESeq.df$lfcSE,
-                                 "DESeq_stat"     = res_DESeq.df$stat,
-                                 "pval"     = res_DESeq.df$pvalue, 
-                                 "pval_adj" = res_DESeq.df$padj,
-                                 "limma_avgExpr" = NA,
-                                 "limma_B" = NA,
-                                 "limma_t_stat" = NA
-        )
+        if (!skipTF) {
+            
+            res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq))
+            
+            
+            final.TF.df = data_frame("TFBSID"    = rownames(res_DESeq.df), 
+                                     "DESeq_baseMean" = res_DESeq.df$baseMean,
+                                     "l2FC"     = res_DESeq.df$log2FoldChange,
+                                     "DESeq_ldcSE"    = res_DESeq.df$lfcSE,
+                                     "DESeq_stat"     = res_DESeq.df$stat,
+                                     "pval"     = res_DESeq.df$pvalue, 
+                                     "pval_adj" = res_DESeq.df$padj,
+                                     "limma_avgExpr" = NA,
+                                     "limma_B" = NA,
+                                     "limma_t_stat" = NA
+            )
+        }
+       
       }
       
       ##################################
       # SUMMARIZE AND MERGE WITH PEAKS #
       ##################################
-      order  = c("permutation", "TF", "chr", "MSS", "MES", "TFBSID", "strand", "peakID", "l2FC", "limma_avgExpr", "limma_B", "limma_t_stat", "DESeq_ldcSE", "DESeq_stat", "DESeq_baseMean", "pval", "pval_adj")
+      if (!skipTF) {
+          order  = c("permutation", "TF", "chr", "MSS", "MES", "TFBSID", "strand", "peakID", "l2FC", "limma_avgExpr", "limma_B", "limma_t_stat", "DESeq_ldcSE", "DESeq_stat", "DESeq_baseMean", "pval", "pval_adj")
+          
+          # dplyr::mutate(TF = par.l$TF) gives the following weird error message: Error: Unsupported type NILSXP for column "TF"
+          TFCur = par.l$TF
+          
+          TF_outputCur.df = final.TF.df %>%
+            dplyr::left_join(overlapsAll.df,by = c("TFBSID")) %>%
+            dplyr::left_join(peaksFiltered.df, by = c("peakID" = "annotation")) %>%
+            dplyr::rename(chr = chr.x) %>%
+            dplyr::filter(!(is.na(limma_avgExpr) & is.na(DESeq_baseMean))) %>%
+            dplyr::arrange(chr)  %>%
+            dplyr::mutate(TF = TFCur, permutation = permutationCur, l2FC = signif(l2FC, par.l$roundLog2FCDigits)) %>%
+            dplyr::select(one_of(order)) 
+    
+          
+          if (permutationCur == 0) {
+            
+            TF_output.df = rbind(TF_output.df, TF_outputCur.df)
+            
+            ######################
+            ## DIAGNOSTIC PLOTS ##
+            ######################
+            conditionComparison = readRDS(par.l$file_input_conditionComparison)
+            
+            
+            pdf(par.l$file_output_plot_diagnostic)
+            if (par.l$nPermutations == 0) {
+              plotDiagnosticPlots(TF.cds.filt, res_DESeq, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 
+            } else {
+              plotDiagnosticPlots(TF.cds.filt, fit, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 
+            }
+            
+            
+            
+            # Density plot
+            conditionComparison = paste0(conditionComparison[1], " vs. ", conditionComparison[2])
+            xlabLabel = paste0(" log2 FC ", conditionComparison)
+            TF_dens = ggplot(peaks.df, aes(l2FC)) + geom_density(aes(fill = "Peaks" ),alpha = .5, color = "black") +
+              geom_density(data = final.TF.df, aes(x = l2FC, fill = "TF"),size = 1, alpha = .7) +
+              xlab(xlabLabel) +
+              theme(axis.text.x = element_text(face = "bold", color = "black", size = 12),
+                    axis.text.y = element_text(face = "bold", color = "black", size = 12),
+                    axis.title.x = element_text(face = "bold", colour = "black", size = 10, margin = margin(25,0,0,0)),
+                    axis.title.y = element_text(face = "bold", colour = "black", size = 10, margin = margin(0,25,0,0)),
+                    axis.line.x = element_line(color = "black"), axis.line.y = element_line(color = "black"),
+                    panel.grid.major = element_blank(),
+                    panel.grid.minor = element_blank(),
+                    panel.border = element_blank(),
+                    panel.background = element_blank(),
+                    legend.position = c(0.9,0.9),
+                    legend.justification = "center",
+                    legend.title = element_blank()) +
+              scale_fill_manual(values = c("Peaks" = "grey50" , "TF" = "blue"), labels = c("PEAKS", par.l$TF))
+            
+            plot(TF_dens)
+            
+            # create ecdf plots for each TF
+            ECDF_TF = ggplot(final.TF.df, aes(l2FC)) +
+              stat_ecdf(aes(colour = "TF")) +
+              stat_ecdf(data = peaks.df, aes(x = l2FC, colour = "Peaks")) +
+              xlab(xlabLabel) +
+              scale_fill_manual(values = c("Peaks" = "grey50" , "TF" = "blue"), labels = c("PEAKS", par.l$TF))
+            
+            plot(ECDF_TF)
+            
+            dev.off()
+            
+          } 
+          
+          # Execute this ALWAYS, as also the values for the real data should be stored for easier later retrieval
+          TF_outputCurFiltered.df = dplyr::select(TF_outputCur.df, one_of("permutation", "TF", "TFBSID", "l2FC"))
+          TF_outputInclPerm.df = rbind(TF_outputInclPerm.df, TF_outputCurFiltered.df)
+          
+          
+          # d) Comparisons between peaks and binding sites
+          
+          modeNum     = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)
+          
+          # We have to filter now by NAs because for some permutations, limma might have been unable to calculate the coefficients
+          final.TF.filtered.df = dplyr::filter(final.TF.df, !is.na(l2FC))
+          nRowFilt = nrow(final.TF.filtered.df)
+          if (nRowFilt > 0) {
+            
+            if (nRowFilt >= par.l$minNoDatapoints) {
+              Ttest   = t.test(final.TF.df$l2FC, peaks.df$l2FC)
+              tTest_pVal = Ttest$p.value
+              tTest_stat = Ttest$statistic[[1]]
+            } else {
+              message = paste0("Skipping t-test due to insufficient number of TFBS (<", par.l$minNoDatapoints, "). The columns T_statistic and pvalue_raw will be set to NA.")
+              checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+              tTest_pVal = tTest_stat = NA
+            }
+            
+            
+            outputSummary.df = add_row(outputSummary.df,
+                                       permutation     = permutationCur,
+                                       TF              = par.l$TF,
+                                       Pos_l2FC        = nrow(final.TF.df[final.TF.df$l2FC > 0,]) / nrow(final.TF.df),
+                                       Mean_l2FC       = mean(final.TF.df$l2FC, na.rm = TRUE),
+                                       Median_l2FC     = median(final.TF.df$l2FC, na.rm = TRUE),
+                                       Mode_l2FC       = modeNum[[1]],
+                                       sd_l2FC         = sd(final.TF.df$l2FC, na.rm = TRUE),
+                                       pvalue_raw      = tTest_pVal,
+                                       skewness_l2FC   = modeNum[[2]], 
+                                       T_statistic     = tTest_stat, 
+                                       TFBS_num        = nrow(final.TF.df)
+            )
+            
+          } else {
+            
+            # Rest will be NA
+            outputSummary.df = add_row(outputSummary.df,
+                                       permutation     = permutationCur,
+                                       TF              = par.l$TF,
+                                       TFBS_num        = nrow(final.TF.df)               
+            )
+          }
       
-      # dplyr::mutate(TF = par.l$TF) gives the following weird error message: Error: Unsupported type NILSXP for column "TF"
-      TFCur = par.l$TF
-      
-      TF_outputCur.df = final.TF.df %>%
-        dplyr::left_join(overlapsAll.df,by = c("TFBSID")) %>%
-        dplyr::left_join(peaksFiltered.df, by = c("peakID" = "annotation")) %>%
-        dplyr::rename(chr = chr.x) %>%
-        dplyr::filter(!(is.na(limma_avgExpr) & is.na(DESeq_baseMean))) %>%
-        dplyr::arrange(chr)  %>%
-        dplyr::mutate(TF = TFCur, permutation = permutationCur, l2FC = signif(l2FC, par.l$roundLog2FCDigits)) %>%
-        dplyr::select(one_of(order)) 
-
-      
-      if (permutationCur == 0) {
+    } else { # if skipTF
         
-        TF_output.df = rbind(TF_output.df, TF_outputCur.df)
-        
-        ######################
-        ## DIAGNOSTIC PLOTS ##
-        ######################
-        conditionComparison = readRDS(par.l$file_input_conditionComparison)
-        
-        
+        message <- paste0("DESeq could not be run.")
         pdf(par.l$file_output_plot_diagnostic)
-        if (par.l$nPermutations == 0) {
-          plotDiagnosticPlots(TF.cds.filt, res_DESeq, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 
-        } else {
-          plotDiagnosticPlots(TF.cds.filt, fit, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 
-        }
-        
-        
-        
-        # Density plot
-        conditionComparison = paste0(conditionComparison[1], " vs. ", conditionComparison[2])
-        xlabLabel = paste0(" log2 FC ", conditionComparison)
-        TF_dens = ggplot(peaks.df, aes(l2FC)) + geom_density(aes(fill = "Peaks" ),alpha = .5, color = "black") +
-          geom_density(data = final.TF.df, aes(x = l2FC, fill = "TF"),size = 1, alpha = .7) +
-          xlab(xlabLabel) +
-          theme(axis.text.x = element_text(face = "bold", color = "black", size = 12),
-                axis.text.y = element_text(face = "bold", color = "black", size = 12),
-                axis.title.x = element_text(face = "bold", colour = "black", size = 10, margin = margin(25,0,0,0)),
-                axis.title.y = element_text(face = "bold", colour = "black", size = 10, margin = margin(0,25,0,0)),
-                axis.line.x = element_line(color = "black"), axis.line.y = element_line(color = "black"),
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),
-                panel.border = element_blank(),
-                panel.background = element_blank(),
-                legend.position = c(0.9,0.9),
-                legend.justification = "center",
-                legend.title = element_blank()) +
-          scale_fill_manual(values = c("Peaks" = "grey50" , "TF" = "blue"), labels = c("PEAKS", par.l$TF))
-        
-        plot(TF_dens)
-        
-        # create ecdf plots for each TF
-        ECDF_TF = ggplot(final.TF.df, aes(l2FC)) +
-          stat_ecdf(aes(colour = "TF")) +
-          stat_ecdf(data = peaks.df, aes(x = l2FC, colour = "Peaks")) +
-          xlab(xlabLabel) +
-          scale_fill_manual(values = c("Peaks" = "grey50" , "TF" = "blue"), labels = c("PEAKS", par.l$TF))
-        
-        plot(ECDF_TF)
-        
+        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+        message = paste0("Insufficient data to run analysis.\n", message, "\nThis TF will be ignored in subsequent steps.")
+        text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
         dev.off()
         
-      } 
-      
-      # Execute this ALWAYS, as also the values for the real data should be stored for easier later retrieval
-      TF_outputCurFiltered.df = dplyr::select(TF_outputCur.df, one_of("permutation", "TF", "TFBSID", "l2FC"))
-      TF_outputInclPerm.df = rbind(TF_outputInclPerm.df, TF_outputCurFiltered.df)
-      
-      
-      # d) Comparisons between peaks and binding sites
-      
-      modeNum     = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)
-      
-      # We have to filter now by NAs because for some permutations, limma might have been unable to calculate the coefficients
-      final.TF.filtered.df = dplyr::filter(final.TF.df, !is.na(l2FC))
-      nRowFilt = nrow(final.TF.filtered.df)
-      if (nRowFilt > 0) {
-        
-        if (nRowFilt >= par.l$minNoDatapoints) {
-          Ttest   = t.test(final.TF.df$l2FC, peaks.df$l2FC)
-          tTest_pVal = Ttest$p.value
-          tTest_stat = Ttest$statistic[[1]]
-        } else {
-          message = paste0("Skipping t-test due to insufficient number of TFBS (<", par.l$minNoDatapoints, "). The columns T_statistic and pvalue_raw will be set to NA.")
-          checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-          tTest_pVal = tTest_stat = NA
-        }
-        
-        
-        outputSummary.df = add_row(outputSummary.df,
-                                   permutation     = permutationCur,
-                                   TF              = par.l$TF,
-                                   Pos_l2FC        = nrow(final.TF.df[final.TF.df$l2FC > 0,]) / nrow(final.TF.df),
-                                   Mean_l2FC       = mean(final.TF.df$l2FC, na.rm = TRUE),
-                                   Median_l2FC     = median(final.TF.df$l2FC, na.rm = TRUE),
-                                   Mode_l2FC       = modeNum[[1]],
-                                   sd_l2FC         = sd(final.TF.df$l2FC, na.rm = TRUE),
-                                   pvalue_raw      = tTest_pVal,
-                                   skewness_l2FC   = modeNum[[2]], 
-                                   T_statistic     = tTest_stat, 
-                                   TFBS_num        = nrow(final.TF.df)
-        )
-        
-      } else {
-        
-        # Rest will be NA
-        outputSummary.df = add_row(outputSummary.df,
-                                   permutation     = permutationCur,
-                                   TF              = par.l$TF,
-                                   TFBS_num        = nrow(final.TF.df)               
-        )
-      }
-      
-
+    }
    }  # end for each permutation
 
 } # end if !skipTF
