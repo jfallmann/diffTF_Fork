@@ -181,8 +181,8 @@ for (colnameCur in names(components3types)) {
 if (datatypeVariableToPermute %in% c("factor", "logical")) {
   
   conditionsVec = strsplit(par.l$conditionComparison, ",")[[1]]
-  if (!testSubset(sampleData.df$conditionSummary, conditionsVec)) {
-    message = "The parameter conditionComparison does not correspond to the sample summary table"
+  if (!testSubset(as.character(unique(sampleData.df$conditionSummary)), conditionsVec)) {
+      message = paste0("The specified elements for the parameter conditionComparison (", par.l$conditionComparison,   ") do not correspond to what is specified in the sample summary table (", paste0(unique(sampleData.df$conditionSummary), collapse = ","), "). All elements of conditionComparison must be present in the column conditionSummary.")
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
   }
   
