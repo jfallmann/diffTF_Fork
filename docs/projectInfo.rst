@@ -19,13 +19,19 @@ Citation
 
 If you use this software, please cite the following reference:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Genome-wide quantification of differential transcription factor activity: diffTF*. 2018. submitted.
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF*. 2018. submitted.
 
 
 Change log
 ============================
 
-COMING SOON
+Version 1.0.1 (2018-07-25)
+    - fixed a bug in 2.DiffPeaks.R that sometimes caused the step to fail, thanks to Jonas Ungerbeck for letting us know
+    - fixed a bug in 3.analyzeTF for rare corner cases when DeSeq fails
+
+Version 1.0 (2018-07-01)
+    - released stable version
+
 
 
 License
