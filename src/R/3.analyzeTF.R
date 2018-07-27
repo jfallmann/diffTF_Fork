@@ -150,7 +150,8 @@ if (length(colnamesNew) != nrow(sampleData.df)) {
 
 # Initiate data structures that are populated hereafter
 TF_output.df  = tribble(~permutation, ~TF, ~chr, ~MSS, ~MES, ~TFBSID, ~strand, ~peakID, ~limma_avgExpr, ~l2FC, ~limma_B, ~limma_t_stat, ~DESeq_ldcSE, ~DESeq_stat, ~DESeq_baseMean, ~pval, ~pval_adj)
-TF_outputInclPerm.df  = tribble(~permutation, ~TF, ~TFBSID, ~l2FC)
+
+
 outputSummary.df  = tribble(~permutation, ~TF, ~Pos_l2FC, ~Mean_l2FC, ~Median_l2FC, ~Mode_l2FC, ~sd_l2FC, ~pvalue_raw, ~skewness_l2FC, ~T_statistic, ~TFBS_num)
 
 
@@ -176,6 +177,9 @@ overlapsAll.df = overlapsAll.df %>%
     
 
 nTFBS = nrow(overlapsAll.df)
+
+
+
 skipTF = FALSE
 
 
@@ -183,11 +187,12 @@ skipTF = FALSE
 if (nTFBS >= par.l$minNoDatapoints) {
 
   
-  # Group by ID
+  # Group by peak ID
   # take only the maximum row mean of all samples, sample with biggest coverage
   coverageAll_grouped.df = overlapsAll.df %>%
     dplyr::group_by(peakID) %>%
-    dplyr::slice(which.max(mean))
+    dplyr::slice(which.max(mean)) %>%
+    dplyr::ungroup()
   
   TF.table.m = as.matrix(coverageAll_grouped.df[,sampleData.df$SampleID])
   colnames(TF.table.m) = sampleData.df$SampleID
@@ -204,9 +209,14 @@ if (skipTF) {
   # write a dummy pdf file
   pdf(par.l$file_output_plot_diagnostic)
   plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-  message = paste0("Insufficient data to run analysis.\n", message)
+  message = paste0("Insufficient data to run analysis.\n", message, "\nThis TF will be ignored in subsequent steps.")
   text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
   dev.off()
+  
+  
+  TF_outputInclPerm.df = as.data.frame(matrix(nrow = 0, ncol = 2 + par.l$nPermutations + 1))
+  colnames(TF_outputInclPerm.df) = c("TF", "TFBSID", paste0("log2fc_perm", 0:par.l$nPermutations))
+  
   
 } else {
   
@@ -273,6 +283,11 @@ if (skipTF) {
   
   # low RC, check by rowMean
   TF.cds.filt = TF.cds[rowMeans(counts(TF.cds)) > 0, ]
+  
+  nPeaks = nrow(TF.cds.filt)
+  
+  # Preallocate data frame so no expensive reallocation has to be done
+  log2fc.m = matrix(NA, nrow = nPeaks , ncol = par.l$nPermutations + 1)
 
   peaks.df = read_tsv(par.l$file_input_peak2, col_types = cols())
   if (nrow(problems(peaks.df)) > 0) {
@@ -298,6 +313,19 @@ if (skipTF) {
       par.l$nPermutations = valueNew
     }
     
+    # Calculate the log2 counts once
+    if (par.l$nPermutations > 0) {
+      
+      # Generate normalized counts for limma analysis
+      countsNorm        = counts(TF.cds.filt, norm = TRUE)
+      countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
+      rownames(countsNorm.transf) = rownames(TF.cds.filt)
+      
+    }
+    
+    # dplyr::mutate(TF = par.l$TF) gives the following weird error message: Error: Unsupported type NILSXP for column "TF"
+    TFCur = par.l$TF
+    
     for (permutationCur in 0:par.l$nPermutations) {
       
       if (permutationCur == 0) {
@@ -310,14 +338,11 @@ if (skipTF) {
       ##############################
       # RUN EITHER LIMMA OR DESEQ2 #
       ##############################
-      skipTF = FALSE
       if (par.l$nPermutations > 0) {
         
-        # Generate normalized counts for limma analysis
-        countsNorm        = counts(TF.cds.filt, norm = TRUE)
-        countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
-        rownames(countsNorm.transf) = rownames(TF.cds.filt)
-
+          # model.matrix uses the first level in the specified column as reference, and so the corresponding column name and values are relative to that reference.
+          # That is, if the levels are "GMP" and "MPP", then all log2 fc will be the log2fc of MPP as compared to GMP.
+          # whatever comes first for model.matrix is taken as first value, then log2fc is of the second condition over the first
         fit <- eBayes(lmFit(countsNorm.transf, design = model.matrix(designFormula, data = sampleData.df)))
         results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
         
@@ -337,6 +362,7 @@ if (skipTF) {
         
         sampleData.df = sampleData.l[[paste0("permutation0")]]
         
+        # We already set the factors for conditionSummary explicitly. The reference level is the first level for DeSeq. 
         # Run the local fit first, if that throws an error try the default fit type
         
         res_DESeq = tryCatch( {
@@ -352,11 +378,8 @@ if (skipTF) {
           }, error = function(e) {
             errorMessage <<- "Could not run DESeq with regular fitting either, set all values to NA."
             checkAndLogWarningsAndErrors(NULL, errorMessage, isWarning = TRUE)
-
           }
           )
-          
-          res_DESeq
           
         }
         )
@@ -364,9 +387,7 @@ if (skipTF) {
         if (class(res_DESeq) == "character") skipTF = TRUE
         
         if (!skipTF) {
-            
             res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq))
-            
             
             final.TF.df = data_frame("TFBSID"    = rownames(res_DESeq.df), 
                                      "DESeq_baseMean" = res_DESeq.df$baseMean,
@@ -380,7 +401,6 @@ if (skipTF) {
                                      "limma_t_stat" = NA
             )
         }
-       
       }
       
       ##################################
@@ -388,10 +408,7 @@ if (skipTF) {
       ##################################
       if (!skipTF) {
           order  = c("permutation", "TF", "chr", "MSS", "MES", "TFBSID", "strand", "peakID", "l2FC", "limma_avgExpr", "limma_B", "limma_t_stat", "DESeq_ldcSE", "DESeq_stat", "DESeq_baseMean", "pval", "pval_adj")
-          
-          # dplyr::mutate(TF = par.l$TF) gives the following weird error message: Error: Unsupported type NILSXP for column "TF"
-          TFCur = par.l$TF
-          
+     
           TF_outputCur.df = final.TF.df %>%
             dplyr::left_join(overlapsAll.df,by = c("TFBSID")) %>%
             dplyr::left_join(peaksFiltered.df, by = c("peakID" = "annotation")) %>%
@@ -400,8 +417,8 @@ if (skipTF) {
             dplyr::arrange(chr)  %>%
             dplyr::mutate(TF = TFCur, permutation = permutationCur, l2FC = signif(l2FC, par.l$roundLog2FCDigits)) %>%
             dplyr::select(one_of(order)) 
-    
           
+    
           if (permutationCur == 0) {
             
             TF_output.df = rbind(TF_output.df, TF_outputCur.df)
@@ -457,10 +474,9 @@ if (skipTF) {
           } 
           
           # Execute this ALWAYS, as also the values for the real data should be stored for easier later retrieval
-          TF_outputCurFiltered.df = dplyr::select(TF_outputCur.df, one_of("permutation", "TF", "TFBSID", "l2FC"))
-          TF_outputInclPerm.df = rbind(TF_outputInclPerm.df, TF_outputCurFiltered.df)
-          
-          
+    
+          log2fc.m[,permutationCur + 1] = TF_outputCur.df$l2FC
+    
           # d) Comparisons between peaks and binding sites
           
           modeNum     = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)
@@ -504,25 +520,34 @@ if (skipTF) {
                                        TFBS_num        = nrow(final.TF.df)               
             )
           }
+          
+      } else { # if skipTF
+          
+          message <- paste0("DESeq could not be run.")
+          pdf(par.l$file_output_plot_diagnostic)
+          plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+          message = paste0("Insufficient data to run analysis.\n", message, "\nThis TF will be ignored in subsequent steps.")
+          text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
+          dev.off()
+          
+      }
+    }  # end for each permutation
+  
+  if (!skipTF) {
+      TF_outputInclPerm.df = as.tibble(log2fc.m) %>%
+          add_column(TF = TFCur , TFBSID = TF_outputCur.df$TFBSID, .before = 1)
       
-    } else { # if skipTF
-        
-        message <- paste0("DESeq could not be run.")
-        pdf(par.l$file_output_plot_diagnostic)
-        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-        message = paste0("Insufficient data to run analysis.\n", message, "\nThis TF will be ignored in subsequent steps.")
-        text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
-        dev.off()
-        
-    }
-   }  # end for each permutation
+      colnames(TF_outputInclPerm.df)[3:ncol(TF_outputInclPerm.df)] = paste0("log2fc_perm", 0:par.l$nPermutations)
+  } 
+ 
 
 } # end if !skipTF
+    
 
 TF_output.df = mutate_if(TF_output.df, is.numeric, as.character)
 write_tsv(TF_output.df,     path = par.l$file_output_summaryAll)
-TF_outputInclPerm.dfv = mutate_if(TF_outputInclPerm.df, is.numeric, as.character)
-write_tsv(TF_outputInclPerm.df, path = par.l$file_outputPerm_summaryAll)
+TF_outputInclPerm.df = mutate_if(TF_outputInclPerm.df, is.numeric, as.character)
+write_tsv(TF_outputInclPerm.df, path = par.l$file_outputPerm_summaryAll, col_names = FALSE)
 saveRDS(outputSummary.df,   file = par.l$file_output_summaryStats)
 
 # saveRDS(res_DESeq.l, file = par.l$file_output_DESeq)

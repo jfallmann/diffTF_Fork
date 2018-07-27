@@ -103,7 +103,7 @@ configDict = {
             "par_general":
                 ["outdir", "regionExtension", "comparisonType", "designContrast", "designVariableTypes", "conditionComparison", "nPermutations", "nCGBins", "TFs", "dir_scripts", "RNASeqIntegration", "nBootstraps"],
             "samples":
-                ["summaryFile"],
+                ["summaryFile", "pairedEnd"],
             "peaks":
                 ["consensusPeaks", "peakType", "minOverlap"],
             "additionalInputFiles":
@@ -133,8 +133,22 @@ for sectionCur in configDict:
 # DIRECTORIES AND VARIABLES #
 #############################
 
-# Maximum number of cores per rule. This value will never be achieved because the minimum of this value and the --cores parameter will define the number of CPUs per rule in the end.
-threadsMax = 16
+# Maximum number of cores per rule.
+
+# For local computation, the minimum of this value and the --cores parameter will define the number of CPUs per rule,
+# while in a cluster setting, the minimum of this value and the number of cores onn the node the jobs runs is usedself.
+
+try:
+  threadsMax = config["par_general"]["maxCoresPerRule"]
+except KeyError:
+  print("The parameter \"coresPerRule\" in section \"par_general\" has not been defined. Jobs/rules with multithreading support will use the default of 16 cores.")
+  threadsMax = 16
+
+try:
+  TFBSSorted = config["par_general"]["dir_TFBS_sorted"]
+except KeyError:
+  print("The parameter \"dir_TFBS_sorted\" in section \"par_general\" has not been defined. Presorted BED files will be assumed.")
+  TFBSSorted = True
 
 # Increase ulimit -n for analysis with high number of TF and/or input files. The standard value of 1024 may not be enough.
 ulimitMax = 4096
@@ -151,6 +165,9 @@ regionExt          = config["par_general"]["regionExtension"]
 nCGBins            = config["par_general"]["nCGBins"]
 extDir = "extension" + str(config["par_general"]["regionExtension"])
 
+pairedEndOptions = "-p -B -P -d 0 -D 2000 -C"
+if not config["samples"]["pairedEnd"]:
+    pairedEndOptions = ""
 
 ROOT_DIR            = config["par_general"]["outdir"]
 FINAL_DIR           = ROOT_DIR + "/FINAL_OUTPUT/" + extDir
@@ -160,6 +177,7 @@ LOG_BENCHMARK_DIR   = ROOT_DIR + "/LOGS_AND_BENCHMARKS"
 TEMP_DIR            = ROOT_DIR + "/TEMP"
 TEMP_EXTENSION_DIR  = ROOT_DIR + "/TEMP/"  + extDir
 TEMP_BAM_DIR        = ROOT_DIR + "/TEMP/"  + "sortedBAM"
+
 
 global samplesData
 samplesData = read_samplesTable(config["samples"]["summaryFile"], config["peaks"]["consensusPeaks"])
@@ -339,6 +357,7 @@ rule filterSexChromosomesAndSortPeaks:
 
 overlapPattern = "overlaps.bed.gz"
 
+# This rule is only run when parameter TFBSSorted = False
 rule sortTFBSParallel:
     input:
         flag = ancient(rules.checkParameterValidity.output.flag),
@@ -359,7 +378,7 @@ def getBamFileFromBasename(basename):
         raise KeyError("Could not uniquely retrieve the BAM file for the basename \"" + basename + "\" from the file " + config["samples"]["summaryFile"])
     return hit
 
-
+# Not run for single-end data
 rule resortBAM:
     input:
         flag = ancient(rules.checkParameterValidity.output.flag),
@@ -374,11 +393,21 @@ rule resortBAM:
     shell:
         """sh -c 'repair {params.compression} {params.noSeqInf} -i {input.BAM} -o {output.BAMSorted} '"""
 
+
+
+def getBamFilesBasedOnPairedEnd(wildcards):
+    """text"""
+    if config["samples"]["pairedEnd"]:
+        return expand('{dir}/{allBasenamesBAM}.bam', dir = TEMP_BAM_DIR, allBasenamesBAM = allBamFilesBasename)
+    else:
+        return allBamFiles
+
+
 # Use anonymous named pipe to speed-up execution times
 rule intersectPeaksAndBAM:
     input:
         consensusPeaks = rules.filterSexChromosomesAndSortPeaks.output.consensusPeaks_sorted,
-        allBAMs        = expand('{dir}/{allBasenamesBAM}.bam', dir = TEMP_BAM_DIR, allBasenamesBAM = allBamFilesBasename),
+        allBAMs        = getBamFilesBasedOnPairedEnd,
         sampleFile     = config["samples"]["summaryFile"]
     output:
         peaksBamOverlapRaw = temp(PEAKS_DIR + '/' + compType + 'allBams.peaks.overlaps.bed'),
@@ -388,7 +417,7 @@ rule intersectPeaksAndBAM:
     message: "{ruleDisplayMessage} Intersect for file {input.consensusPeaks} with all BAM files..."
     threads: threadsMax
     params:
-        pairedEnd     = "-p -B -d 0 -D 2000 -C",
+        pairedEnd     = pairedEndOptions,
         readFiltering = "-Q 10",
         multiOverlap = "-O",
         ulimitMax = ulimitMax
@@ -410,14 +439,21 @@ rule intersectPeaksAndBAM:
 
 # TF-specific part:
 
+def retrieveInputFilesTFBS (TFBSSorted):
+
+    if not TFBSSorted:
+        return rules.sortTFBSParallel.output.allBedSorted
+    else:
+        return expand('{dir}/{TF}{suffix}', dir = config["additionalInputFiles"]["dir_TFBS"], TF = allTF, suffix = suffixTFBS)
+
 rule intersectPeaksAndTFBS:
     input:
         consensusPeaks = rules.filterSexChromosomesAndSortPeaks.output.consensusPeaks_sorted,
-        allTFBS        = rules.sortTFBSParallel.output.allBedSorted
+        allTFBS        = retrieveInputFilesTFBS(TFBSSorted)
     output:
         TFBSinPeaks_bed    = expand('{dir}/{compType}allTFBS.peaks.bed.gz', dir = TEMP_DIR, compType = compType),
         TFBSinPeaksMod_bed = expand('{dir}/{compType}allTFBS.peaks.extension.bed.gz', dir = TEMP_EXTENSION_DIR, compType = compType)
-    message: "{ruleDisplayMessage} Obtain binding sites from peaks: Intersect files {input.allTFBS} and {input.consensusPeaks}..."
+    message: "{ruleDisplayMessage} Obtain binding sites from peaks: Intersect all TFBS files and {input.consensusPeaks}..."
     threads: 1
     params:
         extension = config["par_general"]["regionExtension"],
@@ -434,10 +470,12 @@ rule intersectPeaksAndTFBS:
             gunzip -c {output.TFBSinPeaks_bed} | cut -f4,5,6,7,8,9,12 | uniq  | awk '{{OFS="\\t"}};{{ print $4, $5-{params.extension}, $6+{params.extension},$1,$2,$7,$3}}' | gzip -f > {output.TFBSinPeaksMod_bed}
         """
 
+
+
 rule intersectTFBSAndBAM:
     input:
         bed           = rules.intersectPeaksAndTFBS.output.TFBSinPeaksMod_bed,
-        allBAMs       = expand('{dir}/{allBasenamesBAM}.bam', dir = TEMP_BAM_DIR, allBasenamesBAM = allBamFilesBasename),
+        allBAMs       = getBamFilesBasedOnPairedEnd,
         sampleFile    = config["samples"]["summaryFile"]
     output:
         BAMOverlapRaw = temp(TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.allBAMs.overlaps.bed"),
@@ -447,13 +485,13 @@ rule intersectTFBSAndBAM:
     message: "{ruleDisplayMessage} Intersect file {input.bed} against all BAM files..."
     threads: 4
     params:
-        pairedEnd = "-p -B -d 0 -D 2000 -C",
+        pairedEnd = pairedEndOptions,
         readFiltering = "-Q 10",
         multiOverlap = "-O",
         ulimitMax = ulimitMax
     shell:
         """ ulimit -n {params.ulimitMax} &&
-            zgrep "{wildcards.TF}_TFBS\.sorted" {input.bed} | awk 'BEGIN {{ OFS = "\\t" }} {{print $4"_"$2"-"$3,$1,$2,$3,$6}}' | sort -u -k1,1  >{output.saf} &&
+            zgrep "{wildcards.TF}_TFBS\." {input.bed} | awk 'BEGIN {{ OFS = "\\t" }} {{print $4"_"$2"-"$3,$1,$2,$3,$6}}' | sort -u -k1,1  >{output.saf} &&
             featureCounts \
             -F SAF \
             -T {threads} \
@@ -526,26 +564,9 @@ rule summary1:
     script: dir_scripts + script_summary1
 
 
-#set +o pipefail has to be used here because head closes the pipe after reading the specified number of lines, causing a 141 (127+14) error that Snakemake captures)
-# Use anonymous named pipe to speed-up execution times
-rule concatenateMotifs:
-    input:
-        diagnosticPlots = rules.summary1.output,
-        TFMotifes     = expand('{dir}/{TF}/{extension}/{compType}{TF}.output.tsv.gz', dir = TF_DIR, TF = allTF, extension = extDir, compType = compType)
-    output:
-        allMotifsDetails = FINAL_DIR + "/" + compType + "allMotifs.tsv.gz"
-    log:
-    message: "{ruleDisplayMessage}Concatenate all motifs for file {input.TFMotifes}..."
-    threads: 1
-    params:
-        motifsShort = TF_DIR + "/*/" + extDir + "/" + compType + "*.output.tsv.gz"
-    shell:
-      """
-        set +o pipefail; cat <(gunzip -c {input.TFMotifes[1]} | head -1) <(zgrep "$(printf '^0\\t')" {params.motifsShort}) | gzip -f > {output.allMotifsDetails}
-      """
+# Python: Read in 640 files one by one, and for each loop through all 1000 permutations and output to the correpsonding output file.
 
 
-#set +o pipefail has to be used here because the pattern may not be found in all individual files, and this would cause an exit value of 1 otherwise
 rule concatenateMotifsPerm:
     input:
         diagnosticPlots = rules.summary1.output,
@@ -555,26 +576,36 @@ rule concatenateMotifsPerm:
     log:
     message: "{ruleDisplayMessage}Concatenate all motifs for permutation {wildcards.perm}..."
     threads: 1
+    benchmark: LOG_BENCHMARK_DIR + "/concatenateMotifsPerm.{perm}.benchmark"
     params:
-        motifsShortPerm = TF_DIR + "/*/" + extDir + "/" + compType + "*.outputPerm.tsv.gz"
+        motifsShortPerm = TF_DIR + "/*/" + extDir + "/" + compType + "*.outputPerm.tsv.gz",
+        colToExtract= lambda wc: str(int(wc.perm) + 3)
     shell:
       """
-        set +o pipefail; zgrep -h "$(printf '^{wildcards.perm}\\t')" {params.motifsShortPerm} |  gzip -f > {output.allMotifsLog2FC}
+        zcat {params.motifsShortPerm} | cut -f1,2,{params.colToExtract} | gzip >{output.allMotifsLog2FC}
       """
 
+
+# set +o pipefail has to be used here because head closes the pipe after reading the specified number of lines, causing a 141 (127+14) error that Snakemake captures)
 # Use anonymous named pipe to speed-up execution times
 rule calcNucleotideContent:
     input:
-        motifsBed = rules.concatenateMotifs.output.allMotifsDetails
+        diagnosticPlots = rules.summary1.output,
+        TFMotifes     = expand('{dir}/{TF}/{extension}/{compType}{TF}.output.tsv.gz', dir = TF_DIR, TF = allTF, extension = extDir, compType = compType)
     output:
+        allMotifsDetails = FINAL_DIR + "/" + compType + "allMotifs.tsv.gz",
         bed     = TEMP_EXTENSION_DIR + "/" + compType + "motifs.coord.nucContent.bed.gz"
     log:
-    message: "{ruleDisplayMessage}Calculate nucleotide content via bedtools nuc for file {input} ..."
+    message: "{ruleDisplayMessage}Calculate nucleotide content via bedtools nuc for all TFBS..."
     threads: 1
-    params: refGenome = config["additionalInputFiles"]["refGenome_fasta"]
+    params:
+        motifsShort = TF_DIR + "/*/" + extDir + "/" + compType + "*.output.tsv.gz",
+        # TFMotifes = construct a string that resembles the call to tail,
+        refGenome = config["additionalInputFiles"]["refGenome_fasta"]
     shell:
       """
-            bedtools nuc -fi {params.refGenome} -bed <(gunzip -c {input.motifsBed} | awk '{{OFS="\\t"}}; NR > 1 {{print $3,$4,$5,$6,$2}}') | gzip -f > {output.bed}
+            set +o pipefail; cat <(gunzip -c {input.TFMotifes[1]} | head -1) <(zgrep "$(printf '^0\\t')" {params.motifsShort}) | gzip -f > {output.allMotifsDetails} &&
+            bedtools nuc -fi {params.refGenome} -bed <(gunzip -c {output.allMotifsDetails} | awk '{{OFS="\\t"}}; NR > 1 {{print $3,$4,$5,$6,$2}}') | gzip -f > {output.bed}
         """
 
 rule binningTF:
@@ -589,6 +620,13 @@ rule binningTF:
     threads: 1
     script: dir_scripts + script_binningTF
 
+# Determine which files are produced by the rule depending on whether the classifiation should be run
+allDiagnosticFiles = []
+allDiagnosticFiles.append(FINAL_DIR + "/" + compType + "diagnosticPlots.pdf")
+if config["par_general"]["RNASeqIntegration"]:
+    classificationFiles = expand("{dir}/{compType}diagnosticPlotsClassification{no}.pdf", dir = FINAL_DIR, compType = compType, no = [1,2,3,4])
+    allDiagnosticFiles.append(classificationFiles)
+
 
 rule summaryFinal:
     input:
@@ -600,12 +638,8 @@ rule summaryFinal:
         summary         = FINAL_DIR + "/" + compType + "summary.tsv.gz",
         circularPlot    = FINAL_DIR + "/" + compType + "summary.circular.pdf",
         volcanoPlot     = FINAL_DIR + "/" + compType + "summary.volcano.pdf",
-        diagnosticPlots = FINAL_DIR + "/" + compType + "diagnosticPlots.pdf",
+        diagnosticPlots = allDiagnosticFiles,
         plotsRDS        = FINAL_DIR + "/" + compType + "summary.circular.rds",
-        #plotClassificationDiagnostic1 = FINAL_DIR + "/" + compType + "diagnosticPlotsClassification1.pdf" if config["par_general"]["RNASeqIntegration"] else "",
-        #plotClassificationDiagnostic2 = FINAL_DIR + "/" + compType + "diagnosticPlotsClassification2.pdf" if config["par_general"]["RNASeqIntegration"] else "",
-        #plotClassificationDiagnostic3 = FINAL_DIR + "/" + compType + "diagnosticPlotsClassification3.pdf" if config["par_general"]["RNASeqIntegration"] else "",
-        #plotClassificationDiagnostic4 = FINAL_DIR + "/" + compType + "diagnosticPlotsClassification4.pdf" if config["par_general"]["RNASeqIntegration"] else ""
     log: expand('{dir}/6.summaryFinal.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_summaryFinal} ..."
     threads: 1

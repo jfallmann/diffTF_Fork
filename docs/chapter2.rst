@@ -40,7 +40,7 @@ diffTF is implemented as a *Snakemake* pipeline. For a gentle introduction about
 - ``produceConsensusPeaks``:  R script that generates the consensus peaks if none are provided
 - ``filterSexChromosomesAndSortPeaks``: Filters various chromosomes 8sex, unassembled ones, contigs, etc) from the peak file.
 - ``sortTFBSParallel``: Sort the TFBS lists by position
-- ``resortBAM``: Sort the *BAM* file for optimized processing
+- ``resortBAM``: Sort the *BAM* file for optimized processing (only run if data are paired-end)
 - ``intersectPeaksAndBAM``: Count all reads for peak regions across all input files
 - ``intersectPeaksAndTFBS``: Intersect all TFBS with peak regions to retain only TFBS in peak regions
 - ``intersectTFBSAndBAM``: Count all reads from all TFBS across all input files in a TF-specific manner
@@ -116,6 +116,31 @@ Summary
 Details
   Specifies the number of base pairs each target region (from the peaks file) should be extended in both 5’ and 3’ direction.
 
+.. _parameter_maxCoresPerRule:
+
+
+PARAMETER ``maxCoresPerRule``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Integer > 0. Default 16. Maximum number of cores to use for rules that support multithreading.
+
+Details
+  This affects currently only rules involving *featureCounts* - that is, *intersectPeaksAndBAM* while for rule *intersectTFBSAndBAM*, the number of cores is hard-coded to 4. When running Snakemake locally, each rule will use at most this number of cores, while in a cluster setting, this value refers to the maximum number of CPUs an individual job / rule will occupy. If the node the job is executed on has fewer nodes, then the maximum number of cores on the node will be taken.
+
+
+.. _parameter_dir_TFBS_sorted:
+
+PARAMETER ``dir_TFBS_sorted``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+    Logical. true or false. Default false. Are the files in ``dir_TFBS`` (:ref:`parameter_dir_TFBS`) already pre-sorted?
+
+Details
+  If set to true, no additional sorting will be done, saving computation time because the rule *sortTFBSParallel* is not executed. Note that sorting is assumed to be according to the chromosome (first column) and start position (second column), essentially invoking *sort -k1,1 -k2,2n*.  If set to false, all files in ``dir_TFBS`` (:ref:`parameter_dir_TFBS`) will be sorted.
+
+
 .. _parameter_comparisonType:
 
 
@@ -127,6 +152,21 @@ Summary
 
 Details
   This parameter helps to organize complex analysis for which multiple different types of comparisons should be done. Set it to a short but descriptive name that summarizes the type of comparison you are making or the types of cells you compare. The value of this parameter appears as prefix in most output files created by the pipeline. It may also be empty.
+
+
+.. _parameter_conditionComparison:
+
+
+PARAMETER ``conditionComparison``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  String. Default "". Specifies the two conditions you want to compare.
+
+Details
+  This parameter specifies the contrast you are making in *diffTF*. Two conditions have to be specified, separated by a comma. For example, if you want to compare GMP and MPP samples, the parameter should be "GMP,MPP". Both conditions have to be present in the column "conditionSummary" in the sample file table (see parameter ``summaryFile`` (:ref:`parameter_summaryFile`)).
+
+  .. note:: The order of the two conditions matters. The condition specified first is the reference condition. For the "GMP,MPP" example, all log2 fold-changes will be the log2fc of *MPP* as compared to *GMP*. That means that a positive log2 fold-change means it is higher in *MPP* as compared to *GMP*. This is particularly relevant for the *allMotifs* output file.
 
 .. _parameter_designContrast:
 
@@ -251,6 +291,17 @@ Details
   Path to a tab-separated file that summarizes the input data. See the section :ref:`section_metadata` and the example file for how this file should look like.
 
 
+.. _parameter_pairedEnd:
+
+PARAMETER ``pairedEnd``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  Logical. true or false. Default true. Is the data paired-end? If single-end, set to false.
+
+Details
+  Both paired-end and single-end data can be run with diffTF.
+
+
 SECTION ``peaks``
 --------------------------------------------
 
@@ -332,6 +383,7 @@ Details
 .. _parameter_dir_TFBS:
 
 
+
 PARAMETER ``dir_TFBS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -348,13 +400,15 @@ Details
   5. score or any other numeric column
   6. strand
 
-  For user convenience, we provide these files as described in the publication as a separate download:
+  For user convenience, we provide such sorted files as described in the publication as a separate download:
 
   - hg19: For a pre-compiled list of 620 human TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for hg19, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz>`__
   - hg38: For a pre-compiled list of 771 human TF with in-silico predicted TFBS based on the *HOCOMOCO 11* database and *FIMO* from the MEME suite1 for hg38, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz>`_
   - mm10: For a pre-compiled list of 423 mouse TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for mm10, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz>`__
 
   However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as *FIMO* or *MOODS*.
+
+  Also see the parameter ``dir_TFBS_sorted`` (:ref:`parameter_dir_TFBS_sorted`) to specify whether the files are already sorted or not.
 
 .. _parameter_RNASeqCounts:
 
@@ -406,7 +460,7 @@ It must contain at least contain the following columns (the exact names do matte
   .. warning:: All *BAM* files must meet *SAM* format specifications. You may use the program *ValidateSamFile* from the *Picard tools* to check and identify problems with your file. Chromosome names must have a "*chr*" as prefix, otherwise diffTF may crash.
 
 - ``peaks``: absolute path to the sample-specific peak file, in the format as given by ``peakType`` (:ref:`parameter_peakType`). Only needed if no consensus peak file is provided.
-- ``conditionSummary``: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., *mutated and unmutated*, *day0 and day10*, ...)
+- ``conditionSummary``: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., *mutated and unmutated*, *day0 and day10*, ...). In addition, the two conditions must match the ones specified in the parameter ``conditionComparison`` (:ref:`parameter_conditionComparison`).
 - if applicable, all additional variables from the design formula except ``conditionSummary`` must also be present as a separate column.
 
 
@@ -452,7 +506,7 @@ Details
   - *TF*: name of the TF
   - *chr*, *MSS*, *MES*, *strand*, *TFBSID*: Genomic location and identifier of the (extended) TFBS
   - *peakID*:  Genomic location and annotation of the overlapping peak region
-  - *l2FC*, *pval*, *pval_adj*: Results from the *limma* or *DESeq2* analysis, see the respective documentation for details (see below for links and further explanation). These column names are shared between *limma* and *DESeq2*.
+  - *l2FC*, *pval*, *pval_adj*: Results from the *limma* or *DESeq2* analysis, see the respective documentation for details (see below for links and further explanation). These column names are shared between *limma* and *DESeq2*. l2FC are interpreted as described in the parameter ``conditionComparison`` ( :ref:`parameter_conditionComparison`)
   - *DESeq_baseMean*, *DESeq_ldcSE*, *DESeq_stat*: Results from the *DESeq2* analysis, see the *DESeq2* documentation for details (e.g., *?DESeq2::results*). If *DESeq2* was not run for calculating log2 fold-changes (i.e., if the value for the parameter ``nPermutations`` ( :ref:`parameter_regionExtension`) is >0), these columns are set to NA.
   - *limma_avgExpr*, *limma_B*, *limma_t_stat*: Results from the *limma* analysis, see the *limma* documentation for details (e.g., *??topTable*). If *limma* was not run (i.e., if the value for the parameter ``nPermutations`` ( :ref:`parameter_regionExtension`) is 0), these columns are set to NA.
 
@@ -625,9 +679,8 @@ Summary
 Details
   This file has the following columns (see the description for the file ``{TF}.{comparisonType}.output.tsv.gz`` for details):
   - *TF*
-  - *permutation*
   - *TFBSID*
-  - *l2FC*
+  - *log2fc_perm* columns, which store the permutation-specific log2 fold-changes of the particular TFBS. Permutation 0 refers to the real data
 
 FILE ``{TF}.{comparisonType}.summary.rds``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -711,7 +764,7 @@ Stores temporary and intermediate files. Since they are usually not relevant for
 Sub-folder ``SortedBAM``
 ------------------------------
 
-Stores sorted versions of the original *BAMs* that are optimized for fast count retrieval using *featureCounts*.
+Stores sorted versions of the original *BAMs* that are optimized for fast count retrieval using *featureCounts*. Only present if data are paired-end.
 
 - ``{basenameBAM}.bam`` for each input *BAM* file: Produced in rule ``resortBAM``. Resorted *BAM* file
 
@@ -868,8 +921,15 @@ Identify the cause
 To troubleshoot errors, you have to first locate the exact error. Depending on how you run *Snakemake* (i.e., in a cluster setting or not), check the following places:
 
 - in locale mode: the *Snakemake* output appears on the console. Check the output before the line "Error in rule", and try to identify what went wrong.  Errors from R script should in addition be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory.
-- in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it
 
+- in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it.
+
+In both cases, you can check the log file that is located in .snakemake/log/. Identify the latest log file (check the date), and then either open the file or use something along the lines of:
+
+.. code-block:: Bash
+  grep -C 5 "Error in rule" .snakemake/log/2018-07-25T095519.371892.snakemake.log
+
+This is particularly helpful if the Snakemake output is long and you have troubles identifying the exact step in which an error occurred.
 
 Fixing the error
 ==============================

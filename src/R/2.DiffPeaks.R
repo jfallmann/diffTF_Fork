@@ -123,6 +123,11 @@ sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_type
 
 checkAndLogWarningsAndErrors(colnames(sampleData.df), checkSubset(c("bamReads"), colnames(sampleData.df)))
 
+conditionsVec = strsplit(par.l$conditionComparison, ",")[[1]]
+if (!testSubset(sampleData.df$conditionSummary, conditionsVec)) {
+  message = paste0("The specified elements for the parameter conditionComparison (", par.l$conditionComparison,   ") do not correspond to what is specified in the sample summary table (", paste0(unique(sampleData.df$conditionSummary), collapse = ","), "). All elements of conditionComparison must be present in the column conditionSummary.")
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+}
 
 designFormula = as.formula(par.l$designFormula)
 formulaVariables = attr(terms(designFormula), "term.labels")
@@ -152,8 +157,6 @@ checkAndLogWarningsAndErrors(components3types, checkSubset(components3types, c("
 
 datatypeVariableToPermute = components3types[variableToPermute]
 
-
-
 # Read and modify samples metadata
 sampleData.df = mutate(sampleData.df, name = file_path_sans_ext(basename(sampleData.df$bamReads)))
   
@@ -177,28 +180,17 @@ for (colnameCur in names(components3types)) {
   
 }
 
+# Change the conditionSummary specifically and enforce the direction as specified in the config file
+sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary, levels = conditionsVec)
 
-if (datatypeVariableToPermute %in% c("factor", "logical")) {
-  
-  conditionsVec = strsplit(par.l$conditionComparison, ",")[[1]]
-  if (!testSubset(as.character(unique(sampleData.df$conditionSummary)), conditionsVec)) {
-      message = paste0("The specified elements for the parameter conditionComparison (", par.l$conditionComparison,   ") do not correspond to what is specified in the sample summary table (", paste0(unique(sampleData.df$conditionSummary), collapse = ","), "). All elements of conditionComparison must be present in the column conditionSummary.")
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-  }
-  
-  # If variable to permute is a factor, check that is has 2 levels 
-  nLevels = length(unique(unlist(sampleData.df[,variableToPermute])))
-  if (datatypeVariableToPermute == "factor" & nLevels != 2) {
-    message = paste0("The variable ", variableToPermute, " was specified as a factor, but it does not have two different levels but instead ", nLevels, ".")
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-  }
-  
-  # Change the conditionSummary specifically and enforce the direction as specified in the config file
-  sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary, levels = conditionsVec)
-  
-} else {
-  
+
+# If variable to permute is a factor, check that is has 2 levels 
+nLevels = length(unique(unlist(sampleData.df[,variableToPermute])))
+if (datatypeVariableToPermute == "factor" & nLevels != 2) {
+  message = paste0("The variable ", variableToPermute, " was specified as a factor, but it does not have two different levels but instead ", nLevels, ".")
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
 }
+
 
 
 
@@ -367,12 +359,10 @@ if (!par.l$doCyclicLoess) {
 cds.peaks.filt   = cds.peaks[rowMeans(counts(cds.peaks)) > 0, ]
 
 
-# model.matrix uses the first level in the specified column as reference, and so the corresponding column name and values are relative to that reference.
-# That is, if the levels are "GMP" and "MPP", then all log2 fc will be the log2fc of MPP as compared to GMP.
+# DESeq log2fc are not used at all afterwards, as we currently only take the normalization factors to normalize the TFBS subsequently
+
+
 # The levels have to be reversed because the first element is the one appearing at the right of the plot, with positive values as. compared to the reference
-# TODO: Double-check because limma and DeSEQ are different: post vs pre and pre vs post (DESeq). This has a big influence in the final visualization!
-# dds$condition <- relevel(dds$condition, ref = "untreated") 
-# limma: whatever comes first for model.matrix is taken as first value, then log2fc is of the second condition over the first
 comparisonDESeq = rev(levels(sampleData.df$conditionSummary))
 
 ##############
@@ -384,72 +374,71 @@ countsNorm.df     = as.data.frame(countsNorm) %>%
   dplyr::mutate(peakID = rownames(cds.peaks.filt))  %>%
   dplyr::select(one_of("peakID", colnames(countsNorm)))
 
-# EDIT: FOR NOW, ALWAYS RUN DESEQ as it has to run only once anyway independent of the number of permutations and we can improve signal.
-# 
-# if (par.l$nPermutations > 0) {
-#   
-#   # Generate normalized counts for limma analysis
-#   countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
-#   rownames(countsNorm.transf) = rownames(cds.peaks.filt)
-#   
-#   sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary)
-#   
-#   designMatrix = model.matrix(designFormula, data = sampleData.df)
-#   
-#   if (nrow(designMatrix) < nrow(sampleData.df)) {
-#     missingRows = setdiff(1:nrow(sampleData.df), as.integer(row.names(designMatrix)))
-#     message = paste0("There is a problem with the specified design formula (parameter designContrast): The corresponding design matrix has fewer rows. This usually means that there are missing values in one of the specified variables. The problem comes from the following lines in the summary file: ", paste0(missingRows, collapse = ","), ".") 
-#     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-#   }
-#   
-#   fit        <- eBayes(lmFit(countsNorm.transf, design = designMatrix))
-#   results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
-#   
-#   final.peaks.df = data_frame(  
-#     "permutation" = 0,
-#     "peakID"      = rownames(results.df), 
-#     "limma_avgExpr"     = results.df$AveExpr,
-#     "l2FC"        = results.df$logFC,
-#     "limma_B"           = results.df$B,
-#     "limma_t_stat"      = results.df$t,
-#     "pval"        = results.df$P.Value, 
-#     "pval_adj"    = results.df$adj.P.Val
-#   )
-#   
-#   
-#   plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 10)
-#   
-#   
-# } else {
 
-# Deseq analysis
-cds.peaks.filt = tryCatch( {
-  DESeq(cds.peaks.filt, fitType = 'local', quiet = TRUE)
+if (par.l$nPermutations == 0) {
   
-}, error = function(e) {
-  message = "Warning: Could not run DESeq with local fitting, retry with default fitting type..."
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-  DESeq(cds.peaks.filt, quiet = TRUE)
+  # Generate normalized counts for limma analysis
+  countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
+  rownames(countsNorm.transf) = rownames(cds.peaks.filt)
+  
+  sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary)
+  
+  designMatrix = model.matrix(designFormula, data = sampleData.df)
+  
+  if (nrow(designMatrix) < nrow(sampleData.df)) {
+    missingRows = setdiff(1:nrow(sampleData.df), as.integer(row.names(designMatrix)))
+    message = paste0("There is a problem with the specified design formula (parameter designContrast): The corresponding design matrix has fewer rows. This usually means that there are missing values in one of the specified variables. The problem comes from the following lines in the summary file: ", paste0(missingRows, collapse = ","), ".") 
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  }
+  
+  fit        <- eBayes(lmFit(countsNorm.transf, design = designMatrix))
+  results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
+  
+  final.peaks.df = data_frame(  
+    "permutation" = 0,
+    "peakID"      = rownames(results.df), 
+    "limma_avgExpr"     = results.df$AveExpr,
+    "l2FC"        = results.df$logFC,
+    "limma_B"           = results.df$B,
+    "limma_t_stat"      = results.df$t,
+    "pval"        = results.df$P.Value, 
+    "pval_adj"    = results.df$adj.P.Val
+  )
+  
+  
+  plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
+  
+  
+} else {
+
+  # Deseq analysis
+  cds.peaks.filt = tryCatch( {
+    DESeq(cds.peaks.filt, fitType = 'local', quiet = TRUE)
+    
+  }, error = function(e) {
+    message = "Warning: Could not run DESeq with local fitting, retry with default fitting type..."
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    DESeq(cds.peaks.filt, quiet = TRUE)
+  }
+  )
+  
+  cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt))
+  
+  # TODO: "peakID"      = rownames(results.df), CHECK
+  final.peaks.df = data_frame( 
+    "permutation" = 0,
+    "peakID"    = rownames(cds.peaks.df), 
+    "DESeq_baseMean" = cds.peaks.df$baseMean,
+    "l2FC"     = cds.peaks.df$log2FoldChange,
+    "DESeq_ldcSE"    = cds.peaks.df$lfcSE,
+    "DESeq_stat"     = cds.peaks.df$stat,
+    "pval"     =  cds.peaks.df$pvalue, 
+    "pval_adj" =  cds.peaks.df$padj
+  )
+  
+  plotDiagnosticPlots(cds.peaks.filt, cds.peaks.filt, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
+  
 }
-)
-
-cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt))
-
-# TODO: "peakID"      = rownames(results.df), CHECK
-final.peaks.df = data_frame( 
-  "permutation" = 0,
-  "peakID"    = rownames(cds.peaks.df), 
-  "DESeq_baseMean" = cds.peaks.df$baseMean,
-  "l2FC"     = cds.peaks.df$log2FoldChange,
-  "DESeq_ldcSE"    = cds.peaks.df$lfcSE,
-  "DESeq_stat"     = cds.peaks.df$stat,
-  "pval"     =  cds.peaks.df$pvalue, 
-  "pval_adj" =  cds.peaks.df$padj
-)
-
-plotDiagnosticPlots(cds.peaks.filt, cds.peaks.filt, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
-  
-# }
 
 
 saveRDS(cds.peaks.filt, file = par.l$file_output_DESeqObj)
@@ -463,8 +452,6 @@ if (par.l$nPermutations > 0) {
   listNames = paste0("permutation", seq_len(par.l$nPermutations))
   names(permutationsList.l) = listNames
   
-  # we don't need permuted peaks l2fc actually so this can be skipped
-  
   # final.peaks.perm.df = tribble(~permutation, ~peakID, ~l2FC)
   sampleDataOrig.df = sampleData.df
   
@@ -476,23 +463,10 @@ if (par.l$nPermutations > 0) {
     sampleData.df[,variableToPermute] = unlist(sampleData.df[,variableToPermute]) [permutationsList.l[[permutationCur]]]
     
     sampleData.l[[permutationCur]] = sampleData.df
-    
-    # TODO: Why is limma not run for the permutations?
-    
-    # Calculate log2 fold changes using limma
-    # https://support.bioconductor.org/p/66251/
-    
-    # fit <- eBayes(lmFit(countsNorm.transf, design = model.matrix(designFormula, data = sampleData.df)))
-    # results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
-    
-    #  final.peaks.perm.df = add_row(final.peaks.perm.df,
-    #                          "permutation" = permutationCur,
-    #                          "peakID"      = rownames(results.df),
-    #                          "l2FC"        = results.df$logFC
-    # )
-    
-    
-  } # end for each permutation
+
+    # We don't need permuted peaks l2fc actually so permutation-specific l2fc can be skipped
+  
+  }
 }
 
 

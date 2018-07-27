@@ -1,6 +1,8 @@
 {
   "par_general": {
     "outdir": "../output",
+    "maxCoresPerRule": 2,
+    "dir_TFBS_sorted":true,
     "regionExtension": 100,
     "comparisonType": "GMPvsMPP.all",
     "conditionComparison": "GMP,MPP",
@@ -15,7 +17,8 @@
     "RNASeqIntegration": true
   },
   "samples": {
-    "summaryFile": "sampleData.tsv"
+    "summaryFile": "sampleData.tsv",
+    "pairedEnd": true
   },
   "peaks": {
     "consensusPeaks": "",

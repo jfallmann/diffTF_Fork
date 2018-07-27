@@ -34,6 +34,9 @@ par.l$verbose = TRUE
 par.l$log_minlevel = "INFO"
 par.l$minNoDatapoints = 5
 
+# Used for plotting
+par.l$includePlots = FALSE
+
 #####################
 # VERIFY PARAMETERS #
 #####################
@@ -171,7 +174,7 @@ if (nRowsNA > 0) {
 
 TF.motifs.CG = TF.motifs.CG %>%
   mutate(CG.identifier = paste0(TF,":" ,TFBSID))  %>%
-  select(-one_of("TFBSID"))
+ dplyr:: select(-one_of("TFBSID"))
 
 
 CGBins = seq(0,1, 1/par.l$nBins)
@@ -185,12 +188,47 @@ CGBins = seq(0,1, 1/par.l$nBins)
 # PERMUTATIONS #
 ################
 
+# TODO: Take at most x TFBS per TF for background, not all
+
+# TODO: Binning preparation and storing all TFBS in one object is too large and not feasible
+# TODO:Possibility 1: For each permutation, read in all 640 TF files with specific columns. Results in 640 * 640x1000 > 400 Million read_tsv calls. 
+#TODO: Alternative: Use the new column layout and modify the shell call to extract only the required columns: 1,2, and 2+permutationCur rather than using grep. Results in 1000 extra jobs but only 640*1000 = 640,000 read_tsv calls and acceptable memory
+
+#for (permutationCur in 0:par.l$nPermutations)
 for (fileCur in par.l$files_input_TF_allMotives) {
+    
+    # Init the col type list to skip colums directly
+  #   colType.l = vector("list", length = 2 + par.l$nPermutations + 1)
+  #   colType.l[[1]] = col_character()  # "TF"
+  #   colType.l[[2]] = col_character() # "TFBSID"
+  #   for (n in 1:permutationCur) {
+  #       indexLast = 2+n
+  #       colType.l[[indexLast]] = col_skip()
+  #   }
+  #   colType.l[[indexLast+1]] = col_double() # "log2FoldChange", important to have double here as col_number would not parse numbers in scientific notation
+  #   for (n in 1:(par.l$nPermutations - permutationCur )) {
+  #       colType.l[[indexLast + 1 + n]] = col_skip()
+  #   }
+  #   
+  #  
+  # TF.motifs.ori = tribble(~permutation, ~TF, ~TFBSID, ~log2FoldChange)
+  # # Iterate over all TF
+  #   for (fileCur in allFiles) {
+  #       TF.motifs.ori  = read_tsv(fileCur, col_types = colType.l)
+  #       
+  #       if (nrow(problems(TF.motifs.ori)) > 0) {
+  #           flog.fatal(paste0("Parsing errors: "), problems(TF.motifs.ori), capture = TRUE)
+  #           stop("Error when parsing the file ", fileCur, ", see errors above")
+  #       }
+  #       
+  #   }
+  #   
+    #
+
 
   # Log 2 fold-changes from the particular permutation
-  TF.motifs.ori  = read_tsv(fileCur, col_names = FALSE, 
+  TF.motifs.ori  = read_tsv(fileCur, col_names = TRUE, 
                             col_types = list(
-                              col_integer(), # "permutation"
                               col_character(), # "TF",
                               col_character(), # "TFBSID"
                               col_double() # "log2FoldChange", important to have double here as col_number would not parse numbers in scientific notation correctly
@@ -208,9 +246,10 @@ for (fileCur in par.l$files_input_TF_allMotives) {
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
   }
  
-  colnames(TF.motifs.ori) = c("permutation", "TF", "TFBSID", "log2FoldChange")
+  colnames(TF.motifs.ori) = c("TF", "TFBSID", "log2FoldChange")
   
-  permutationCur = unique(TF.motifs.ori$permutation)
+  permutationCur = as.numeric(gsub(".*perm([0-9]+).tsv.gz", '\\1', fileCur))
+  TF.motifs.ori$permutation = permutationCur
   
   if (permutationCur > 0) {
     flog.info(paste0("Running permutation ", permutationCur))
@@ -230,6 +269,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   # MERGE #
   #########
   
+  # TODO: full join necessary?
   TF.motifs.all =  TF.motifs.ori %>% 
     full_join(TF.motifs.CG, by = c("CG.identifier"))  %>% 
     mutate(CG.bins = cut(CG, breaks = CGBins, labels = paste0(round(CGBins[-1] * 100,0),"%"), include.lowest = TRUE))  %>%  
@@ -260,7 +300,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   if (calculateVariance)
     boostrapResults.l[[TFCur]][[as.character(permutationCur)]] = list()
   
-  binnedCombined.df  = tribble(~bin, ~type, ~value)
+  if (par.l$includePlots) binnedCombined.df  = tribble(~bin, ~type, ~value)
   
   for (bin in uniqueBins) {
     
@@ -324,8 +364,11 @@ for (fileCur in par.l$files_input_TF_allMotives) {
                                 Tstat          = Tstat
       )
       
-      binnedCombined.df = add_row(binnedCombined.df, bin = bin, type = paste0(TFCur, "-only"), value = binned.curTF.df$log2FoldChange)
-      binnedCombined.df = add_row(binnedCombined.df, bin = bin, type = paste0("all_other"), value =  binned.allTF.df$log2FoldChange)
+      if (par.l$includePlots) {
+          binnedCombined.df = add_row(binnedCombined.df, bin = bin, type = paste0(TFCur, "-only"), value = binned.curTF.df$log2FoldChange)
+          binnedCombined.df = add_row(binnedCombined.df, bin = bin, type = paste0("all_other"), value =  binned.allTF.df$log2FoldChange)
+      }
+      
       
       
   
@@ -435,9 +478,8 @@ for (fileCur in par.l$files_input_TF_allMotives) {
                               TFBS                    = nRowsTF,
                               variance                = varianceFinal)
   
-  # Used for plotting
-  includePlots = FALSE
-  if (includePlots) {
+
+  if (par.l$includePlots) {
       xlabStr = paste0("log2 fold-change of TFBS")
       binnedCombined.df$bin = factor(binnedCombined.df$bin, levels = levels(uniqueBins))
       g1 = ggplot(binnedCombined.df, aes(value, fill = type)) + geom_density(alpha = 0.5) + 

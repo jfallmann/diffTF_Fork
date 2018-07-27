@@ -421,40 +421,26 @@ myMAPlot <- function(M, idx, main, minMean = 0) {
 }
 
 
-plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, filename = NULL, maxPairwiseComparisons = 5, alpha = c(0.001, 0.01, 0.05,0.1,0.2)) {
+plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, filename = NULL, maxPairwiseComparisons = 5, alpha = 0.05) {
   
   checkAndLoadPackages(c("tidyverse", "checkmate", "geneplotter", "DESeq2", "vsn", "RColorBrewer", "limma"), verbose = FALSE)
-
+  
+  
   assertClass(dd, "DESeqDataSet")
   
   assert(testClass(differentialResults, "MArrayLM"), testClass(differentialResults, "DESeqDataSet"))
-  assert(testNull(conditionComparison), testVector(conditionComparison, len = 2))
+  assertVector(conditionComparison, len = 2)
   assert(checkNull(filename), checkDirectory(dirname(filename), access = "w"))
-  
-  
   
   if (!is.null(filename)) {
     pdf(filename)
   }
   
   if (testClass(differentialResults, "MArrayLM")) {
+    title = paste0("limma results\n", conditionComparison[1], " vs. ", conditionComparison[2])
+    isSign = ifelse(p.adjust(differentialResults$p.value[,ncol(differentialResults$p.value)], method = "BH") < alpha, paste0("sign. (BH, ", alpha, ")"), "not-significant")
     
-    if (!is.null(conditionComparison)) {
-      title = paste0("limma results\n", conditionComparison[1], " vs. ", conditionComparison[2])
-    } else {
-      title = paste0("limma results\n")
-    }
-    
-    
-    for (alphaCur in alpha) {
-      isSign = ifelse(p.adjust(differentialResults$p.value[,ncol(differentialResults$p.value)], method = "BH") < alphaCur, 
-                      paste0("sign. (BH, ", alphaCur, ")"), 
-                      "not-significant")
-      
-      limma::plotMA(differentialResults, main = title, status = isSign, bg.cex = 0.5, hl.cex = 0.5)
-    }
-    
-    
+    limma::plotMA(differentialResults, main = title, status = isSign)
   
     } else {
       
