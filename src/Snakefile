@@ -284,13 +284,13 @@ if config["par_general"]["nPermutations"] == 0 and config["par_general"]["nBoots
 # Not to be confused with the dir_scripts directory, which is only used to load the correct functions.R file in all R scripts
 dir_scripts = "R/"
 
-script_checkParValidity     = "0.checkParameters.R"
-script_createConsensusPeaks = "1.createConsensusPeaks.R"
-script_DiffPeaks            = "2.DiffPeaks.R"
-script_analyzeTF            = "3.analyzeTF.R"
-script_summary1             = "4.summary1.R"
-script_binningTF            = "5.binningTF.R"
-script_summaryFinal         = "6.summaryFinal.R"
+script_checkParValidity     = "checkParameterValidity.R"
+script_createConsensusPeaks = "createConsensusPeaks.R"
+script_DiffPeaks            = "diffPeaks.R"
+script_analyzeTF            = "analyzeTF.R"
+script_summary1             = "summary1.R"
+script_binningTF            = "binningTF.R"
+script_summaryFinal         = "summaryFinal.R"
 
 
 
@@ -314,7 +314,7 @@ rule checkParameterValidity:
     output:
         flag      = touch(TEMP_DIR  + "/" + compType + "checkParameterValidity.done"),
         consPeaks = TEMP_DIR  + "/" + compType + "consensusPeaks.clean.bed",
-    log: expand('{dir}/0.checkParameters.R.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/checkParameterValidity.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Check parameter validity {script_checkParValidity}..."
     threads: 1
     priority: 1
@@ -329,7 +329,7 @@ rule produceConsensusPeaks:
     output:
         consensusPeaks_bed = TEMP_DIR + "/" + compType + "consensusPeaks.bed",
         summaryPlot        = TEMP_DIR + "/" + compType + "consensusPeaks_lengthDistribution.pdf"
-    log: expand('{dir}/1.produceConsensusPeaks.R.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/produceConsensusPeaks.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Calculate consensus peaks for all peak files with the script {script_createConsensusPeaks}..."
     threads: 1
     params:
@@ -520,7 +520,7 @@ rule DiffPeaks:
         normCounts     = PEAKS_DIR + "/" + compType + "countsNormalized.tsv.gz",
         plots          = name_plots,
         DESeqObj       = PEAKS_DIR + "/" + compType + "DESeq.object.rds"
-    log: expand('{dir}/2.DiffPeaks.R.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/DiffPeaks.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_DiffPeaks}"
     threads: 1
     params:
@@ -543,7 +543,7 @@ rule analyzeTF:
         outputPermTSV        = TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.outputPerm.tsv.gz",
         outputRDS            = TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.summary.rds",
         plot_diagnostic      = name_plotsDiag
-    log: expand('{dir}/3.analyzeTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/analyzeTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_analyzeTF} for TF {wildcards.TF}..."
     threads: 1
     params:
@@ -558,7 +558,7 @@ rule summary1:
         TF    = expand('{dir}/{TF}/{ext}/{compType}{TF}.summary.rds', dir = TF_DIR, TF = allTF, ext = extDir, compType = compType)
     output:
         outputTable = FINAL_DIR + "/" + compType + "TF_vs_peak_distribution.tsv.gz"
-    log: expand('{dir}/4.summary1.R.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/summary1.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_summary1} ..."
     threads: 1
     script: dir_scripts + script_summary1
@@ -615,7 +615,7 @@ rule binningTF:
     output:
         permResults  = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}.permutationResults.rds', dir = TF_DIR, extension = extDir, compType = compType),
         summary      = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}.permutationSummary.tsv.gz', dir = TF_DIR, extension = extDir, compType = compType)
-    log: expand('{dir}/5.binningTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/binningTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_binningTF} for TF {wildcards.TF}..."
     threads: 1
     script: dir_scripts + script_binningTF
@@ -624,7 +624,7 @@ rule binningTF:
 allDiagnosticFiles = []
 allDiagnosticFiles.append(FINAL_DIR + "/" + compType + "diagnosticPlots.pdf")
 if config["par_general"]["RNASeqIntegration"]:
-    classificationFiles = expand("{dir}/{compType}diagnosticPlotsClassification{no}.pdf", dir = FINAL_DIR, compType = compType, no = [1,2,3,4])
+    classificationFiles = expand("{dir}/{compType}diagnosticPlotsClassification{no}.pdf", dir = FINAL_DIR, compType = compType, no = [1,2])
     allDiagnosticFiles.append(classificationFiles)
 
 
@@ -640,7 +640,7 @@ rule summaryFinal:
         volcanoPlot     = FINAL_DIR + "/" + compType + "summary.volcano.pdf",
         diagnosticPlots = allDiagnosticFiles,
         plotsRDS        = FINAL_DIR + "/" + compType + "summary.circular.rds",
-    log: expand('{dir}/6.summaryFinal.R.log', dir = LOG_BENCHMARK_DIR)
+    log: expand('{dir}/summaryFinal.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_summaryFinal} ..."
     threads: 1
     params: TFs = ",".join(allTF)

@@ -99,11 +99,11 @@ assertFileExists(par.l$file_input_metadata, access = "r")
 assertList(snakemake@output, min.len = 1)
 assertSubset(c("", "summary", "circularPlot", "diagnosticPlots", "plotsRDS"), names(snakemake@output))
 
-par.l$file_output_summary = snakemake@output$summary
-par.l$file_plotCircular   = snakemake@output$circularPlot
-par.l$file_plotVolcano    = snakemake@output$volcanoPlot
-par.l$file_plotDiagnostic = snakemake@output$diagnosticPlots
-par.l$file_output_plots   = snakemake@output$plotsRDS
+par.l$file_output_summary  = snakemake@output$summary
+par.l$file_plotCircular    = snakemake@output$circularPlot
+par.l$file_plotVolcano     = snakemake@output$volcanoPlot
+par.l$files_plotDiagnostic = snakemake@output$diagnosticPlots
+par.l$file_output_plots    = snakemake@output$plotsRDS
 
 
 
@@ -127,12 +127,7 @@ if (par.l$plotRNASeqClassification) {
   par.l$file_input_geneCountsPerSample = snakemake@config$additionalInputFiles$RNASeqCounts
   assertFileExists(par.l$file_input_HOCOMOCO_mapping, access = "r")
   assertFileExists(par.l$file_input_geneCountsPerSample, access = "r")
-  
-  par.l$file_plotAR1        = snakemake@output$plotClassificationDiagnostic1
-  par.l$file_plotAR2        = snakemake@output$plotClassificationDiagnostic2
-  par.l$file_plotAR3        = snakemake@output$plotClassificationDiagnostic3
-  par.l$file_plotAR4        = snakemake@output$plotClassificationDiagnostic4
-  
+
 }
 
 
@@ -145,7 +140,7 @@ par.l$file_log = snakemake@log[[1]]
 
 allDirs = c(dirname(par.l$file_output_summary), 
             dirname(par.l$file_plotCircular),
-            dirname(par.l$file_plotDiagnostic),
+            dirname(par.l$files_plotDiagnostic),
             dirname(par.l$file_log)
 )
 
@@ -482,7 +477,7 @@ if (length(TF_NA) > 0) {
 diagPlots.l = list()
 
 
-pdf(par.l$file_plotDiagnostic)
+pdf(par.l$files_plotDiagnostic[1])
 output.global.TFs.orig$pvalue = 0
 if (par.l$nPermutations > 0) {
 
@@ -564,12 +559,12 @@ if (par.l$nPermutations > 0) {
   output.global.TFs.orig$weighted_Tstat_centralized = output.global.TFs.orig$weighted_Tstat - MLE.delta
   
   output.global.TFs.orig$variance = as.numeric(output.global.TFs.orig$variance)
-  output.global.TFs.orig$pvalue2    = 2*pnorm(-abs(output.global.TFs.orig$weighted_Tstat_centralized), sd = sqrt(output.global.TFs.orig$variance))
+  output.global.TFs.orig$pvalue   = 2*pnorm(-abs(output.global.TFs.orig$weighted_Tstat_centralized), sd = sqrt(output.global.TFs.orig$variance))
   
   # Handle extreme cases with p-values that are practically 0 and would cause subsequent issues
-  index0 = which(output.global.TFs.orig$pvalue2 < .Machine$double.xmin)
+  index0 = which(output.global.TFs.orig$pvalue < .Machine$double.xmin)
   if (length(index0) > 0) {
-    output.global.TFs.orig$pvalue2[index0] = .Machine$double.xmin
+    output.global.TFs.orig$pvalue[index0] = .Machine$double.xmin
   }
   
 }
@@ -586,11 +581,8 @@ output.global.TFs$Cohend_factor = ifelse(output.global.TFs$weighted_CD < par.l$t
 output.global.TFs$Cohend_factor = factor(output.global.TFs$Cohend_factor, levels = par.l$classes_CohensD, labels = seq_len(length(par.l$classes_CohensD)))
 
 
-
-# TODO move?
 output.global.TFs$pvalueAdj = p.adjust(output.global.TFs$pvalue, method = "BH")
 
-#output.global.TFs$pvalueAdj2 = p.adjust(output.global.TFs$pvalue2, method = "BH")
 
 colnamesToPlot = colnames(output.global.TFs)[-which(colnames(output.global.TFs) %in% c("TF", "sign", "classification"))]
 
@@ -878,9 +870,9 @@ if (par.l$plotRNASeqClassification) {
     # DIAGNOSTIC PLOTS #
     ####################
     ####################
-    # par.l$file_plotAR1 = "classification_activators_repressors.pdf"
     
-    pdf(file = par.l$file_plotAR1, width = 3, height = 8)
+    
+    pdf(file = par.l$files_plotDiagnostic[2], width = 3, height = 8)
     xlab="median pearson correlation (r)"
     ylab=""
     xlim= c(-0.2,0.2)
@@ -910,10 +902,7 @@ if (par.l$plotRNASeqClassification) {
     abline(v=act.rep.thres[2], col=par.l$colorCategories["activator"])
     axis(side = 1, lwd = 1, line = 0, at = c(-0.2,0,0.2), cex=1)
     
-    dev.off()
 
-    # par.l$file_plotAR2 = "Heatmap_correlation_densities.pdf"
-    pdf(par.l$file_plotAR2, width = 2, height = 8, onefile = FALSE)
     heatmap.act.rep(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp)
     dev.off()
     
@@ -964,8 +953,7 @@ if (par.l$plotRNASeqClassification) {
     # Correlation plots for the 3 classes #
     #######################################
     
-    # par.l$file_plotAR3 = "correlationByClass.pdf"
-    pdf(par.l$file_plotAR3)
+    pdf(par.l$files_plotDiagnostic[3])
     for (classificationCur in unique(output.global.TFs.merged$classification)) {
       
       output.global.TFs.cur = filter(output.global.TFs.merged, classification == classificationCur)
@@ -989,7 +977,7 @@ if (par.l$plotRNASeqClassification) {
       plot(g)
       
     }
-    dev.off()
+
     
     #############################
     # Density plots for each TF #
@@ -997,8 +985,6 @@ if (par.l$plotRNASeqClassification) {
     
     stopifnot(identical(colnames(t.cor.sel.matrix), colnames(t.cor.sel.matrix.non)))
     
-    # par.l$file_plotAR4 = "densityPlots.pdf"
-    pdf(par.l$file_plotAR4)
     for (colCur in seq_len(ncol(t.cor.sel.matrix))) {
       
       TFCur = colnames(t.cor.sel.matrix)[colCur]
@@ -1091,36 +1077,48 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
     ymax = max(transform_yValues(significanceThresholdCur), max(output.global.TFs$pValueAdj_log10, na.rm = TRUE)) * 1.1
     alphaValueNonSign = 0.3
     
+        
+        # Reverse here because negative values at left mean that the condition that has been specified in the beginning is higher. 
+        # Reverse the rev() that was done before for this plot therefore to restore the original order
+        labelsConditionsNew = rev(conditionComparison)
+    
     g = ggplot()
     
     if (par.l$plotRNASeqClassification) {
       g = g + geom_point(data = output.global.TFs, aes(weighted_meanDifference, pValueAdj_log10, alpha = pValue_sig, size = TFBS, fill = classification), shape=21, stroke = 0.5, color = "black") +  scale_fill_manual("TF class", values = par.l$colorCategories)
+      
+      g = g +
+          geom_rect(aes(xmin = -Inf,xmax = 0,ymin = -Inf, ymax = Inf, color = par.l$colorConditions[2]),
+                    alpha = .3, fill = par.l$colorConditions[2], size = 0) +
+          geom_rect(aes(xmin = 0, xmax = Inf, ymin = -Inf,ymax = Inf, color = par.l$colorConditions[1]),                                                                                   alpha = .3, fill = par.l$colorConditions[1], size = 0) + 
+          scale_color_manual(name = 'TF activity higher in', values = par.l$colorConditions, labels = conditionComparison)
+      
     } else {
+        
       g = g + geom_point(data = output.global.TFs, aes(weighted_meanDifference, pValueAdj_log10, alpha = pValue_sig, size = TFBS), shape=21, stroke = 0.5, color = "black")
- 
+      g = g + geom_rect(aes(xmin = -Inf,
+                            xmax = 0,
+                            ymin = -Inf, 
+                            ymax = Inf, color = par.l$colorConditions[2]),
+                        alpha = .3) + 
+          geom_rect(aes(xmin = 0,
+                        xmax = Inf,
+                        ymin = -Inf, 
+                        ymax = Inf, color = par.l$colorConditions[1]),
+                    alpha = .3)
+      g = g + scale_fill_manual(name = 'TF activity higher in', values = rev(par.l$colorConditions), labels = labelsConditionsNew)
     }
-     
-    g = g +
-      geom_rect(aes(xmin = 0,
-                    xmax = Inf,
-                    ymin = -Inf, 
-                    ymax = Inf, fill = "condition1"),
-                alpha = .3) + 
-      geom_rect(aes(xmin = -Inf,
-                    xmax = 0,
-                    ymin = -Inf, 
-                    ymax = Inf, fill = "condition2"),
-                alpha = .3) + 
-      scale_fill_manual(name = 'TF activity higher in', values = par.l$colorConditions, labels = conditionComparison) +
-      ylim(-0.1,ymax) + 
-      ylab(paste0(transform_yValues_caption(), " (adj. p-value)")) + 
-      xlab("weighted mean difference") + 
-      scale_alpha_manual(paste0("adj. p-value < ", significanceThresholdCur), values = c(alphaValueNonSign, 1), labels = c("no", "yes")) + 
-      geom_hline(yintercept = transform_yValues(significanceThresholdCur), linetype = "dotted") 
+ 
 
+    g = g + ylim(-0.1,ymax) + 
+        ylab(paste0(transform_yValues_caption(), " (adj. p-value)")) + 
+        xlab("weighted mean difference") + 
+        scale_alpha_manual(paste0("adj. p-value < ", significanceThresholdCur), values = c(alphaValueNonSign, 1), labels = c("no", "yes")) + 
+        geom_hline(yintercept = transform_yValues(significanceThresholdCur), linetype = "dotted") 
+    
     if (par.l$plotRNASeqClassification) {
       g = g +  geom_label_repel(data = ggrepel_df, aes(weighted_meanDifference, pValueAdj_log10, label = TF, fill = classification),
-                                size = TFLabelSize, fontface = 'bold', color = 'black',
+                                size = TFLabelSize, fontface = 'bold', color = 'white',
                                 segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
                                 label.padding = unit(0.2, "lines"), # how thick is connectin line
                                 nudge_y = 0.05, nudge_x = 0,  # how far from center points
@@ -1144,12 +1142,14 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
       
       if (par.l$plotRNASeqClassification) {
         g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
-                       fill = guide_legend(override.aes = list(size=5), order = 3))
+                       fill = guide_legend(override.aes = list(size=5), order = 3),
+                       color = guide_legend(override.aes = list(size=5), order = 1))
         
         allPlots.l[["volcano"]] [[pValThrStr]] [[paste0(showClasses,collapse = "-")]] = g
       } else {
         g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
                        fill = guide_legend(override.aes = list(size=5), order = 3))
+ 
         
         allPlots.l[["volcano"]] [[pValThrStr]] = g
       }

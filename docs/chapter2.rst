@@ -747,12 +747,13 @@ Stores various log and error files.
 
 - ``*.log`` files from R scripts: Each log file is produced by the corresponding R script and contains debugging information as well as warnings and errors:
 
-  - ``1.produceConsensusPeaks.R.log``
-  - ``2.DiffPeaks.R.log``
-  - ``3.analyzeTF.{TF}.R.log`` for each TF ``{TF}``
-  - ``4.summary1.R.log``
-  - ``5.binningTF.{TF}.log``  for each TF ``{TF}``
-  - ``6.summaryFinal.R.log``
+  - ``checkParameterValidity.R.log``
+  - ``produceConsensusPeaks.R.log``
+  - ``diffPeaks.R.log``
+  - ``analyzeTF.{TF}.R.log`` for each TF ``{TF}``
+  - ``summary1.R.log``
+  - ``binningTF.{TF}.log``  for each TF ``{TF}``
+  - ``summaryFinal.R.log``
 
 - ``*.log`` summary files: Summary logs for user convenience, produced at very end of the pipeline only. They should contain all errors and warnings from the pipeline run.
 
@@ -972,9 +973,9 @@ If an R script fails with a technical error such as ``caught segfault`` (a segme
 
 .. code-block:: R
 
-  snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/0.checkParameters.R.rds")
+  snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/checkParameters.R.rds")
 
-Replace ``{outputFolder}`` by the folder you used for the analysis, and adjust the ``0.checkParameters`` part also accordingly. Essentially, you just have to provide the path to the corresponding file that is located in the ``LOGS_AND_BENCHMARKS`` subdirectly within the specified output directory.
+Replace ``{outputFolder}`` by the folder you used for the analysis, and adjust the ``checkParameters`` part also accordingly. Essentially, you just have to provide the path to the corresponding file that is located in the ``LOGS_AND_BENCHMARKS`` subdirectly within the specified output directory.
 
 Rerunning *Snakemake*
 ----------------------

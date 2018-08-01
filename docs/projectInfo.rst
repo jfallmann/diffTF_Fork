@@ -31,20 +31,22 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
-Version 1.1.1 (2018-08-01, coming soon)
+Version 1.1.1 (2018-08-01)
     - Documentation updates (referenced the bioRxiv paper, extended the section about errors)
     - updated the information on how to load the snakemake object into the R workspace in the corresponding R scripts
-    - fixed a small bug that made the Volcano plot and the circular one appear to have switched sides.
+    - fixed a bug that made the labels in the Volcano plot switch sides (thanks to Jonas Ungerbeck)
+    - merged some diagnostic plots for the AR classification in the last step
+    - renamed R scripts and R log files to make them consistent with the cluster output and error files
 
 Version 1.1 (2018-07-27)
-    - added a new parameter *dir_TFBS_sorted* in the config file to specify that the TFBS input files are already sorted, which saves some computation time by not resorting them
+    - added a new parameter ``dir_TFBS_sorted`` in the config file to specify that the TFBS input files are already sorted, which saves some computation time by not resorting them
     - updated the TFBS files that are available via download (some files were not presorted correctly)
-    - added support for single-end BAM files. There is a new parameter *pairedEnd* in the config file that specifies whether reads are paired-end or not.
-    - restructured some of the permutation-related output files to save space and computation time. The rule *concatenateMotifsPerm* should now be much faster, and the TF-specific *...outputPerm.tsv.gz* files are now much smaller due to an improved column structure
+    - added support for single-end BAM files. There is a new parameter ``pairedEnd`` in the config file that specifies whether reads are paired-end or not.
+    - restructured some of the permutation-related output files to save space and computation time. The rule ``concatenateMotifsPerm`` should now be much faster, and the TF-specific ``...outputPerm.tsv.gz`` files are now much smaller due to an improved column structure
 
 Version 1.0.1 (2018-07-25)
-    - fixed a bug in *2.DiffPeaks.R* that sometimes caused the step to fail, thanks to Jonas Ungerbeck for letting us know
-    - fixed a bug in *3.analyzeTF* for rare corner cases when *DESeq* fails
+    - fixed a bug in ``2.DiffPeaks.R`` that sometimes caused the step to fail, thanks to Jonas Ungerbeck for letting us know
+    - fixed a bug in ``3.analyzeTF`` for rare corner cases when *DESeq* fails
 
 Version 1.0 (2018-07-01)
     - released stable version
