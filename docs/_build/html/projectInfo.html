@@ -177,6 +177,8 @@
 <span id="docs-project"></span><h1>Biological motivation<a class="headerlink" href="#biological-motivation" title="Permalink to this headline">¶</a></h1>
 <p>Transcription factor (TF) activity constitutes an important readout of cellular signalling pathways and thus for assessing regulatory differences across conditions. However, current technologies lack the ability to simultaneously assessing activity changes for multiple TFs and surprisingly little is known about whether a TF acts as repressor or activator. To this end, we introduce the widely applicable genome-wide method diffTF to assess differential TF binding activity and classifying TFs as activator or repressor by integrating any type of genome-wide chromatin with RNA-Seq data and in-silico predicted TF binding sites.</p>
 <p>For a graphical summary of the idea, see the section <a class="reference internal" href="chapter2.html#workflow"><span class="std std-ref">Workflow</span></a></p>
+<p>We also put the paper on <em>bioRxiv</em>, please read all methodological details here:
+<a class="reference external" href="https://www.biorxiv.org/content/early/2018/07/13/368498">Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</a>.</p>
 </div>
 <div class="section" id="help-contribute-and-contact">
 <h1>Help, contribute and contact<a class="headerlink" href="#help-contribute-and-contact" title="Permalink to this headline">¶</a></h1>
@@ -186,11 +188,33 @@
 <div class="section" id="citation">
 <h1>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h1>
 <p>If you use this software, please cite the following reference:</p>
-<p>Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin &amp; Judith B. Zaugg. <em>Genome-wide quantification of differential transcription factor activity: diffTF</em>. 2018. submitted.</p>
+<p>Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin &amp; Judith B. Zaugg. <em>Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</em>. 2018. in review</p>
+<p>We also put the paper on <em>bioRxiv</em>, please read all methodological details here:
+<a class="reference external" href="https://www.biorxiv.org/content/early/2018/07/13/368498">Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</a>.</p>
 </div>
 <div class="section" id="change-log">
 <h1>Change log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
-<p>COMING SOON</p>
+<dl class="docutils">
+<dt>Version 1.1 (2018-07-27)</dt>
+<dd><ul class="first last simple">
+<li>added a new parameter <em>dir_TFBS_sorted</em> in the config file to specify that the TFBS input files are already sorted, which saves some computation time by not resorting them</li>
+<li>updated the TFBS files that are available via download (some files were not presorted correctly)</li>
+<li>added support for single-end BAM files. There is a new parameter <em>pairedEnd</em> in the config file that specifies whether reads are paired-end or not.</li>
+<li>restructured some of the permutation-related output files to save space and computation time. The rule <em>concatenateMotifsPerm</em> should now be much faster, and the TF-specific <em>…outputPerm.tsv.gz</em> files are now much smaller due to an improved column structure</li>
+</ul>
+</dd>
+<dt>Version 1.0.1 (2018-07-25)</dt>
+<dd><ul class="first last simple">
+<li>fixed a bug in <em>2.DiffPeaks.R</em> that sometimes caused the step to fail, thanks to Jonas Ungerbeck for letting us know</li>
+<li>fixed a bug in <em>3.analyzeTF</em> for rare corner cases when <em>DESeq</em> fails</li>
+</ul>
+</dd>
+<dt>Version 1.0 (2018-07-01)</dt>
+<dd><ul class="first last simple">
+<li>released stable version</li>
+</ul>
+</dd>
+</dl>
 </div>
 <div class="section" id="license">
 <h1>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>

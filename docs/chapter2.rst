@@ -37,7 +37,7 @@ We now show which rules are executed by *Snakemake* for a specific example (see 
 
          Exact workflow (a so-called directed acyclic graph, or DAG) that is executed when calling *Snakemake* for an easy of example with two TFs (CEBPB and CTCF) for the two samples GMP.WT1 and MPP.WT1. Each node represents a rule name as defined in the Snakefile, and each arrow a dependency.
 
-diffTF is implemented as a *Snakemake* pipeline. For a gentle introduction about Snakemake, see Section :ref:`workingWithPipeline`. As you can see, the workflow consists of the following steps or *rules*:
+diffTF is implemented as a *Snakemake* pipeline. For a gentle introduction about *Snakemake*, see Section :ref:`workingWithPipeline`. As you can see, the workflow consists of the following steps or *rules*:
 
 - ``checkParameterValidity``: R script that checks whether the specified peak file has the correct format, whether the provided *fasta* file and the *BAM* files are compatible, and other checks
 - ``produceConsensusPeaks``:  R script that generates the consensus peaks if none are provided
@@ -129,7 +129,7 @@ Summary
   Integer > 0. Default 16. Maximum number of cores to use for rules that support multithreading.
 
 Details
-  This affects currently only rules involving *featureCounts* - that is, *intersectPeaksAndBAM* while for rule *intersectTFBSAndBAM*, the number of cores is hard-coded to 4. When running Snakemake locally, each rule will use at most this number of cores, while in a cluster setting, this value refers to the maximum number of CPUs an individual job / rule will occupy. If the node the job is executed on has fewer nodes, then the maximum number of cores on the node will be taken.
+  This affects currently only rules involving *featureCounts* - that is, *intersectPeaksAndBAM* while for rule *intersectTFBSAndBAM*, the number of cores is hard-coded to 4. When running *Snakemake* locally, each rule will use at most this number of cores, while in a cluster setting, this value refers to the maximum number of CPUs an individual job / rule will occupy. If the node the job is executed on has fewer nodes, then the maximum number of cores on the node will be taken.
 
 
 .. _parameter_dir_TFBS_sorted:
@@ -161,7 +161,7 @@ Details
 
 
 PARAMETER ``conditionComparison``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
   String. Default "". Specifies the two conditions you want to compare.
@@ -839,7 +839,7 @@ Some notes regarding the number of available cores:
 
 - diffTF can be invoked in a highly parallelized manner, so the more CPUs are available, the better.
 - you can use the ``--cores`` option when invoking *Snakemake* to specify the number of cores that are available for the analysis. If you specify 4 cores, for example, up to 4 rules can be run in parallel (if each of them occupies only 1 core), or 1 rule can use up to 4 cores.
-- we strongly recommend running diffTF in a cluster environment due to the massive parallelization. With Snakemake, it is easy to run diffTF in a cluster setting. Simply do the following:
+- we strongly recommend running diffTF in a cluster environment due to the massive parallelization. With *Snakemake*, it is easy to run diffTF in a cluster setting. Simply do the following:
 
   - write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder ``src/clusterConfigurationTemplates`` for examples. Note that these are rough estimates only. See the `*Snakemake* documentation <http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration>`__ for details for how to use cluster configuration files.
   - invoke *Snakemake* with one of the available cluster modes, which will depend on your cluster system. We used ``--cluster`` and tested the pipeline extensively with *LSF/BSUB* and *SLURM*. For more details, see the `*Snakemake* documentation <http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution>`__
@@ -861,7 +861,7 @@ Running *diffTF* in a cluster environment
 
 If *diffTF* should be run in a cluster environment, the changes are minimal due to the flexibility of *Snakemake*. You only need to change the following:
 
-- create a cluster configuration file in JSON format. See the files in the *clusterConfigurationTemplates* folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via Snakemake.
+- create a cluster configuration file in JSON format. See the files in the *clusterConfigurationTemplates* folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via *Snakemake*.
 - invoke *Snakemake* with a cluster parameter. As an example, we use the following for our *SLURM* cluster:
 
 .. code-block:: Bash
@@ -879,7 +879,7 @@ Here a few typical use cases, which we will extend regularly in the future if th
 
 1. I received an error, and the pipeline did not finish.
 
-  As explained in Section :ref:`docs-errors`, you first have to identify and fix the error. Rerunning then becomes trivially easy: just restart Snakemake, it will start off where it left off: at the step that produced that error.
+  As explained in Section :ref:`docs-errors`, you first have to identify and fix the error. Rerunning then becomes trivially easy: just restart *Snakemake*, it will start off where it left off: at the step that produced that error.
 
 2. I want to rerun a specific part of the pipeline only.
 
@@ -911,12 +911,12 @@ Errors occur during the *Snakemake* run can principally be divided into:
 - Temporary errors (often when running in a cluster setting)
 
   * might occur due to temporary problems such as bad nodes, file system issues or latencies
-  * rerunning usually fixes the problem already. Consider using the option ``--restart-times`` in Snakemake.
+  * rerunning usually fixes the problem already. Consider using the option ``--restart-times`` in *Snakemake*.
 
 - Permanent errors
 
   * indicates a real error related to the specific command that is executed
-  * rerunning does not fix the problem as they are systematic (such as a missing tool)
+  * rerunning does not fix the problem as they are systematic (such as a missing tool, a library problem in R)
 
 Identify the cause
 ==============================
@@ -927,21 +927,55 @@ To troubleshoot errors, you have to first locate the exact error. Depending on h
 
 - in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it.
 
-In both cases, you can check the log file that is located in .snakemake/log/. Identify the latest log file (check the date), and then either open the file or use something along the lines of:
+In both cases, you can check the log file that is located in ``.snakemake/log``. Identify the latest log file (check the date), and then either open the file or use something along the lines of:
 
 .. code-block:: Bash
+
   grep -C 5 "Error in rule" .snakemake/log/2018-07-25T095519.371892.snakemake.log
 
-This is particularly helpful if the Snakemake output is long and you have troubles identifying the exact step in which an error occurred.
+This is particularly helpful if the *Snakemake* output is long and you have troubles identifying the exact step in which an error occurred.
+
+
+Common errors
+================
+
+We here provide a list of some of the errors that can happen and that users reported to us. This list will be extended whenever a new problem has been reported.
+
+1. R related problems
+  Many errors are R related. R and *Bioconductor* use a quite complex system of libraries and dependencies, and you may receive errors that are related to R, *Bioconductor*, or specific libraries.
+
+  .. code-block:: Bash
+
+    *** caught segfault ***
+    ...
+    Segmentation fault
+    ...
+
+  This unfortunate message points to a problem with your R and R libraries installation and has per se nothing to do with *diffTF*. At least one of the installed libraries has an issue. We advise to reinstall *Bioconductor* in such a case, and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions as this type of error is very general. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.
+
 
 Fixing the error
 ==============================
 
+General guidelines
+--------------------
 After locating the error, fix it accordingly. We here provide some guidelines of different error types that may help you fixing the errors you receive:
 
 - Errors related to erroneous input: These errors are easy to fix, and the error message should be indicative. If not, please let us know, and we improve the error message in the pipeline.
 - Errors of technical nature: Errors related to memory, missing programs, R libraries etc can be fixed easily by making sure the necessary tools are installed and by executing the pipeline in an environment that provides the required technical requirements. For example, if you receive a memory-related error, try to increase the available memory. In a cluster setting, adjust the cluster configuration file accordingly by either increasing the default memory or (preferably) or by overriding the default values for the specific rule.
-- Errors related to Snakemake: In rare cases, the error can be due to *Snakemake* (corrupt metadata, missing files, etc). If you suspect this to be the case, you may delete the .*Snakemake* directory in the folder froom which you started the analysis. *Snakemake* will regenerate it the next time you invoke it then.
+- Errors related to *Snakemake*: In rare cases, the error can be due to *Snakemake* (corrupt metadata, missing files, etc). If you suspect this to be the case, you may delete the hidden ``.snakemake`` directory in the folder from which you started the analysis. *Snakemake* will regenerate it the next time you invoke it then.
 - Errors related to the input data: Error messages that indicate the problem might be located in the data are more difficult to fix, and we cannot provide guidelines here. Feel free to contact us.
 
-After fixing the error, rerun Snakemake. *Snakemake* will continue at the point at which the error message occurred, without rerunning already successfully computed previous steps (unless specified otherwise).
+Debugging R scripts to identify the cause of an error
+--------------------------------------------------------------------
+If an R script fails with a technical error such as ``caught segfault`` (a segmentation fault), you may want to identify the library or function call that causes the message in order to figure out which library to reinstall. To do so, open the R script that fails in *RStudio*, and execute the script line by line until you identify the line that causes the issue. Importantly, read the instructions in the section at the beginning of the script that is called ``SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES``. Briefly, you simply have to make the *snakemake* object available in your R workspace, which contains all necessary information to execute the R script properly. Normally, *Snakemake* automatically loads that when executing a script. To do so, simply execute the line that is pasted there in R, it is something like this:
+
+.. code-block:: R
+
+  snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/0.checkParameters.R.rds")
+
+Replace ``{outputFolder}`` by the folder you used for the analysis, and adjust the ``0.checkParameters`` part also accordingly. Essentially, you just have to provide the path to the corresponding file that is located in the ``LOGS_AND_BENCHMARKS`` subdirectly within the specified output directory.
+
+Rerunning *Snakemake*
+----------------------
+After fixing the error, rerun *Snakemake*. *Snakemake* will continue at the point at which the error message occurred, without rerunning already successfully computed previous steps (unless specified otherwise).

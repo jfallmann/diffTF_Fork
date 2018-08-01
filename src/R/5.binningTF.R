@@ -20,8 +20,8 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmat
 ########################################################################
 
 # Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
-# Replace {outputFolder} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/5.prepareBinning.R.rds")
+# Replace {outputFolder} and {TF} correspondingly.
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/5.binningTF.{TF}.R.rds")
 
 createDebugFile(snakemake)
 

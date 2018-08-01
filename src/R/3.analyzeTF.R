@@ -22,6 +22,9 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "modeest",
 # SAVE SNAKEMAKE S4 OBJECT THAT IS PASSED ALONG FOR DEBUGGING PURPOSES #
 ########################################################################
 
+# Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
+# Replace {outputFolder} and {TF} correspondingly.
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/3.analyzeTF.{TF}.R.rds")
 
 createDebugFile(snakemake)
 

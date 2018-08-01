@@ -105,7 +105,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#section-par-general">SECTION <code class="docutils literal"><span class="pre">par_general</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-outdir">PARAMETER <code class="docutils literal"><span class="pre">outdir</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-regionextension">PARAMETER <code class="docutils literal"><span class="pre">regionExtension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameter-maxcoresperrule">PARAMETER <code class="docutils literal"><span class="pre">maxCoresPerRule</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameter-dir-tfbs-sorted">PARAMETER <code class="docutils literal"><span class="pre">dir_TFBS_sorted</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-comparisontype">PARAMETER <code class="docutils literal"><span class="pre">comparisonType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameter-conditioncomparison">PARAMETER <code class="docutils literal"><span class="pre">conditionComparison</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-designcontrast">PARAMETER <code class="docutils literal"><span class="pre">designContrast</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-designvariabletypes">PARAMETER <code class="docutils literal"><span class="pre">designVariableTypes</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-npermutations">PARAMETER <code class="docutils literal"><span class="pre">nPermutations</span></code></a></li>
@@ -117,6 +120,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#section-samples">SECTION <code class="docutils literal"><span class="pre">samples</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#parameter-summaryfile">PARAMETER <code class="docutils literal"><span class="pre">summaryFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameter-pairedend">PARAMETER <code class="docutils literal"><span class="pre">pairedEnd</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#section-peaks">SECTION <code class="docutils literal"><span class="pre">peaks</span></code></a><ul>
@@ -161,7 +165,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#folder-tf-specific">FOLDER <code class="docutils literal"><span class="pre">TF-SPECIFIC</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id20">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id24">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary">FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.gz</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.summary</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-output-tsv-gz">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv.gz</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#file-tf-comparisontype-outputperm-tsv-gz">FILE <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.outputPerm.tsv.gz</span></code></a></li>
@@ -177,7 +181,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#folder-logs-and-benchmarks">FOLDER <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#folder-temp">FOLDER <code class="docutils literal"><span class="pre">TEMP</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sub-folder-sortedbam">Sub-folder <code class="docutils literal"><span class="pre">SortedBAM</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id21">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id25">Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -198,7 +202,13 @@
 <li class="toctree-l1"><a class="reference internal" href="#handling-errors">Handling errors</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#error-types">Error types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#identify-the-cause">Identify the cause</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#fixing-the-error">Fixing the error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-errors">Common errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fixing-the-error">Fixing the error</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#general-guidelines">General guidelines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-r-scripts-to-identify-the-cause-of-an-error">Debugging R scripts to identify the cause of an error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rerunning-snakemake">Rerunning <em>Snakemake</em></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -274,17 +284,19 @@
             
   <div class="section" id="workflow">
 <span id="id1"></span><h1>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h1>
+<p>We put the paper on <em>bioRxiv</em>, please read all methodological details here:
+<a class="reference external" href="https://www.biorxiv.org/content/early/2018/07/13/368498">Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</a>.</p>
 <p>The workflow and conceptual idea behind <em>diffTF</em> is illustrated by the following three Figures. First, we give a high-level conceptual overview and a biological motivation:</p>
 <blockquote>
 <div><blockquote>
-<div><div class="figure align-center" id="id22">
+<div><div class="figure align-center" id="id26">
 <a class="reference internal image-reference" href="_images/diffTF_Schematic.png"><img alt="diffTF schematics" src="_images/diffTF_Schematic.png" style="width: 810.0px; height: 494.5px;" /></a>
 <p class="caption"><span class="caption-text">Conceptual idea and workflow of <em>diffTF</em></span></p>
 </div>
 </div></blockquote>
 <p>Next, we show a schematic of the diffTF workflow from a more technical perspective by showing the actual steps that are performed:</p>
 <blockquote>
-<div><div class="figure align-center" id="id23">
+<div><div class="figure align-center" id="id27">
 <a class="reference internal image-reference" href="_images/Workflow_transparent.png"><img alt="Schematic of the diffTF workflow" src="_images/Workflow_transparent.png" style="width: 762.0px; height: 755.0px;" /></a>
 <p class="caption"><span class="caption-text">Schematic of the diffTF workflow, with input and output of the pipeline highlighted.</span></p>
 </div>
@@ -292,18 +304,18 @@
 </div></blockquote>
 <p>We now show which rules are executed by <em>Snakemake</em> for a specific example (see the caption of the image):</p>
 <blockquote>
-<div><div class="figure align-center" id="id24">
+<div><div class="figure align-center" id="id28">
 <a class="reference internal image-reference" href="_images/dag.png"><img alt="Directed acyclic graph of an example workflow" src="_images/dag.png" style="width: 915.5px; height: 1253.0px;" /></a>
 <p class="caption"><span class="caption-text">Exact workflow (a so-called directed acyclic graph, or DAG) that is executed when calling <em>Snakemake</em> for an easy of example with two TFs (CEBPB and CTCF) for the two samples GMP.WT1 and MPP.WT1. Each node represents a rule name as defined in the Snakefile, and each arrow a dependency.</span></p>
 </div>
 </div></blockquote>
-<p>diffTF is implemented as a <em>Snakemake</em> pipeline. For a gentle introduction about Snakemake, see Section <a class="reference internal" href="#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a>. As you can see, the workflow consists of the following steps or <em>rules</em>:</p>
+<p>diffTF is implemented as a <em>Snakemake</em> pipeline. For a gentle introduction about <em>Snakemake</em>, see Section <a class="reference internal" href="#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a>. As you can see, the workflow consists of the following steps or <em>rules</em>:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">checkParameterValidity</span></code>: R script that checks whether the specified peak file has the correct format, whether the provided <em>fasta</em> file and the <em>BAM</em> files are compatible, and other checks</li>
 <li><code class="docutils literal"><span class="pre">produceConsensusPeaks</span></code>:  R script that generates the consensus peaks if none are provided</li>
 <li><code class="docutils literal"><span class="pre">filterSexChromosomesAndSortPeaks</span></code>: Filters various chromosomes 8sex, unassembled ones, contigs, etc) from the peak file.</li>
 <li><code class="docutils literal"><span class="pre">sortTFBSParallel</span></code>: Sort the TFBS lists by position</li>
-<li><code class="docutils literal"><span class="pre">resortBAM</span></code>: Sort the <em>BAM</em> file for optimized processing</li>
+<li><code class="docutils literal"><span class="pre">resortBAM</span></code>: Sort the <em>BAM</em> file for optimized processing (only run if data are paired-end)</li>
 <li><code class="docutils literal"><span class="pre">intersectPeaksAndBAM</span></code>: Count all reads for peak regions across all input files</li>
 <li><code class="docutils literal"><span class="pre">intersectPeaksAndTFBS</span></code>: Intersect all TFBS with peak regions to retain only TFBS in peak regions</li>
 <li><code class="docutils literal"><span class="pre">intersectTFBSAndBAM</span></code>: Count all reads from all TFBS across all input files in a TF-specific manner</li>
@@ -367,8 +379,26 @@
 <dd>Specifies the number of base pairs each target region (from the peaks file) should be extended in both 5’ and 3’ direction.</dd>
 </dl>
 </div>
+<div class="section" id="parameter-maxcoresperrule">
+<span id="id4"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">maxCoresPerRule</span></code><a class="headerlink" href="#parameter-maxcoresperrule" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Integer &gt; 0. Default 16. Maximum number of cores to use for rules that support multithreading.</dd>
+<dt>Details</dt>
+<dd>This affects currently only rules involving <em>featureCounts</em> - that is, <em>intersectPeaksAndBAM</em> while for rule <em>intersectTFBSAndBAM</em>, the number of cores is hard-coded to 4. When running <em>Snakemake</em> locally, each rule will use at most this number of cores, while in a cluster setting, this value refers to the maximum number of CPUs an individual job / rule will occupy. If the node the job is executed on has fewer nodes, then the maximum number of cores on the node will be taken.</dd>
+</dl>
+</div>
+<div class="section" id="parameter-dir-tfbs-sorted">
+<span id="id5"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_TFBS_sorted</span></code><a class="headerlink" href="#parameter-dir-tfbs-sorted" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Logical. true or false. Default false. Are the files in <code class="docutils literal"><span class="pre">dir_TFBS</span></code> (<a class="reference internal" href="#parameter-dir-tfbs"><span class="std std-ref">PARAMETER dir_TFBS</span></a>) already pre-sorted?</dd>
+<dt>Details</dt>
+<dd>If set to true, no additional sorting will be done, saving computation time because the rule <em>sortTFBSParallel</em> is not executed. Note that sorting is assumed to be according to the chromosome (first column) and start position (second column), essentially invoking <em>sort -k1,1 -k2,2n</em>.  If set to false, all files in <code class="docutils literal"><span class="pre">dir_TFBS</span></code> (<a class="reference internal" href="#parameter-dir-tfbs"><span class="std std-ref">PARAMETER dir_TFBS</span></a>) will be sorted.</dd>
+</dl>
+</div>
 <div class="section" id="parameter-comparisontype">
-<span id="id4"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">comparisonType</span></code><a class="headerlink" href="#parameter-comparisontype" title="Permalink to this headline">¶</a></h4>
+<span id="id6"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">comparisonType</span></code><a class="headerlink" href="#parameter-comparisontype" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “”.</dd>
@@ -376,8 +406,22 @@
 <dd>This parameter helps to organize complex analysis for which multiple different types of comparisons should be done. Set it to a short but descriptive name that summarizes the type of comparison you are making or the types of cells you compare. The value of this parameter appears as prefix in most output files created by the pipeline. It may also be empty.</dd>
 </dl>
 </div>
+<div class="section" id="parameter-conditioncomparison">
+<span id="id7"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">conditionComparison</span></code><a class="headerlink" href="#parameter-conditioncomparison" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>String. Default “”. Specifies the two conditions you want to compare.</dd>
+<dt>Details</dt>
+<dd><p class="first">This parameter specifies the contrast you are making in <em>diffTF</em>. Two conditions have to be specified, separated by a comma. For example, if you want to compare GMP and MPP samples, the parameter should be “GMP,MPP”. Both conditions have to be present in the column “conditionSummary” in the sample file table (see parameter <code class="docutils literal"><span class="pre">summaryFile</span></code> (<a class="reference internal" href="#parameter-summaryfile"><span class="std std-ref">PARAMETER summaryFile</span></a>)).</p>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The order of the two conditions matters. The condition specified first is the reference condition. For the “GMP,MPP” example, all log2 fold-changes will be the log2fc of <em>MPP</em> as compared to <em>GMP</em>. That means that a positive log2 fold-change means it is higher in <em>MPP</em> as compared to <em>GMP</em>. This is particularly relevant for the <em>allMotifs</em> output file.</p>
+</div>
+</dd>
+</dl>
+</div>
 <div class="section" id="parameter-designcontrast">
-<span id="id5"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">designContrast</span></code><a class="headerlink" href="#parameter-designcontrast" title="Permalink to this headline">¶</a></h4>
+<span id="id8"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">designContrast</span></code><a class="headerlink" href="#parameter-designcontrast" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default  <em>conditionSummary</em>. Design formula for the differential accessibility analysis.</dd>
@@ -386,7 +430,7 @@
 </dl>
 </div>
 <div class="section" id="parameter-designvariabletypes">
-<span id="id6"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">designVariableTypes</span></code><a class="headerlink" href="#parameter-designvariabletypes" title="Permalink to this headline">¶</a></h4>
+<span id="id9"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">designVariableTypes</span></code><a class="headerlink" href="#parameter-designvariabletypes" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default  <em>conditionSummary:factor</em>.   The data types of all elements listed in <code class="docutils literal"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>).</dd>
@@ -400,7 +444,7 @@
 </dl>
 </div>
 <div class="section" id="parameter-npermutations">
-<span id="id7"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">nPermutations</span></code><a class="headerlink" href="#parameter-npermutations" title="Permalink to this headline">¶</a></h4>
+<span id="id10"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">nPermutations</span></code><a class="headerlink" href="#parameter-npermutations" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Integer &gt;=  0. Default 50. The number of random sample permutations.</dd>
@@ -427,7 +471,7 @@
 </div>
 </div>
 <div class="section" id="parameter-nbootstraps">
-<span id="id8"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">nBootstraps</span></code><a class="headerlink" href="#parameter-nbootstraps" title="Permalink to this headline">¶</a></h4>
+<span id="id11"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">nBootstraps</span></code><a class="headerlink" href="#parameter-nbootstraps" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Integer &gt;=  0. Default 1,000. The number of bootstrap for estimating the variance of the TF-specific T scores in the CG binning step.</dd>
@@ -445,7 +489,7 @@
 </dl>
 </div>
 <div class="section" id="parameter-tfs">
-<span id="id9"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">TFs</span></code><a class="headerlink" href="#parameter-tfs" title="Permalink to this headline">¶</a></h4>
+<span id="id12"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">TFs</span></code><a class="headerlink" href="#parameter-tfs" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “all”. Either “all” or a comma-separated list of TF names of TFs to include. If set to “all”, all TFs that are found in the directory as specified in <code class="docutils literal"><span class="pre">dir_TFBS</span></code> (<a class="reference internal" href="#parameter-dir-tfbs"><span class="std std-ref">PARAMETER dir_TFBS</span></a>) will be used.</dd>
@@ -463,7 +507,7 @@
 </dl>
 </div>
 <div class="section" id="parameter-dir-scripts">
-<span id="id10"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_scripts</span></code><a class="headerlink" href="#parameter-dir-scripts" title="Permalink to this headline">¶</a></h4>
+<span id="id13"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_scripts</span></code><a class="headerlink" href="#parameter-dir-scripts" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. The path to the directory where the R scripts for running the pipeline are stored.</dd>
@@ -476,7 +520,7 @@
 </dl>
 </div>
 <div class="section" id="parameter-rnaseqintegration">
-<span id="id11"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqIntegration</span></code><a class="headerlink" href="#parameter-rnaseqintegration" title="Permalink to this headline">¶</a></h4>
+<span id="id14"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqIntegration</span></code><a class="headerlink" href="#parameter-rnaseqintegration" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Logical. true or false. Default false. Should RNA-Seq data be integrated into the pipeline?</dd>
@@ -488,7 +532,7 @@
 <div class="section" id="section-samples">
 <h3>SECTION <code class="docutils literal"><span class="pre">samples</span></code><a class="headerlink" href="#section-samples" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="parameter-summaryfile">
-<span id="id12"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">summaryFile</span></code><a class="headerlink" href="#parameter-summaryfile" title="Permalink to this headline">¶</a></h4>
+<span id="id15"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">summaryFile</span></code><a class="headerlink" href="#parameter-summaryfile" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “samples.tsv”. Path to the sample metadata file.</dd>
@@ -496,11 +540,20 @@
 <dd>Path to a tab-separated file that summarizes the input data. See the section <a class="reference internal" href="#section-metadata"><span class="std std-ref">Input metadata</span></a> and the example file for how this file should look like.</dd>
 </dl>
 </div>
+<div class="section" id="parameter-pairedend">
+<span id="id16"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">pairedEnd</span></code><a class="headerlink" href="#parameter-pairedend" title="Permalink to this headline">¶</a></h4>
+<dl class="docutils">
+<dt>Summary</dt>
+<dd>Logical. true or false. Default true. Is the data paired-end? If single-end, set to false.</dd>
+<dt>Details</dt>
+<dd>Both paired-end and single-end data can be run with diffTF.</dd>
+</dl>
+</div>
 </div>
 <div class="section" id="section-peaks">
 <h3>SECTION <code class="docutils literal"><span class="pre">peaks</span></code><a class="headerlink" href="#section-peaks" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="parameter-consensuspeaks">
-<span id="id13"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">consensusPeaks</span></code><a class="headerlink" href="#parameter-consensuspeaks" title="Permalink to this headline">¶</a></h4>
+<span id="id17"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">consensusPeaks</span></code><a class="headerlink" href="#parameter-consensuspeaks" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “” (empty). Path to the consensus peak file.</dd>
@@ -531,7 +584,7 @@
 </dl>
 </div>
 <div class="section" id="parameter-peaktype">
-<span id="id14"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">peakType</span></code><a class="headerlink" href="#parameter-peaktype" title="Permalink to this headline">¶</a></h4>
+<span id="id18"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">peakType</span></code><a class="headerlink" href="#parameter-peaktype" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default <code class="docutils literal"><span class="pre">narrow</span></code>. File format of the individual, sample-specific peak files. Only relevant if no consensus peak file has been provided (i.e., the <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a> is empty).</dd>
@@ -545,7 +598,7 @@
 </dl>
 </div>
 <div class="section" id="parameter-minoverlap">
-<span id="id15"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">minOverlap</span></code><a class="headerlink" href="#parameter-minoverlap" title="Permalink to this headline">¶</a></h4>
+<span id="id19"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">minOverlap</span></code><a class="headerlink" href="#parameter-minoverlap" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>Integer &gt;= 0 or Float between 0 and 1. Default 2. Minimum overlap for peak files for a peak to be considered into the consensus peak set. Corresponds to the <code class="docutils literal"><span class="pre">minOverlap</span></code> argument in the <em>dba</em> function of <em>DiffBind</em>. Only relevant if no consensus peak file has been provided (i.e., <code class="docutils literal"><span class="pre">consensusPeaks</span></code>, <a class="reference internal" href="#parameter-consensuspeaks"><span class="std std-ref">PARAMETER consensusPeaks</span></a>, is empty).</dd>
@@ -557,7 +610,7 @@
 <div class="section" id="section-additionalinputfiles">
 <h3>SECTION <code class="docutils literal"><span class="pre">additionalInputFiles</span></code><a class="headerlink" href="#section-additionalinputfiles" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="parameter-refgenome-fasta">
-<span id="id16"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">refGenome_fasta</span></code><a class="headerlink" href="#parameter-refgenome-fasta" title="Permalink to this headline">¶</a></h4>
+<span id="id20"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">refGenome_fasta</span></code><a class="headerlink" href="#parameter-refgenome-fasta" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default ‘hg19.fasta’. Path to the reference genome <em>fasta</em> file.</dd>
@@ -575,7 +628,7 @@
 </div></blockquote>
 </div>
 <div class="section" id="parameter-dir-tfbs">
-<span id="id17"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_TFBS</span></code><a class="headerlink" href="#parameter-dir-tfbs" title="Permalink to this headline">¶</a></h4>
+<span id="id21"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">dir_TFBS</span></code><a class="headerlink" href="#parameter-dir-tfbs" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Path to the directory where the TF-specific files for TFBS results are stored.</dd>
@@ -589,18 +642,19 @@
 <li>score or any other numeric column</li>
 <li>strand</li>
 </ol>
-<p>For user convenience, we provide these files as described in the publication as a separate download:</p>
+<p>For user convenience, we provide such sorted files as described in the publication as a separate download:</p>
 <ul class="simple">
 <li>hg19: For a pre-compiled list of 620 human TF with in-silico predicted TFBS based on the <em>HOCOMOCO 10</em> database and <em>PWMScan</em> for hg19, <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg19_PWMScan_HOCOMOCOv10.tar.gz">download this file:</a></li>
 <li>hg38: For a pre-compiled list of 771 human TF with in-silico predicted TFBS based on the <em>HOCOMOCO 11</em> database and <em>FIMO</em> from the MEME suite1 for hg38, <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz">download this file:</a></li>
 <li>mm10: For a pre-compiled list of 423 mouse TF with in-silico predicted TFBS based on the <em>HOCOMOCO 10</em> database and <em>PWMScan</em> for mm10, <a class="reference external" href="https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz">download this file:</a></li>
 </ul>
-<p class="last">However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as <em>FIMO</em> or <em>MOODS</em>.</p>
+<p>However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as <em>FIMO</em> or <em>MOODS</em>.</p>
+<p class="last">Also see the parameter <code class="docutils literal"><span class="pre">dir_TFBS_sorted</span></code> (<a class="reference internal" href="#parameter-dir-tfbs-sorted"><span class="std std-ref">PARAMETER dir_TFBS_sorted</span></a>) to specify whether the files are already sorted or not.</p>
 </dd>
 </dl>
 </div>
 <div class="section" id="parameter-rnaseqcounts">
-<span id="id18"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqCounts</span></code><a class="headerlink" href="#parameter-rnaseqcounts" title="Permalink to this headline">¶</a></h4>
+<span id="id22"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">RNASeqCounts</span></code><a class="headerlink" href="#parameter-rnaseqcounts" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Default “”. Path to the file with RNA-Seq counts.</dd>
@@ -611,7 +665,7 @@
 </dl>
 </div>
 <div class="section" id="parameter-hocomoco-mapping">
-<span id="id19"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">HOCOMOCO_mapping</span></code><a class="headerlink" href="#parameter-hocomoco-mapping" title="Permalink to this headline">¶</a></h4>
+<span id="id23"></span><h4>PARAMETER <code class="docutils literal"><span class="pre">HOCOMOCO_mapping</span></code><a class="headerlink" href="#parameter-hocomoco-mapping" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
 <dd>String. Path to the TF-Gene translation table.</dd>
@@ -649,7 +703,7 @@
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">peaks</span></code>: absolute path to the sample-specific peak file, in the format as given by <code class="docutils literal"><span class="pre">peakType</span></code> (<a class="reference internal" href="#parameter-peaktype"><span class="std std-ref">PARAMETER peakType</span></a>). Only needed if no consensus peak file is provided.</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">conditionSummary</span></code>: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., <em>mutated and unmutated</em>, <em>day0 and day10</em>, …)</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">conditionSummary</span></code>: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., <em>mutated and unmutated</em>, <em>day0 and day10</em>, …). In addition, the two conditions must match the ones specified in the parameter <code class="docutils literal"><span class="pre">conditionComparison</span></code> (<a class="reference internal" href="#parameter-conditioncomparison"><span class="std std-ref">PARAMETER conditionComparison</span></a>).</p>
 </li>
 <li><p class="first">if applicable, all additional variables from the design formula except <code class="docutils literal"><span class="pre">conditionSummary</span></code> must also be present as a separate column.</p>
 </li>
@@ -697,7 +751,7 @@
 <li><em>TF</em>: name of the TF</li>
 <li><em>chr</em>, <em>MSS</em>, <em>MES</em>, <em>strand</em>, <em>TFBSID</em>: Genomic location and identifier of the (extended) TFBS</li>
 <li><em>peakID</em>:  Genomic location and annotation of the overlapping peak region</li>
-<li><em>l2FC</em>, <em>pval</em>, <em>pval_adj</em>: Results from the <em>limma</em> or <em>DESeq2</em> analysis, see the respective documentation for details (see below for links and further explanation). These column names are shared between <em>limma</em> and <em>DESeq2</em>.</li>
+<li><em>l2FC</em>, <em>pval</em>, <em>pval_adj</em>: Results from the <em>limma</em> or <em>DESeq2</em> analysis, see the respective documentation for details (see below for links and further explanation). These column names are shared between <em>limma</em> and <em>DESeq2</em>. l2FC are interpreted as described in the parameter <code class="docutils literal"><span class="pre">conditionComparison</span></code> ( <a class="reference internal" href="#parameter-conditioncomparison"><span class="std std-ref">PARAMETER conditionComparison</span></a>)</li>
 <li><em>DESeq_baseMean</em>, <em>DESeq_ldcSE</em>, <em>DESeq_stat</em>: Results from the <em>DESeq2</em> analysis, see the <em>DESeq2</em> documentation for details (e.g., <em>?DESeq2::results</em>). If <em>DESeq2</em> was not run for calculating log2 fold-changes (i.e., if the value for the parameter <code class="docutils literal"><span class="pre">nPermutations</span></code> ( <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>) is &gt;0), these columns are set to NA.</li>
 <li><em>limma_avgExpr</em>, <em>limma_B</em>, <em>limma_t_stat</em>: Results from the <em>limma</em> analysis, see the <em>limma</em> documentation for details (e.g., <em>??topTable</em>). If <em>limma</em> was not run (i.e., if the value for the parameter <code class="docutils literal"><span class="pre">nPermutations</span></code> ( <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>) is 0), these columns are set to NA.</li>
 </ul>
@@ -842,8 +896,8 @@
 <div class="section" id="folder-tf-specific">
 <h2>FOLDER <code class="docutils literal"><span class="pre">TF-SPECIFIC</span></code><a class="headerlink" href="#folder-tf-specific" title="Permalink to this headline">¶</a></h2>
 <p>Stores TF-specific files. For each TF <code class="docutils literal"><span class="pre">{TF}</span></code>, a separate sub-folder <code class="docutils literal"><span class="pre">{TF}</span></code> is created by the pipeline. Within this folder, the following structure is created:</p>
-<div class="section" id="id20">
-<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id24">
+<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary">
 <h4>FILES <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.gz</span></code> and <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.allBAMs.overlaps.bed.summary</span></code><a class="headerlink" href="#files-tf-comparisontype-allbams-overlaps-bed-gz-and-tf-comparisontype-allbams-overlaps-bed-summary" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
@@ -870,9 +924,8 @@
 <dt>Details</dt>
 <dd>This file has the following columns (see the description for the file <code class="docutils literal"><span class="pre">{TF}.{comparisonType}.output.tsv.gz</span></code> for details):
 - <em>TF</em>
-- <em>permutation</em>
 - <em>TFBSID</em>
-- <em>l2FC</em></dd>
+- <em>log2fc_perm</em> columns, which store the permutation-specific log2 fold-changes of the particular TFBS. Permutation 0 refers to the real data</dd>
 </dl>
 </div>
 <div class="section" id="file-tf-comparisontype-summary-rds">
@@ -957,13 +1010,13 @@
 <p>Stores temporary and intermediate files. Since they are usually not relevant for the user, they are explained only very briefly here.</p>
 <div class="section" id="sub-folder-sortedbam">
 <h3>Sub-folder <code class="docutils literal"><span class="pre">SortedBAM</span></code><a class="headerlink" href="#sub-folder-sortedbam" title="Permalink to this headline">¶</a></h3>
-<p>Stores sorted versions of the original <em>BAMs</em> that are optimized for fast count retrieval using <em>featureCounts</em>.</p>
+<p>Stores sorted versions of the original <em>BAMs</em> that are optimized for fast count retrieval using <em>featureCounts</em>. Only present if data are paired-end.</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">{basenameBAM}.bam</span></code> for each input <em>BAM</em> file: Produced in rule <code class="docutils literal"><span class="pre">resortBAM</span></code>. Resorted <em>BAM</em> file</li>
 </ul>
 </div>
-<div class="section" id="id21">
-<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id25">
+<h3>Sub-folder <code class="docutils literal"><span class="pre">extension{regionExtension}</span></code><a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
 <p>Stores results related to the user-specified extension size (<code class="docutils literal"><span class="pre">regionExtension</span></code>, <a class="reference internal" href="#parameter-regionextension"><span class="std std-ref">PARAMETER regionExtension</span></a>)</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">{comparisonType}.allTFBS.peaks.bed.gz</span></code>: Produced in rule <code class="docutils literal"><span class="pre">intersectPeaksAndTFBS</span></code>. <em>BED</em> file containing all TFBS from all TF that overlap with the peaks after motif extension</li>
@@ -1021,7 +1074,7 @@
 <ul class="simple">
 <li>diffTF can be invoked in a highly parallelized manner, so the more CPUs are available, the better.</li>
 <li>you can use the <code class="docutils literal"><span class="pre">--cores</span></code> option when invoking <em>Snakemake</em> to specify the number of cores that are available for the analysis. If you specify 4 cores, for example, up to 4 rules can be run in parallel (if each of them occupies only 1 core), or 1 rule can use up to 4 cores.</li>
-<li>we strongly recommend running diffTF in a cluster environment due to the massive parallelization. With Snakemake, it is easy to run diffTF in a cluster setting. Simply do the following:<ul>
+<li>we strongly recommend running diffTF in a cluster environment due to the massive parallelization. With <em>Snakemake</em>, it is easy to run diffTF in a cluster setting. Simply do the following:<ul>
 <li>write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder <code class="docutils literal"><span class="pre">src/clusterConfigurationTemplates</span></code> for examples. Note that these are rough estimates only. See the <a class="reference external" href="http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration">*Snakemake* documentation</a> for details for how to use cluster configuration files.</li>
 <li>invoke <em>Snakemake</em> with one of the available cluster modes, which will depend on your cluster system. We used <code class="docutils literal"><span class="pre">--cluster</span></code> and tested the pipeline extensively with <em>LSF/BSUB</em> and <em>SLURM</em>. For more details, see the <a class="reference external" href="http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution">*Snakemake* documentation</a></li>
 </ul>
@@ -1042,7 +1095,7 @@
 <span id="clusterenvironment"></span><h2>Running <em>diffTF</em> in a cluster environment<a class="headerlink" href="#running-difftf-in-a-cluster-environment" title="Permalink to this headline">¶</a></h2>
 <p>If <em>diffTF</em> should be run in a cluster environment, the changes are minimal due to the flexibility of <em>Snakemake</em>. You only need to change the following:</p>
 <ul class="simple">
-<li>create a cluster configuration file in JSON format. See the files in the <em>clusterConfigurationTemplates</em> folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via Snakemake.</li>
+<li>create a cluster configuration file in JSON format. See the files in the <em>clusterConfigurationTemplates</em> folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via <em>Snakemake</em>.</li>
 <li>invoke <em>Snakemake</em> with a cluster parameter. As an example, we use the following for our <em>SLURM</em> cluster:</li>
 </ul>
 <div class="highlight-Bash"><div class="highlight"><pre><span></span>snakemake -s path/to/Snakefile --reason --configfile path/to/configfile --latency-wait <span class="m">30</span> --notemp --printshellcmds --rerun-incomplete --timestamp --cores <span class="m">16</span>  --keep-going --jobs <span class="m">400</span> --cluster-config path/to/clusterconfigfile --cluster <span class="s2">&quot; sbatch -p {cluster.queueSLURM} -J {cluster.name} -A {cluster.group} -C {cluster.nodes} --cpus-per-task {cluster.nCPUs} --mem {cluster.memory} --time {cluster.maxTime} -o &quot;</span><span class="o">{</span>cluster.output<span class="o">}</span><span class="s2">&quot; -e &quot;</span><span class="o">{</span>cluster.error<span class="o">}</span><span class="s2">&quot;   --mail-type=None --parsable &quot;</span> --local-cores <span class="m">1</span>
@@ -1057,7 +1110,7 @@
 <li>I received an error, and the pipeline did not finish.</li>
 </ol>
 <blockquote>
-<div>As explained in Section <a class="reference internal" href="#docs-errors"><span class="std std-ref">Handling errors</span></a>, you first have to identify and fix the error. Rerunning then becomes trivially easy: just restart Snakemake, it will start off where it left off: at the step that produced that error.</div></blockquote>
+<div>As explained in Section <a class="reference internal" href="#docs-errors"><span class="std std-ref">Handling errors</span></a>, you first have to identify and fix the error. Rerunning then becomes trivially easy: just restart <em>Snakemake</em>, it will start off where it left off: at the step that produced that error.</div></blockquote>
 <ol class="arabic simple" start="2">
 <li>I want to rerun a specific part of the pipeline only.</li>
 </ol>
@@ -1084,12 +1137,12 @@
 <ul class="simple">
 <li>Temporary errors (often when running in a cluster setting)<ul>
 <li>might occur due to temporary problems such as bad nodes, file system issues or latencies</li>
-<li>rerunning usually fixes the problem already. Consider using the option <code class="docutils literal"><span class="pre">--restart-times</span></code> in Snakemake.</li>
+<li>rerunning usually fixes the problem already. Consider using the option <code class="docutils literal"><span class="pre">--restart-times</span></code> in <em>Snakemake</em>.</li>
 </ul>
 </li>
 <li>Permanent errors<ul>
 <li>indicates a real error related to the specific command that is executed</li>
-<li>rerunning does not fix the problem as they are systematic (such as a missing tool)</li>
+<li>rerunning does not fix the problem as they are systematic (such as a missing tool, a library problem in R)</li>
 </ul>
 </li>
 </ul>
@@ -1099,19 +1152,55 @@
 <p>To troubleshoot errors, you have to first locate the exact error. Depending on how you run <em>Snakemake</em> (i.e., in a cluster setting or not), check the following places:</p>
 <ul class="simple">
 <li>in locale mode: the <em>Snakemake</em> output appears on the console. Check the output before the line “Error in rule”, and try to identify what went wrong.  Errors from R script should in addition be written to the corresponding R log files in the in the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> directory.</li>
-<li>in cluster mode: either error, output or log file of the corresponding rule that threw the error in the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it</li>
+<li>in cluster mode: either error, output or log file of the corresponding rule that threw the error in the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it.</li>
 </ul>
+<p>In both cases, you can check the log file that is located in <code class="docutils literal"><span class="pre">.snakemake/log</span></code>. Identify the latest log file (check the date), and then either open the file or use something along the lines of:</p>
+<div class="highlight-Bash"><div class="highlight"><pre><span></span>grep -C <span class="m">5</span> <span class="s2">&quot;Error in rule&quot;</span> .snakemake/log/2018-07-25T095519.371892.snakemake.log
+</pre></div>
+</div>
+<p>This is particularly helpful if the <em>Snakemake</em> output is long and you have troubles identifying the exact step in which an error occurred.</p>
+</div>
+<div class="section" id="common-errors">
+<h2>Common errors<a class="headerlink" href="#common-errors" title="Permalink to this headline">¶</a></h2>
+<p>We here provide a list of some of the errors that can happen and that users reported to us. This list will be extended whenever a new problem has been reported.</p>
+<ol class="arabic simple">
+<li>R related problems</li>
+</ol>
+<blockquote>
+<div><p>Many errors are R related. R and <em>Bioconductor</em> use a quite complex system of libraries and dependencies, and you may receive errors that are related to R, <em>Bioconductor</em>, or specific libraries.</p>
+<div class="highlight-Bash"><div class="highlight"><pre><span></span>*** caught segfault ***
+...
+Segmentation fault
+...
+</pre></div>
+</div>
+<p>This unfortunate message points to a problem with your R and R libraries installation and has per se nothing to do with <em>diffTF</em>. At least one of the installed libraries has an issue. We advise to reinstall <em>Bioconductor</em> in such a case, and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions as this type of error is very general. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.</p>
+</div></blockquote>
 </div>
 <div class="section" id="fixing-the-error">
 <h2>Fixing the error<a class="headerlink" href="#fixing-the-error" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="general-guidelines">
+<h3>General guidelines<a class="headerlink" href="#general-guidelines" title="Permalink to this headline">¶</a></h3>
 <p>After locating the error, fix it accordingly. We here provide some guidelines of different error types that may help you fixing the errors you receive:</p>
 <ul class="simple">
 <li>Errors related to erroneous input: These errors are easy to fix, and the error message should be indicative. If not, please let us know, and we improve the error message in the pipeline.</li>
 <li>Errors of technical nature: Errors related to memory, missing programs, R libraries etc can be fixed easily by making sure the necessary tools are installed and by executing the pipeline in an environment that provides the required technical requirements. For example, if you receive a memory-related error, try to increase the available memory. In a cluster setting, adjust the cluster configuration file accordingly by either increasing the default memory or (preferably) or by overriding the default values for the specific rule.</li>
-<li>Errors related to Snakemake: In rare cases, the error can be due to <em>Snakemake</em> (corrupt metadata, missing files, etc). If you suspect this to be the case, you may delete the .*Snakemake* directory in the folder froom which you started the analysis. <em>Snakemake</em> will regenerate it the next time you invoke it then.</li>
+<li>Errors related to <em>Snakemake</em>: In rare cases, the error can be due to <em>Snakemake</em> (corrupt metadata, missing files, etc). If you suspect this to be the case, you may delete the hidden <code class="docutils literal"><span class="pre">.snakemake</span></code> directory in the folder from which you started the analysis. <em>Snakemake</em> will regenerate it the next time you invoke it then.</li>
 <li>Errors related to the input data: Error messages that indicate the problem might be located in the data are more difficult to fix, and we cannot provide guidelines here. Feel free to contact us.</li>
 </ul>
-<p>After fixing the error, rerun Snakemake. <em>Snakemake</em> will continue at the point at which the error message occurred, without rerunning already successfully computed previous steps (unless specified otherwise).</p>
+</div>
+<div class="section" id="debugging-r-scripts-to-identify-the-cause-of-an-error">
+<h3>Debugging R scripts to identify the cause of an error<a class="headerlink" href="#debugging-r-scripts-to-identify-the-cause-of-an-error" title="Permalink to this headline">¶</a></h3>
+<p>If an R script fails with a technical error such as <code class="docutils literal"><span class="pre">caught</span> <span class="pre">segfault</span></code> (a segmentation fault), you may want to identify the library or function call that causes the message in order to figure out which library to reinstall. To do so, open the R script that fails in <em>RStudio</em>, and execute the script line by line until you identify the line that causes the issue. Importantly, read the instructions in the section at the beginning of the script that is called <code class="docutils literal"><span class="pre">SAVE</span> <span class="pre">SNAKEMAKE</span> <span class="pre">S4</span> <span class="pre">OBJECT</span> <span class="pre">THAT</span> <span class="pre">IS</span> <span class="pre">PASSED</span> <span class="pre">ALONG</span> <span class="pre">FOR</span> <span class="pre">DEBUGGING</span> <span class="pre">PURPOSES</span></code>. Briefly, you simply have to make the <em>snakemake</em> object available in your R workspace, which contains all necessary information to execute the R script properly. Normally, <em>Snakemake</em> automatically loads that when executing a script. To do so, simply execute the line that is pasted there in R, it is something like this:</p>
+<div class="highlight-R"><div class="highlight"><pre><span></span>snakemake <span class="o">=</span> <span class="kp">readRDS</span><span class="p">(</span><span class="s">&quot;{outputFolder}/LOGS_AND_BENCHMARKS/0.checkParameters.R.rds&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal"><span class="pre">{outputFolder}</span></code> by the folder you used for the analysis, and adjust the <code class="docutils literal"><span class="pre">0.checkParameters</span></code> part also accordingly. Essentially, you just have to provide the path to the corresponding file that is located in the <code class="docutils literal"><span class="pre">LOGS_AND_BENCHMARKS</span></code> subdirectly within the specified output directory.</p>
+</div>
+<div class="section" id="rerunning-snakemake">
+<h3>Rerunning <em>Snakemake</em><a class="headerlink" href="#rerunning-snakemake" title="Permalink to this headline">¶</a></h3>
+<p>After fixing the error, rerun <em>Snakemake</em>. <em>Snakemake</em> will continue at the point at which the error message occurred, without rerunning already successfully computed previous steps (unless specified otherwise).</p>
+</div>
 </div>
 </div>
 

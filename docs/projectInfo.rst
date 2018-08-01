@@ -31,6 +31,11 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
+Version 1.1.1 (2018-08-01, coming soon)
+    - Documentation updates (referenced the bioRxiv paper, extended the section about errors)
+    - updated the information on how to load the snakemake object into the R workspace in the corresponding R scripts
+    - fixed a small bug that made the Volcano plot and the circular one appear to have switched sides.
+
 Version 1.1 (2018-07-27)
     - added a new parameter *dir_TFBS_sorted* in the config file to specify that the TFBS input files are already sorted, which saves some computation time by not resorting them
     - updated the TFBS files that are available via download (some files were not presorted correctly)
