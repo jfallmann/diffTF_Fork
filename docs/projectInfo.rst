@@ -6,6 +6,9 @@ Transcription factor (TF) activity constitutes an important readout of cellular 
 
 For a graphical summary of the idea, see the section :ref:`workflow`
 
+We also put the paper on *bioRxiv*, please read all methodological details here:
+`Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/07/13/368498>`_.
+
 
 Help, contribute and contact
 ============================
@@ -19,16 +22,19 @@ Citation
 
 If you use this software, please cite the following reference:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF*. 2018. submitted.
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF*. 2018. in review
+
+We also put the paper on *bioRxiv*, please read all methodological details here:
+`Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/07/13/368498>`_.
 
 
 Change log
 ============================
 
 Version 1.1 (2018-07-27)
-    - updated the TFBS files that are available via download (some files were not presorted correctly)
     - added a new parameter *dir_TFBS_sorted* in the config file to specify that the TFBS input files are already sorted, which saves some computation time by not resorting them
-    - added support for single-end BAM files. There is a new parameter *pairedEnd" in the config file now that specifies whether reads are paired-end or not.
+    - updated the TFBS files that are available via download (some files were not presorted correctly)
+    - added support for single-end BAM files. There is a new parameter *pairedEnd* in the config file that specifies whether reads are paired-end or not.
     - restructured some of the permutation-related output files to save space and computation time. The rule *concatenateMotifsPerm* should now be much faster, and the TF-specific *...outputPerm.tsv.gz* files are now much smaller due to an improved column structure
 
 Version 1.0.1 (2018-07-25)

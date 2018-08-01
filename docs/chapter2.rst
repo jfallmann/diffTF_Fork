@@ -3,6 +3,9 @@
 Workflow
 ************************************************************
 
+We put the paper on *bioRxiv*, please read all methodological details here:
+`Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/07/13/368498>`_.
+
 The workflow and conceptual idea behind *diffTF* is illustrated by the following three Figures. First, we give a high-level conceptual overview and a biological motivation:
 
    .. figure:: Figures/diffTF_Schematic.png
