@@ -8,7 +8,7 @@ start.time  <-  Sys.time()
 
 # Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
 # Replace {outputFolder} and {TF} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/3.analyzeTF.{TF}.R.rds")
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/analyzeTF.{TF}.R.rds")
 
 library("checkmate")
 assertClass(snakemake, "Snakemake")
@@ -141,6 +141,18 @@ sampleData.l = readRDS(par.l$file_input_metadata)
 if (length(sampleData.l) == 0) {
     message = "Length of sampleData.l list is 0 but is has to be at least 1. Rerun the rule DiffPeaks."
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+}
+
+
+# Adjust the number of permutations in case less have been computed
+if (par.l$nPermutations + 1 < length(sampleData.l)) {
+  message = paste0("In the output objects, more permutations seem to be stored. They will be ignored and the currently specified value of nPermutations will be used")
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+} else if (par.l$nPermutations + 1 > length(sampleData.l)) {
+  valueNew = length(sampleData.l) - 1
+  message = paste0("The value of the parameter nPermutations differs from what is saved in the output objects. The value of nPermutations will be adjusted to ", valueNew)
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+  par.l$nPermutations = valueNew
 }
 
 
@@ -303,19 +315,7 @@ if (skipTF) {
   ################################
   # ITERATE THROUGH PERMUTATIONS #
   ################################
-  
-    
-    # Adjust the number of permutations in case less have been computed
-    if (par.l$nPermutations + 1 < length(sampleData.l)) {
-      message = paste0("In the output objects, more permutations seem to be stored. They will be ignored and the uoriginal value of nPermutations will be used")
-      checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-    } else if (par.l$nPermutations + 1 > length(sampleData.l)) {
-      valueNew = length(sampleData.l) - 1
-      message = paste0("The value of the parameter nPermutations differs from what is saved in the output objects. The value of nPermutations will be adjusted to ", valueNew)
-      checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-      par.l$nPermutations = valueNew
-    }
-    
+
     # Calculate the log2 counts once
     if (par.l$nPermutations > 0) {
       

@@ -14,7 +14,7 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 
 # Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
 # Replace {outputFolder} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/6.summaryFinal.R.rds")
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/summaryFinal.R.rds")
 createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)

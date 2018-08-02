@@ -21,7 +21,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmat
 
 # Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
 # Replace {outputFolder} and {TF} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/5.binningTF.{TF}.R.rds")
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/binningTF.{TF}.R.rds")
 
 createDebugFile(snakemake)
 
@@ -45,7 +45,10 @@ assertClass(snakemake, "Snakemake")
 
 ## INPUT ##
 assertList(snakemake@input, min.len = 1)
-assertSubset(names(snakemake@input), c("", "nucContent", "motifes"))
+assertSubset(names(snakemake@input), c("", "sampleDataR", "nucContent", "motifes"))
+
+par.l$file_input_metadata = snakemake@input$sampleDataR
+assertFileExists(par.l$file_input_metadata, access = "r")
 
 par.l$file_input_nucContentGenome  = snakemake@input$nucContent
 assertFileExists(par.l$file_input_nucContentGenome , access = "r")
@@ -129,6 +132,25 @@ if (calculateVariance && par.l$nBootstraps < 1000) {
   flog.warn(paste0("The value for nBootstraps is < 1000. We strongly recommend using a higher value in order to reliably estimate the statistical variance."))
 }
 
+sampleData.l = readRDS(par.l$file_input_metadata)
+
+if (length(sampleData.l) == 0) {
+  message = "Length of sampleData.l list is 0 but is has to be at least 1. Rerun the rule DiffPeaks."
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+}
+
+
+# Adjust the number of permutations in case less have been computed
+if (par.l$nPermutations + 1 < length(sampleData.l)) {
+  message = paste0("In the output objects, more permutations seem to be stored. They will be ignored and the currently specified value of nPermutations will be used")
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+} else if (par.l$nPermutations + 1 > length(sampleData.l)) {
+  valueNew = length(sampleData.l) - 1
+  message = paste0("The value of the parameter nPermutations differs from what is saved in the output objects. The value of nPermutations will be adjusted to ", valueNew)
+  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+  par.l$nPermutations = valueNew
+  par.l$files_input_TF_allMotives = par.l$files_input_TF_allMotives[1:(par.l$nPermutations+1)]
+}
 
 ####################
 # READ NUC CG FILE #
@@ -188,44 +210,8 @@ CGBins = seq(0,1, 1/par.l$nBins)
 # PERMUTATIONS #
 ################
 
-# TODO: Take at most x TFBS per TF for background, not all
-
-# TODO: Binning preparation and storing all TFBS in one object is too large and not feasible
-# TODO:Possibility 1: For each permutation, read in all 640 TF files with specific columns. Results in 640 * 640x1000 > 400 Million read_tsv calls. 
-#TODO: Alternative: Use the new column layout and modify the shell call to extract only the required columns: 1,2, and 2+permutationCur rather than using grep. Results in 1000 extra jobs but only 640*1000 = 640,000 read_tsv calls and acceptable memory
-
-#for (permutationCur in 0:par.l$nPermutations)
 for (fileCur in par.l$files_input_TF_allMotives) {
     
-    # Init the col type list to skip colums directly
-  #   colType.l = vector("list", length = 2 + par.l$nPermutations + 1)
-  #   colType.l[[1]] = col_character()  # "TF"
-  #   colType.l[[2]] = col_character() # "TFBSID"
-  #   for (n in 1:permutationCur) {
-  #       indexLast = 2+n
-  #       colType.l[[indexLast]] = col_skip()
-  #   }
-  #   colType.l[[indexLast+1]] = col_double() # "log2FoldChange", important to have double here as col_number would not parse numbers in scientific notation
-  #   for (n in 1:(par.l$nPermutations - permutationCur )) {
-  #       colType.l[[indexLast + 1 + n]] = col_skip()
-  #   }
-  #   
-  #  
-  # TF.motifs.ori = tribble(~permutation, ~TF, ~TFBSID, ~log2FoldChange)
-  # # Iterate over all TF
-  #   for (fileCur in allFiles) {
-  #       TF.motifs.ori  = read_tsv(fileCur, col_types = colType.l)
-  #       
-  #       if (nrow(problems(TF.motifs.ori)) > 0) {
-  #           flog.fatal(paste0("Parsing errors: "), problems(TF.motifs.ori), capture = TRUE)
-  #           stop("Error when parsing the file ", fileCur, ", see errors above")
-  #       }
-  #       
-  #   }
-  #   
-    #
-
-
   # Log 2 fold-changes from the particular permutation
   TF.motifs.ori  = read_tsv(fileCur, col_names = TRUE, 
                             col_types = list(
@@ -245,6 +231,11 @@ for (fileCur in par.l$files_input_TF_allMotives) {
     message = paste0("The file ", fileCur, " is empty. Something went wrong before. Make sure the previous steps succeeded.")
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
   }
+  
+  if (ncol(TF.motifs.ori) != 3) {
+    message = paste0("The file ", fileCur, " does not have 3 columns. Something is wrong with the number of permutations. We recommend restarting the pipeline from the DiffPeaks step.")
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  }
  
   colnames(TF.motifs.ori) = c("TF", "TFBSID", "log2FoldChange")
   
@@ -260,9 +251,9 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   
   #Filter permutations in the original files that the user does not want anymore
   TF.motifs.ori = TF.motifs.ori %>% 
-    filter(permutation <= par.l$nPermutations) %>%
+    dplyr::filter(permutation <= par.l$nPermutations) %>%
     mutate(CG.identifier = paste0(TF,":",TFBSID)) %>%
-    select(-one_of("TF"))
+    dplyr::select(-one_of("TF"))
   
 
   #########
@@ -273,7 +264,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   TF.motifs.all =  TF.motifs.ori %>% 
     full_join(TF.motifs.CG, by = c("CG.identifier"))  %>% 
     mutate(CG.bins = cut(CG, breaks = CGBins, labels = paste0(round(CGBins[-1] * 100,0),"%"), include.lowest = TRUE))  %>%  
-    select(-one_of("CG.identifier", "CG"))
+    dplyr::select(-one_of("CG.identifier", "CG"))
   
   
   # Not needed anymore, delete
@@ -489,7 +480,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
       
       plot.df = filter(perm.l[[TFCur]], !is.na(meanDifference)) %>%
           mutate(binNo = as.numeric(gsub("%", "", bin)))  %>%
-          select(one_of("binNo", "meanDifference", "ratio_TFBS"))  %>%
+          dplyr::select(one_of("binNo", "meanDifference", "ratio_TFBS"))  %>%
           dplyr::rename(weight = ratio_TFBS)
       plot.new.df = reshape2::melt(plot.df, id = "binNo")
       

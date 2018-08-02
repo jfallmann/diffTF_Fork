@@ -20,7 +20,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "DiffBind", "checkmate", "s
 
 # Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
 # Replace {outputFolder} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/1.createConsensusPeaks.R.rds")
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/createConsensusPeaks.R.rds")
 createDebugFile(snakemake)
 
 ###################

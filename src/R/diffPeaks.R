@@ -7,7 +7,7 @@ start.time  <-  Sys.time()
 
 # Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
 # Replace {outputFolder} correspondingly.
-# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/2.DiffPeaks.R.rds")
+# snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/diffPeaks.R.rds")
 
 library("checkmate")
 assertClass(snakemake, "Snakemake")

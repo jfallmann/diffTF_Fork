@@ -31,6 +31,9 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
+Version 1.1.2 (2018-08-03)
+    - fixed a bug that made the ``3.analyzeTF`` script fail in case when the number of permutations has been changed throughout the analysis or when the value is higher than the actual maximum number (thanks to Jonas Ungerbeck)
+
 Version 1.1.1 (2018-08-01)
     - Documentation updates (referenced the bioRxiv paper, extended the section about errors)
     - updated the information on how to load the snakemake object into the R workspace in the corresponding R scripts
