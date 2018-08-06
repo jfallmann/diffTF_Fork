@@ -31,6 +31,9 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
+Version 1.1.3 (2018-08-06)
+    - minor, fixed a small issue in the Volcano plot (legends wrong and background color in the plot was not colored properly)
+
 Version 1.1.2 (2018-08-03)
     - fixed a bug that made the ``3.analyzeTF`` script fail in case when the number of permutations has been changed throughout the analysis or when the value is higher than the actual maximum number (thanks to Jonas Ungerbeck)
 

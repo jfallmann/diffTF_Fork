@@ -1099,12 +1099,12 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
       g = g + geom_rect(aes(xmin = -Inf,
                             xmax = 0,
                             ymin = -Inf, 
-                            ymax = Inf, color = par.l$colorConditions[2]),
+                            ymax = Inf, fill = par.l$colorConditions[2]),
                         alpha = .3) + 
           geom_rect(aes(xmin = 0,
                         xmax = Inf,
                         ymin = -Inf, 
-                        ymax = Inf, color = par.l$colorConditions[1]),
+                        ymax = Inf, fill = par.l$colorConditions[1]),
                     alpha = .3)
       g = g + scale_fill_manual(name = 'TF activity higher in', values = rev(par.l$colorConditions), labels = labelsConditionsNew)
     }

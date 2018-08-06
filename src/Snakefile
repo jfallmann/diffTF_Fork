@@ -305,7 +305,7 @@ localrules: all
 
 rule all:
     input:
-        perm        = FINAL_DIR + "/" + compType + "summary.circular.pdf",
+        plots       = expand("{dir}/{compType}summary.{plotType}.pdf", dir = FINAL_DIR, compType = compType, plotType = ["circular", "volcano"]),
         summaryLogs = LOG_BENCHMARK_DIR + "/" + compType + "all.warnings.log"
 
 
