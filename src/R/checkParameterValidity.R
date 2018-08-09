@@ -86,23 +86,23 @@ printParametersLog(par.l)
 # LOAD ALL LIBRARIES #
 ######################
 
-# Step 1
+# createConsensusPeaks.R
 checkAndLoadPackages(c("tidyverse", "futile.logger", "DiffBind", "checkmate", "stats"), verbose = FALSE)
 
-# Step 2
-checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "csaw", "checkmate", "limma", "tools", "geneplotter", "RColorBrewer"), verbose = FALSE)
+# diffPeaks.R
+checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "csaw", "checkmate", "limma", "tools"), verbose = FALSE)
 
-# Step 3
+# analyzeTF.R
 checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "modeest", "checkmate", "limma", "geneplotter", "RColorBrewer", "tools"), verbose = FALSE)
 
-# Step 4
+# summary1.R
 checkAndLoadPackages(c("tidyverse", "futile.logger", "modeest", "checkmate", "ggrepel"), verbose = FALSE)
 
-# Step 5
-checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "methods", "boot"), verbose = FALSE)
+# binningTF.R
+checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmate", "tools", "methods", "boot"), verbose = FALSE)
 
-# Step 6
-checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmate", "tools", "methods", "grDevices", "pheatmap"), verbose = TRUE)
+# summaryFinal.R
+checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "DESeq2",  "matrixStats", "ggrepel", "checkmate", "tools", "grDevices", "locfdr", "pheatmap"), verbose = FALSE)
 
 
 

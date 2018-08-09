@@ -31,6 +31,9 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
+Version 1.1.4 (2018-08-09)
+    - minor, updated the checkParameterValidity.R script and the documentation (one package was not mentioned)
+
 Version 1.1.3 (2018-08-06)
     - minor, fixed a small issue in the Volcano plot (legends wrong and background color in the plot was not colored properly)
 
