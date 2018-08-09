@@ -798,7 +798,7 @@ Simply put, *Snakemake* executes various *rules*. Each *rule* can be thought of 
 
 In diffTF, a rule is typically executed separately for each TF. One example for a particular rule is sorting the TFBS list for the TF CTCF.
 
-In diffTF, the total number of *jobs* or rules to execute can roughly be approximated as 3 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, four rules are executed:
+In diffTF, the total number of *jobs* or rules to execute can roughly be approximated as 3 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, three sets of rules are executed:
 
 1. Calculating read counts for each TFBS within the peak regions (rule ``intersectTFBSAndBAM``)
 2. Differential accessibility analysis  (rule ``analyzeTF``)
@@ -882,17 +882,28 @@ Here a few typical use cases, which we will extend regularly in the future if th
 
   As explained in Section :ref:`docs-errors`, you first have to identify and fix the error. Rerunning then becomes trivially easy: just restart *Snakemake*, it will start off where it left off: at the step that produced that error.
 
-2. I want to rerun a specific part of the pipeline only.
+2. I received an error, and I do not see any error message.
+
+  First, check the cluster output and error files if you run *diffTF* in cluster mode. They mostly contain an actual error message or at least the print the exact command that resulted in an error. If you executed locally or still cannot find the error message, see below for guidelines.
+
+3. I want to rerun a specific part of the pipeline only.
 
   This common scenario is also easy to solve: Just invoke *Snakemake* with ``--forcerun {rulename}``, where ``{rulename}`` is the name of the rule as defined in the Snakefile. *Snakemake* will then rerun the  specified run and all parts downstream of the rule. If you want to avoid rerunning downstream parts (think carefully about it, as there might be changes from the rerunning that might have consequences for downstream parts also), you can combine ``--forcerun`` with ``--until`` and specify the same rule name for both.
 
-3. I want to modify the workflow.
+4. I want to modify the workflow.
 
   Simply add or modify rules to the Snakefile, it is as easy as that.
 
-4. I want to change the value of a parameter.
+5. *diffTF* finished successfully, but nothing is significant.
+  This can and will happen, depending on the analysis. The following list provides some potential reasons for this:
+    - The two conditions are in fact very similar and there is no signal that surpasses the significance threshold. You could, for example, check in a PCA plot based on the peaks that are used as input for *diffTF* whether they show a clear signal and separation.
+    - There is a confounding factor (like age) that dilutes the signal. One solution is to add the confounding variable into the design model, see above fo details. Again, check in a PCA plot whether samples cluster also according to another variable.
+    - You have a small number of samples or one of the groups contains a small number of samples. In both cases, if you run the permutation-based approach, the number of permutations is small, and there might not be enough permutations to achieve significance. For example, if you run an analysis with only 10 permutations, you cannot surpass the 0.05 significance threshold. As a solution, you may switch to the analytical version. Be aware that this requires to rerun large parts of the pipeline from the *diffPeaks* step onwards.
+    - You have a very small number of peaks and therefore also a small number of TF binding sites within the peaks, resulting in many TFs to be skipped in the analysis due to an insufficient number of binding sites. As a solution, try increasing the number of peaks. We recommend having at least a few thousand peaks, but this can hardly be generalized and depends too much on the biology, the size of the peaks etc.
 
-  TODO
+6. I want to change the value of a parameter.
+
+  Coming soon
 
 **If you feel that a particular use case is missing, let us know and we will add it here!**
 
@@ -924,7 +935,30 @@ Identify the cause
 
 To troubleshoot errors, you have to first locate the exact error. Depending on how you run *Snakemake* (i.e., in a cluster setting or not), check the following places:
 
-- in locale mode: the *Snakemake* output appears on the console. Check the output before the line "Error in rule", and try to identify what went wrong.  Errors from R script should in addition be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory.
+- in locale mode: the *Snakemake* output appears on the console. Check the output before the line "Error in rule", and try to identify what went wrong.  Errors from R script should in addition be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory. Sometimes, no error message might be displayed, and the output may look like this:
+
+  .. code-block:: Bash
+
+    Error in rule intersectTFBSAndBAM:
+            jobid: 1287
+            output: output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed, output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed.gz, output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.HXA10.allTFBS.peaks.extension.saf
+    RuleException:
+    CalledProcessError in line 493 of /mnt/data/bioinfo_tools_and_refs/bioinfo_tools/diffTF/src/Snakefile:
+    Command ' set -euo pipefail;   ulimit -n 4096 &&
+                zgrep "HXA10_TFBS\." output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.allTFBS.peaks.extension.bed.gz | awk 'BEGIN { OFS = "\t" } {print $4"_"$2"-"$3,$1,$2,$3,$6}' | sort -u -k1,1  >output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.HXA10.allTFBS.peaks.extension.saf &&
+                featureCounts             -F SAF             -T 4             -Q 10                          -a output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.HXA10.allTFBS.peaks.extension.saf             -s 0             -O              -o output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed              /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-WT-ProB-1.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-WT-ProB-2.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-WT-ProB-3.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-Ebf1-KO-ProB-1.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-Ebf1-KO-ProB-2.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-Ebf1-KO-ProB-3.bam &&
+                gzip -f < output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed > output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed.gz ' returned non-zero exit status 1.
+      File "/mnt/data/bioinfo_tools_and_refs/bioinfo_tools/diffTF/src/Snakefile", line 493, in __rule_intersectTFBSAndBAM
+      File "/opt/anaconda3/lib/python3.6/concurrent/futures/thread.py", line 56, in run
+    Removing output files of failed job intersectTFBSAndBAM since they might be corrupted:
+    output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.HXA10.allTFBS.peaks.extension.saf
+    Removing temporary output file output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/FLI1/extension100/FL-WTvsFL-EKO.all.FLI1.allBAMs.overlaps.bed.
+    Removing temporary output file output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.FLI1.allTFBS.peaks.extension.saf.
+
+  Finding the exact error can be troublesome, and we recommend the following:
+
+  * execute the exact command as pasted above in a stepwise fashion. The command above consists of several commands that are chained together with *&&*, so copy and paste the individual parts, starting with the first part, execute it locally, and see if you receive any error message.
+  * once you have an error message, you can start troubleshooting it. The first step is always to actually see and understand the error.
 
 - in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it.
 
@@ -943,6 +977,7 @@ Common errors
 We here provide a list of some of the errors that can happen and that users reported to us. This list will be extended whenever a new problem has been reported.
 
 1. R related problems
+
   Many errors are R related. R and *Bioconductor* use a quite complex system of libraries and dependencies, and you may receive errors that are related to R, *Bioconductor*, or specific libraries.
 
   .. code-block:: Bash

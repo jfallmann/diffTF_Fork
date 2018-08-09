@@ -24,26 +24,18 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="diffTF 1.0.0 documentation" href="index.html"/>
-        <link rel="prev" title="Workflow" href="chapter2.html"/> 
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Workflow" href="chapter2.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -121,7 +113,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">diffTF</a>
@@ -129,9 +121,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -188,25 +181,49 @@
 <div class="section" id="citation">
 <h1>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h1>
 <p>If you use this software, please cite the following reference:</p>
-<p>Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin &amp; Judith B. Zaugg. <em>Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</em>. 2018. in review</p>
+<p>Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin &amp; Judith B. Zaugg. <em>Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</em>. 2018. <em>Molecular Systems Biology</em>. in review.</p>
 <p>We also put the paper on <em>bioRxiv</em>, please read all methodological details here:
 <a class="reference external" href="https://www.biorxiv.org/content/early/2018/07/13/368498">Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</a>.</p>
 </div>
 <div class="section" id="change-log">
 <h1>Change log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
 <dl class="docutils">
+<dt>Version 1.1.4 (2018-08-09)</dt>
+<dd><ul class="first last simple">
+<li>minor, updated the checkParameterValidity.R script and the documentation (one package was not mentioned)</li>
+</ul>
+</dd>
+<dt>Version 1.1.3 (2018-08-06)</dt>
+<dd><ul class="first last simple">
+<li>minor, fixed a small issue in the Volcano plot (legends wrong and background color in the plot was not colored properly)</li>
+</ul>
+</dd>
+<dt>Version 1.1.2 (2018-08-03)</dt>
+<dd><ul class="first last simple">
+<li>fixed a bug that made the <code class="docutils literal notranslate"><span class="pre">3.analyzeTF</span></code> script fail in case when the number of permutations has been changed throughout the analysis or when the value is higher than the actual maximum number (thanks to Jonas Ungerbeck)</li>
+</ul>
+</dd>
+<dt>Version 1.1.1 (2018-08-01)</dt>
+<dd><ul class="first last simple">
+<li>Documentation updates (referenced the bioRxiv paper, extended the section about errors)</li>
+<li>updated the information on how to load the snakemake object into the R workspace in the corresponding R scripts</li>
+<li>fixed a bug that made the labels in the Volcano plot switch sides (thanks to Jonas Ungerbeck)</li>
+<li>merged some diagnostic plots for the AR classification in the last step</li>
+<li>renamed R scripts and R log files to make them consistent with the cluster output and error files</li>
+</ul>
+</dd>
 <dt>Version 1.1 (2018-07-27)</dt>
 <dd><ul class="first last simple">
-<li>added a new parameter <em>dir_TFBS_sorted</em> in the config file to specify that the TFBS input files are already sorted, which saves some computation time by not resorting them</li>
+<li>added a new parameter <code class="docutils literal notranslate"><span class="pre">dir_TFBS_sorted</span></code> in the config file to specify that the TFBS input files are already sorted, which saves some computation time by not resorting them</li>
 <li>updated the TFBS files that are available via download (some files were not presorted correctly)</li>
-<li>added support for single-end BAM files. There is a new parameter <em>pairedEnd</em> in the config file that specifies whether reads are paired-end or not.</li>
-<li>restructured some of the permutation-related output files to save space and computation time. The rule <em>concatenateMotifsPerm</em> should now be much faster, and the TF-specific <em>…outputPerm.tsv.gz</em> files are now much smaller due to an improved column structure</li>
+<li>added support for single-end BAM files. There is a new parameter <code class="docutils literal notranslate"><span class="pre">pairedEnd</span></code> in the config file that specifies whether reads are paired-end or not.</li>
+<li>restructured some of the permutation-related output files to save space and computation time. The rule <code class="docutils literal notranslate"><span class="pre">concatenateMotifsPerm</span></code> should now be much faster, and the TF-specific <code class="docutils literal notranslate"><span class="pre">...outputPerm.tsv.gz</span></code> files are now much smaller due to an improved column structure</li>
 </ul>
 </dd>
 <dt>Version 1.0.1 (2018-07-25)</dt>
 <dd><ul class="first last simple">
-<li>fixed a bug in <em>2.DiffPeaks.R</em> that sometimes caused the step to fail, thanks to Jonas Ungerbeck for letting us know</li>
-<li>fixed a bug in <em>3.analyzeTF</em> for rare corner cases when <em>DESeq</em> fails</li>
+<li>fixed a bug in <code class="docutils literal notranslate"><span class="pre">2.DiffPeaks.R</span></code> that sometimes caused the step to fail, thanks to Jonas Ungerbeck for letting us know</li>
+<li>fixed a bug in <code class="docutils literal notranslate"><span class="pre">3.analyzeTF</span></code> for rare corner cases when <em>DESeq</em> fails</li>
 </ul>
 </dd>
 <dt>Version 1.0 (2018-07-01)</dt>
@@ -219,7 +236,7 @@
 <div class="section" id="license">
 <h1>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
 <p>diffTF is licensed under the MIT License:</p>
-<div class="highlight-text"><div class="highlight"><pre><span></span>Copyright (c) 2017 Christian Arnold (carnold@embl.de) &amp; Ivan Berest (berest@embl.de)
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Copyright (c) 2017 Christian Arnold (carnold@embl.de) &amp; Ivan Berest (berest@embl.de)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the &quot;Software&quot;), to deal in the Software without
@@ -242,9 +259,7 @@ DEALINGS IN THE SOFTWARE.
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -264,7 +279,7 @@ DEALINGS IN THE SOFTWARE.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -283,6 +298,7 @@ DEALINGS IN THE SOFTWARE.
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'1.0.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -295,19 +311,13 @@ DEALINGS IN THE SOFTWARE.
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

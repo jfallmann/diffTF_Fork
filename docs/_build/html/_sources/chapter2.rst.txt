@@ -747,12 +747,13 @@ Stores various log and error files.
 
 - ``*.log`` files from R scripts: Each log file is produced by the corresponding R script and contains debugging information as well as warnings and errors:
 
-  - ``1.produceConsensusPeaks.R.log``
-  - ``2.DiffPeaks.R.log``
-  - ``3.analyzeTF.{TF}.R.log`` for each TF ``{TF}``
-  - ``4.summary1.R.log``
-  - ``5.binningTF.{TF}.log``  for each TF ``{TF}``
-  - ``6.summaryFinal.R.log``
+  - ``checkParameterValidity.R.log``
+  - ``produceConsensusPeaks.R.log``
+  - ``diffPeaks.R.log``
+  - ``analyzeTF.{TF}.R.log`` for each TF ``{TF}``
+  - ``summary1.R.log``
+  - ``binningTF.{TF}.log``  for each TF ``{TF}``
+  - ``summaryFinal.R.log``
 
 - ``*.log`` summary files: Summary logs for user convenience, produced at very end of the pipeline only. They should contain all errors and warnings from the pipeline run.
 
@@ -797,7 +798,7 @@ Simply put, *Snakemake* executes various *rules*. Each *rule* can be thought of 
 
 In diffTF, a rule is typically executed separately for each TF. One example for a particular rule is sorting the TFBS list for the TF CTCF.
 
-In diffTF, the total number of *jobs* or rules to execute can roughly be approximated as 3 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, four rules are executed:
+In diffTF, the total number of *jobs* or rules to execute can roughly be approximated as 3 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, three sets of rules are executed:
 
 1. Calculating read counts for each TFBS within the peak regions (rule ``intersectTFBSAndBAM``)
 2. Differential accessibility analysis  (rule ``analyzeTF``)
@@ -881,17 +882,21 @@ Here a few typical use cases, which we will extend regularly in the future if th
 
   As explained in Section :ref:`docs-errors`, you first have to identify and fix the error. Rerunning then becomes trivially easy: just restart *Snakemake*, it will start off where it left off: at the step that produced that error.
 
-2. I want to rerun a specific part of the pipeline only.
+2. I received an error, and I do not see any error message.
+
+  First, check the cluster output and error files if you run *diffTF* in cluster mode. They mostly contain an actual error message or at least the print the exact command that resulted in an error. If you executed locally or still cannot find the error message, see below for guidelines.
+
+3. I want to rerun a specific part of the pipeline only.
 
   This common scenario is also easy to solve: Just invoke *Snakemake* with ``--forcerun {rulename}``, where ``{rulename}`` is the name of the rule as defined in the Snakefile. *Snakemake* will then rerun the  specified run and all parts downstream of the rule. If you want to avoid rerunning downstream parts (think carefully about it, as there might be changes from the rerunning that might have consequences for downstream parts also), you can combine ``--forcerun`` with ``--until`` and specify the same rule name for both.
 
-3. I want to modify the workflow.
+4. I want to modify the workflow.
 
   Simply add or modify rules to the Snakefile, it is as easy as that.
 
-4. I want to change the value of a parameter.
+5. I want to change the value of a parameter.
 
-  TODO
+  Coming soon
 
 **If you feel that a particular use case is missing, let us know and we will add it here!**
 
@@ -923,7 +928,30 @@ Identify the cause
 
 To troubleshoot errors, you have to first locate the exact error. Depending on how you run *Snakemake* (i.e., in a cluster setting or not), check the following places:
 
-- in locale mode: the *Snakemake* output appears on the console. Check the output before the line "Error in rule", and try to identify what went wrong.  Errors from R script should in addition be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory.
+- in locale mode: the *Snakemake* output appears on the console. Check the output before the line "Error in rule", and try to identify what went wrong.  Errors from R script should in addition be written to the corresponding R log files in the in the ``LOGS_AND_BENCHMARKS`` directory. Sometimes, no error message might be displayed, and the output may look like this:
+
+  .. code-block:: Bash
+
+    Error in rule intersectTFBSAndBAM:
+            jobid: 1287
+            output: output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed, output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed.gz, output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.HXA10.allTFBS.peaks.extension.saf
+    RuleException:
+    CalledProcessError in line 493 of /mnt/data/bioinfo_tools_and_refs/bioinfo_tools/diffTF/src/Snakefile:
+    Command ' set -euo pipefail;   ulimit -n 4096 &&
+                zgrep "HXA10_TFBS\." output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.allTFBS.peaks.extension.bed.gz | awk 'BEGIN { OFS = "\t" } {print $4"_"$2"-"$3,$1,$2,$3,$6}' | sort -u -k1,1  >output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.HXA10.allTFBS.peaks.extension.saf &&
+                featureCounts             -F SAF             -T 4             -Q 10                          -a output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.HXA10.allTFBS.peaks.extension.saf             -s 0             -O              -o output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed              /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-WT-ProB-1.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-WT-ProB-2.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-WT-ProB-3.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-Ebf1-KO-ProB-1.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-Ebf1-KO-ProB-2.bam /mnt/data/common/tobias/diffTF/ATAC-bam-files/FL-Ebf1-KO-ProB-3.bam &&
+                gzip -f < output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed > output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/HXA10/extension100/FL-WTvsFL-EKO.all.HXA10.allBAMs.overlaps.bed.gz ' returned non-zero exit status 1.
+      File "/mnt/data/bioinfo_tools_and_refs/bioinfo_tools/diffTF/src/Snakefile", line 493, in __rule_intersectTFBSAndBAM
+      File "/opt/anaconda3/lib/python3.6/concurrent/futures/thread.py", line 56, in run
+    Removing output files of failed job intersectTFBSAndBAM since they might be corrupted:
+    output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.HXA10.allTFBS.peaks.extension.saf
+    Removing temporary output file output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TF-SPECIFIC/FLI1/extension100/FL-WTvsFL-EKO.all.FLI1.allBAMs.overlaps.bed.
+    Removing temporary output file output-FL-WT-vs-EKO-ATAC-distal-Linj-activ/TEMP/extension100/FL-WTvsFL-EKO.all.FLI1.allTFBS.peaks.extension.saf.
+
+  Finding the exact error can be troublesome, and we recommend the following:
+
+  * execute the exact command as pasted above in a stepwise fashion. The command above consists of several commands that are chained together with *&&*, so copy and paste the individual parts, starting with the first part, execute it locally, and see if you receive any error message.
+  * once you have an error message, you can start troubleshooting it. The first step is always to actually see and understand the error.
 
 - in cluster mode: either error, output or log file of the corresponding rule that threw the error in the ``LOGS_AND_BENCHMARKS`` directory. If you are unsure in which file to look, identify the rule name that caused the error and search for files that contain the rule name in it.
 
@@ -972,9 +1000,9 @@ If an R script fails with a technical error such as ``caught segfault`` (a segme
 
 .. code-block:: R
 
-  snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/0.checkParameters.R.rds")
+  snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/checkParameters.R.rds")
 
-Replace ``{outputFolder}`` by the folder you used for the analysis, and adjust the ``0.checkParameters`` part also accordingly. Essentially, you just have to provide the path to the corresponding file that is located in the ``LOGS_AND_BENCHMARKS`` subdirectly within the specified output directory.
+Replace ``{outputFolder}`` by the folder you used for the analysis, and adjust the ``checkParameters`` part also accordingly. Essentially, you just have to provide the path to the corresponding file that is located in the ``LOGS_AND_BENCHMARKS`` subdirectly within the specified output directory.
 
 Rerunning *Snakemake*
 ----------------------

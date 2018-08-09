@@ -24,27 +24,19 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="diffTF 1.0.0 documentation" href="index.html"/>
-        <link rel="next" title="Workflow" href="chapter2.html"/>
-        <link rel="prev" title="Welcome to the documentation of diffTF!" href="index.html"/> 
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Workflow" href="chapter2.html" />
+    <link rel="prev" title="Welcome to the documentation of diffTF!" href="index.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -127,7 +119,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">diffTF</a>
@@ -135,9 +127,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -191,7 +184,7 @@
 <p class="last">Note that all tools require Python 3.</p>
 </div>
 <p>We recommend installing them via conda, in which case the installation then becomes as easy as</p>
-<div class="highlight-Bash"><div class="highlight"><pre><span></span>conda config --add channels defaults
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>conda config --add channels defaults
 conda config --add channels conda-forge
 conda config --add channels bioconda
 conda install snakemake bedtools samtools subread
@@ -207,15 +200,15 @@ conda install snakemake bedtools samtools subread
 <ol class="arabic" start="2">
 <li><p class="first">Clone the Git repository:</p>
 <blockquote>
-<div><div class="highlight-Bash"><div class="highlight"><pre><span></span>git clone https://git.embl.de/grp-zaugg/diffTF
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>git clone https://git.embl.de/grp-zaugg/diffTF
 </pre></div>
 </div>
 <p>If you receive an error, <em>Git</em> may not be installed on your system. If you run Ubuntu, try the following command:</p>
-<div class="highlight-Bash"><div class="highlight"><pre><span></span>sudo apt-get install git
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install git
 </pre></div>
 </div>
 <p>For macOS, there are multiple ways of installing it. If you already have <em>Homebrew</em> (<a class="reference external" href="http://brew.sh">http://brew.sh</a>) installed, simply type:</p>
-<div class="highlight-Bash"><div class="highlight"><pre><span></span>brew install git
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>brew install git
 </pre></div>
 </div>
 <p>Otherwise, consult the internet on how to best install Git for your system.</p>
@@ -226,30 +219,30 @@ conda install snakemake bedtools samtools subread
 </ol>
 <blockquote>
 <div><ul>
-<li><p class="first">Change into the <code class="docutils literal"><span class="pre">example/input</span></code> directory within the Git repository</p>
+<li><p class="first">Change into the <code class="docutils literal notranslate"><span class="pre">example/input</span></code> directory within the Git repository</p>
 <blockquote>
-<div><div class="highlight-Bash"><div class="highlight"><pre><span></span><span class="nb">cd</span> diffTF/example/input
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> diffTF/example/input
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p class="first">Download the data via the download script</p>
 <blockquote>
-<div><div class="highlight-Bash"><div class="highlight"><pre><span></span>sh downloadAllData.sh
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>sh downloadAllData.sh
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p class="first">To test if the setup is correct, start a dryrun via the first helper script</p>
 <blockquote>
-<div><div class="highlight-Bash"><div class="highlight"><pre><span></span>sh startAnalysisDryRun.sh
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>sh startAnalysisDryRun.sh
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p class="first">Once the dryrun is successful, start the analysis via the second helper script</p>
 <blockquote>
-<div><div class="highlight-Bash"><div class="highlight"><pre><span></span>sh startAnalysis.sh
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>sh startAnalysis.sh
 </pre></div>
 </div>
 </div></blockquote>
@@ -257,13 +250,13 @@ conda install snakemake bedtools samtools subread
 </ul>
 </div></blockquote>
 <ol class="arabic simple" start="4">
-<li>To run your own analysis, modify the files <code class="docutils literal"><span class="pre">config.json</span></code> and <code class="docutils literal"><span class="pre">sampleData.ts</span></code>. See the instructions in the section <a class="reference internal" href="#run-your-own-analysis">Run your own analysis</a> for more details.</li>
-<li>If your analysis finished successfully, take a look into the <code class="docutils literal"><span class="pre">FINAL_OUTPUT</span></code> folder within your specified output directory, which contains the summary tables and visualization of your analysis. If you received an error, take a look in Section <a class="reference internal" href="chapter2.html#docs-errors"><span class="std std-ref">Handling errors</span></a> to troubleshoot.</li>
+<li>To run your own analysis, modify the files <code class="docutils literal notranslate"><span class="pre">config.json</span></code> and <code class="docutils literal notranslate"><span class="pre">sampleData.ts</span></code>. See the instructions in the section <a class="reference internal" href="#run-your-own-analysis">Run your own analysis</a> for more details.</li>
+<li>If your analysis finished successfully, take a look into the <code class="docutils literal notranslate"><span class="pre">FINAL_OUTPUT</span></code> folder within your specified output directory, which contains the summary tables and visualization of your analysis. If you received an error, take a look in Section <a class="reference internal" href="chapter2.html#docs-errors"><span class="std std-ref">Handling errors</span></a> to troubleshoot.</li>
 </ol>
 </div>
 <div class="section" id="prerequisites">
 <span id="docs-prerequisites"></span><h1>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h1>
-<p>This section lists the required software and how to install them. As outlined in Section <a class="reference internal" href="#docs-quickstart"><span class="std std-ref">Try it out now!</span></a>, the easiest way is to install all of them via <code class="docutils literal"><span class="pre">conda</span></code>. However, it is of course also possible to install the tools separately.</p>
+<p>This section lists the required software and how to install them. As outlined in Section <a class="reference internal" href="#docs-quickstart"><span class="std std-ref">Try it out now!</span></a>, the easiest way is to install all of them via <code class="docutils literal notranslate"><span class="pre">conda</span></code>. However, it is of course also possible to install the tools separately.</p>
 <div class="section" id="id1">
 <h2>Snakemake<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>Please ensure that you have at least version 4.3 installed. Principally, there are <a class="reference external" href="http://snakemake.readthedocs.io/en/stable/getting_started/installation.html">multiple ways to install Snakemake</a>. We recommend installing it, along with all the other required software, via conda.</p>
@@ -274,8 +267,8 @@ conda install snakemake bedtools samtools subread
 </div>
 <div class="section" id="r-and-r-packages">
 <h2>R and R packages<a class="headerlink" href="#r-and-r-packages" title="Permalink to this headline">¶</a></h2>
-<p>A working <code class="docutils literal"><span class="pre">R</span></code> installation is needed and a number of packages from either CRAN or Bioconductor have to be installed.  Type the following in <code class="docutils literal"><span class="pre">R</span></code> to install them:</p>
-<div class="highlight-R"><div class="highlight"><pre><span></span>install.packages<span class="p">(</span><span class="kt">c</span><span class="p">(</span><span class="s">&quot;checkmate&quot;</span><span class="p">,</span> <span class="s">&quot;futile.logger&quot;</span><span class="p">,</span> <span class="s">&quot;tidyverse&quot;</span><span class="p">,</span> <span class="s">&quot;reshape2&quot;</span><span class="p">,</span> <span class="s">&quot;RColorBrewer&quot;</span><span class="p">,</span> <span class="s">&quot;ggrepel&quot;</span><span class="p">,</span> <span class="s">&quot;lsr&quot;</span><span class="p">,</span> <span class="s">&quot;modeest&quot;</span><span class="p">,</span> <span class="s">&quot;boot&quot;</span><span class="p">,</span> <span class="s">&quot;grDevices&quot;</span><span class="p">,</span> <span class="s">&quot;pheatmap&quot;</span><span class="p">,</span> <span class="s">&quot;matrixStats&quot;</span><span class="p">,</span> <span class="s">&quot;locfdr&quot;</span><span class="p">))</span>
+<p>A working <code class="docutils literal notranslate"><span class="pre">R</span></code> installation is needed and a number of packages from either CRAN or Bioconductor have to be installed.  Type the following in <code class="docutils literal notranslate"><span class="pre">R</span></code> to install them:</p>
+<div class="highlight-R notranslate"><div class="highlight"><pre><span></span>install.packages<span class="p">(</span><span class="kt">c</span><span class="p">(</span><span class="s">&quot;checkmate&quot;</span><span class="p">,</span> <span class="s">&quot;futile.logger&quot;</span><span class="p">,</span> <span class="s">&quot;tidyverse&quot;</span><span class="p">,</span> <span class="s">&quot;reshape2&quot;</span><span class="p">,</span> <span class="s">&quot;RColorBrewer&quot;</span><span class="p">,</span> <span class="s">&quot;ggrepel&quot;</span><span class="p">,</span> <span class="s">&quot;lsr&quot;</span><span class="p">,</span> <span class="s">&quot;modeest&quot;</span><span class="p">,</span> <span class="s">&quot;boot&quot;</span><span class="p">,</span> <span class="s">&quot;grDevices&quot;</span><span class="p">,</span> <span class="s">&quot;pheatmap&quot;</span><span class="p">,</span> <span class="s">&quot;matrixStats&quot;</span><span class="p">,</span> <span class="s">&quot;locfdr&quot;</span><span class="p">,</span> <span class="s">&quot;pheatmap&quot;</span><span class="p">))</span>
 <span class="kn">source</span><span class="p">(</span><span class="s">&quot;https://bioconductor.org/biocLite.R&quot;</span><span class="p">)</span>
 biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span><span class="s">&quot;limma&quot;</span><span class="p">,</span> <span class="s">&quot;vsn&quot;</span><span class="p">,</span> <span class="s">&quot;csaw&quot;</span><span class="p">,</span> <span class="s">&quot;DESeq2&quot;</span><span class="p">,</span> <span class="s">&quot;DiffBind&quot;</span><span class="p">,</span> <span class="s">&quot;geneplotter&quot;</span><span class="p">,</span> <span class="s">&quot;Rsamtools&quot;</span><span class="p">))</span>
 </pre></div>
@@ -286,19 +279,17 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 <span id="docs-runownanalysis"></span><h1>Run your own analysis<a class="headerlink" href="#run-your-own-analysis" title="Permalink to this headline">¶</a></h1>
 <p>Running your own analysis is almost as easy as running the example analysis. Carefully read and follow the following steps and notes:</p>
 <ol class="arabic simple">
-<li>Copy the files <code class="docutils literal"><span class="pre">config.json</span></code> and <code class="docutils literal"><span class="pre">startAnalysis.sh</span></code> to a directory of your choice.</li>
-<li>Modify the file <code class="docutils literal"><span class="pre">config.json</span></code> accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section <a class="reference internal" href="chapter2.html#configurationfile"><span class="std std-ref">General configuration file</span></a> for details about the meaning of the parameters. Do not delete or rename any parameters or sections.</li>
-<li>Create a tab-separated file that defines the input data, in analogy to the file <code class="docutils literal"><span class="pre">sampleData.tsv</span></code> from the example analysis, and refer to that in the file <code class="docutils literal"><span class="pre">config.json</span></code> (parameter <code class="docutils literal"><span class="pre">summaryFile</span></code>)</li>
-<li>Adapt the file <code class="docutils literal"><span class="pre">startAnalysis.sh</span></code> if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)</li>
+<li>Copy the files <code class="docutils literal notranslate"><span class="pre">config.json</span></code> and <code class="docutils literal notranslate"><span class="pre">startAnalysis.sh</span></code> to a directory of your choice.</li>
+<li>Modify the file <code class="docutils literal notranslate"><span class="pre">config.json</span></code> accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section <a class="reference internal" href="chapter2.html#configurationfile"><span class="std std-ref">General configuration file</span></a> for details about the meaning of the parameters. Do not delete or rename any parameters or sections.</li>
+<li>Create a tab-separated file that defines the input data, in analogy to the file <code class="docutils literal notranslate"><span class="pre">sampleData.tsv</span></code> from the example analysis, and refer to that in the file <code class="docutils literal notranslate"><span class="pre">config.json</span></code> (parameter <code class="docutils literal notranslate"><span class="pre">summaryFile</span></code>)</li>
+<li>Adapt the file <code class="docutils literal notranslate"><span class="pre">startAnalysis.sh</span></code> if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)</li>
 <li>Since running the pipeline is often computationally demanding, read Section <a class="reference internal" href="chapter2.html#timememoryrequirements"><span class="std std-ref">Executing diffTF - Running times and memory requirements</span></a> and decide on which machine to run the pipeline. In most cases, we recommend running <em>diffTF</em> in a cluster environment (see Section <a class="reference internal" href="chapter2.html#clusterenvironment"><span class="std std-ref">Running diffTF in a cluster environment</span></a> for details). The pipeline is written in Snakemake, and we strongly suggest to also read Section <a class="reference internal" href="chapter2.html#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a> to get a basic understanding of how the pipeline works.</li>
 </ol>
 </div>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -320,7 +311,7 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -339,6 +330,7 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'1.0.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -351,19 +343,13 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>
