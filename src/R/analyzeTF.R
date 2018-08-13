@@ -181,21 +181,29 @@ if (nrow(problems(overlapsAll.df)) > 0) {
   stop("Error when parsing the file ", fileCur, ", see errors above")
 }
 
-colnames(overlapsAll.df) = c("annotation", "chr","MSS","MES", "strand","length", colnamesNew)
 
-overlapsAll.df = overlapsAll.df %>%
-                  dplyr::mutate(TFBSID = paste0(chr,":", MSS, "-",MES),
-                                mean = apply(dplyr::select(overlapsAll.df, one_of(colnamesNew)), 1, mean), 
-                                peakID = sapply(strsplit(overlapsAll.df$annotation, split = "_", fixed = TRUE),"[[", 1)) %>%
-                  dplyr::distinct(TFBSID, .keep_all = TRUE) %>%
-                  dplyr::select(-one_of("length"))
-    
+if (nrow(overlapsAll.df) > 0) {
+  
+  colnames(overlapsAll.df) = c("annotation", "chr","MSS","MES", "strand","length", colnamesNew)
+  
+  overlapsAll.df = overlapsAll.df %>%
+    dplyr::mutate(TFBSID = paste0(chr,":", MSS, "-",MES),
+                  mean = apply(dplyr::select(overlapsAll.df, one_of(colnamesNew)), 1, mean), 
+                  peakID = sapply(strsplit(overlapsAll.df$annotation, split = "_", fixed = TRUE),"[[", 1)) %>%
+    dplyr::distinct(TFBSID, .keep_all = TRUE) %>%
+    dplyr::select(-one_of("length"))
+  
+    skipTF = FALSE
+  
+} else {
+  skipTF = TRUE
+}
 
 nTFBS = nrow(overlapsAll.df)
 
 
 
-skipTF = FALSE
+
 
 
 

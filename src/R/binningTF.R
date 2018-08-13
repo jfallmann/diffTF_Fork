@@ -282,6 +282,9 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   
   flog.info(paste0(" Found ", nrow(TF.motifs.all) - nrow(TF.motifs.all.unique), " duplicated TFBS across all TF."))
   
+  # TODO: Optimize as in dev TF.motifs.all.unique = TF.motifs.all.unique[which(TF.motifs.all.unique$TF != TFCur & is.finite(TF.motifs.all.unique$log2FoldChange)),]
+  
+  
 
   nRowsTF = nrow(TF.motifs.all[which(TF.motifs.all$TF == TFCur),])
   

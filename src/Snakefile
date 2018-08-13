@@ -471,7 +471,6 @@ rule intersectPeaksAndTFBS:
         """
 
 
-
 rule intersectTFBSAndBAM:
     input:
         bed           = rules.intersectPeaksAndTFBS.output.TFBSinPeaksMod_bed,
@@ -482,7 +481,7 @@ rule intersectTFBSAndBAM:
         BAMOverlap    =      TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.allBAMs.overlaps.bed.gz",
         saf           = temp(expand('{dir}/{compType}{{TF}}.allTFBS.peaks.extension.saf', dir = TEMP_EXTENSION_DIR, compType = compType))
     log:
-    message: "{ruleDisplayMessage} Intersect file {input.bed} against all BAM files..."
+    message: "{ruleDisplayMessage} Intersect file {input.bed} against all BAM files for TF {wildcards.TF}..."
     threads: 4
     params:
         pairedEnd = pairedEndOptions,
@@ -491,19 +490,26 @@ rule intersectTFBSAndBAM:
         ulimitMax = ulimitMax
     shell:
         """ ulimit -n {params.ulimitMax} &&
-            zgrep "{wildcards.TF}_TFBS\." {input.bed} | awk 'BEGIN {{ OFS = "\\t" }} {{print $4"_"$2"-"$3,$1,$2,$3,$6}}' | sort -u -k1,1  >{output.saf} &&
-            featureCounts \
-            -F SAF \
-            -T {threads} \
-            {params.readFiltering} \
-            {params.pairedEnd} \
-            -a {output.saf} \
-            -s 0 \
-            {params.multiOverlap}  \
-            -o {output.BAMOverlapRaw}  \
-            {input.allBAMs} &&
+            zgrep "{wildcards.TF}_TFBS\." {input.bed} | awk 'BEGIN {{ OFS = "\\t" }} {{print $4"_"$2"-"$3,$1,$2,$3,$6}}' | sort -u -k1,1  >{output.saf} || true &&
+            if [[ $(wc -l <{output.saf}) -eq "0" ]]; then
+                touch {output.BAMOverlapRaw}
+                echo "No TFBS found, skip featureCounts..."
+            else
+                featureCounts \
+                -F SAF \
+                -T {threads} \
+                {params.readFiltering} \
+                {params.pairedEnd} \
+                -a {output.saf} \
+                -s 0 \
+                {params.multiOverlap}  \
+                -o {output.BAMOverlapRaw}  \
+                {input.allBAMs}
+            fi &&
             gzip -f < {output.BAMOverlapRaw} > {output.BAMOverlap}
+
         """
+
 
 name_plots = PEAKS_DIR + "/" + compType + "diagnosticPlots.peaks.pdf"
 

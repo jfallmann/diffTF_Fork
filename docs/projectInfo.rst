@@ -31,14 +31,21 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
+Version 1.1.5 (2018-08-14)
+    - optimized ``checkParameterValidity.R`` script, only TFBS files for TFs included in the analysis are now checked
+    - addressed an R library compatibility issue independent of *diffTF* that users reported. In some cases, for particular versions of R and Bioconductor, R exited with a *segfault* (memory not mapped) error in the ``checkParameterValidity.R`` that seems to be caused by the combination of *DiffBind* and *DESeq2*. Specifically, when *DiffBind* is loaded *before* *DESeq2*, R crashes with a segmentation fault upon exiting, whereas loading *DiffBind* *after* *DESeq2* causes no issue. If there are further issues, please let us know. Thanks to Gyan Prakash Mishra, who first reported this.
+    - fixed an issue when the number of peaks is very small so that some TFs have no overlapping TFBS at all in the peak regions. This caused the rule ``intersectTFBSAndBAM`` to exit with an error due to grep's policy of returning exit code 1 if no matches are returned (thanks to Jonas Ungerbeck, again).
+    - removed the ``--timestamp`` option in the helper script ``startAnalysis.sh`` because this option has been removed for Snakemake >5.2.1
+    - Documentation updates
+
 Version 1.1.4 (2018-08-09)
-    - minor, updated the checkParameterValidity.R script and the documentation (one package was not mentioned)
+    - minor, updated the ``checkParameterValidity.R`` script and the documentation (one package was not mentioned)
 
 Version 1.1.3 (2018-08-06)
     - minor, fixed a small issue in the Volcano plot (legends wrong and background color in the plot was not colored properly)
 
 Version 1.1.2 (2018-08-03)
-    - fixed a bug that made the ``3.analyzeTF`` script fail in case when the number of permutations has been changed throughout the analysis or when the value is higher than the actual maximum number (thanks to Jonas Ungerbeck)
+    - fixed a bug that made the ``3.analyzeTF.R`` script fail in case when the number of permutations has been changed throughout the analysis or when the value is higher than the actual maximum number (thanks to Jonas Ungerbeck)
 
 Version 1.1.1 (2018-08-01)
     - Documentation updates (referenced the bioRxiv paper, extended the section about errors)

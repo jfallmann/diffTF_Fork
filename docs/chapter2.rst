@@ -987,7 +987,10 @@ We here provide a list of some of the errors that can happen and that users repo
     Segmentation fault
     ...
 
-  This unfortunate message points to a problem with your R and R libraries installation and has per se nothing to do with *diffTF*. At least one of the installed libraries has an issue. We advise to reinstall *Bioconductor* in such a case, and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions as this type of error is very general. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.
+  .. note:: This particular message may also be related to an incompatibility of the *DiffBind* and *DESeq2* libraries. See the changelog for details, as this has been addressed in version 1.1.5.
+
+
+  More generally, however, such messages point to a problem with your R and R libraries installation and have per se nothing to do with *diffTF*. In such cases, we advise to reinstall the latest version of *Bioconductor* and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.
 
 
 Fixing the error

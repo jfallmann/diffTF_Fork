@@ -8,7 +8,7 @@
     "conditionComparison": "GMP,MPP",
     "designContrast": "~ conditionSummary",
     "designVariableTypes": "conditionSummary:factor",
-    "nPermutations": 70,
+    "nPermutations": 100,
     "nBootstraps": 0,
     "nCGBins": 10,
     "TFs": "CTCF,CEBPB,SNAI2,CEBPA,UBIP1,CEBPG,CEBPD,ZFX,AP2D,PAX5.S,SNAI1,ZEB1,SP4,MBD2,IRF1,MECP2,PAX5.D,SP3,NFIA.C,SP1.A,IRF7,MYF6, NRF1,DBP,MAZ,NKX28,DLX2,GATA1,P53,ZN143,AIRE,NR2C2,HMGA1,FUBP1,TEAD3,OVOL1,HXD4,KLF1,RXRG,HNF1B,ZIC3,HNF1A,NANOG.S,GFI1,PO3F1,NR2C1,ELF5,TF65.C,NFAC3,TEAD1",
