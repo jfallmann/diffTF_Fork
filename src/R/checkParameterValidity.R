@@ -295,7 +295,7 @@ if (useAllTFs) {
   }
   
   allTFs = sapply(strsplit(basename(TFs), "_"), "[[", 1)
-  stopifnot(length(allTFs > 0))
+  stopifnot(length(allTFs) > 0)
   
 }
 
