@@ -47,6 +47,10 @@ par.l$extension_x_limits = 0.15 # 15 % x axis extension, regardless of the limit
 par.l$extension_y_limits = 1.1
 par.l$plot_grayColor = "grey50"
 
+par.l$maxTFsToDraw = 150
+
+par.l$pseudocountLogTransform = 0.0001
+
 # diverging, modified
 par.l$colorCategories = c("activator" = "#d7191c", "undetermined" = "black", "repressor" = "#2b83ba", "not-expressed" = "slategrey")
 par.l$colorCategories = c("activator" = "#4daf4a", "undetermined" = "black", "repressor" = "#e41a1c", "not-expressed" = "Snow3")
@@ -63,8 +67,10 @@ par.l$legend_position = c(0.1, 0.9)
 
 # Which transformation of the y values to do?
 
-transform_yValues <- function(values) {
-    -log10(values + 0.0001)
+# TODO: Pseudocount also for line?
+transform_yValues <- function(values, addPseudoCount = TRUE) {
+    
+    -log10(values + ifelse(addPseudoCount, par.l$pseudocountLogTransform, 0))
 }
 
 transform_yValues_caption <- function() {
@@ -465,7 +471,7 @@ if (length(TF_NA) > 0) {
     output.global.TFs.orig = output.global.TFs.orig[-TF_NA,]
   
   TFs_NA = output.global.TFs.orig$TF[TF_NA]
-  message = paste0("The following TF have been removed from the data due to NA values in weighted_meanDifference (insufficient data in previous steps): ", paste0(TFs_NA, collapse = ", "))
+  message = paste0("The following TF have been removed from the data due to NA values in weighted_meanDifference (insufficient data in previous steps): ", paste0(unique(TFs_NA), collapse = ", "))
   checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
 }
 
@@ -1024,7 +1030,7 @@ output.global.TFs.origReal = output.global.TFs
 # Set the page dimensions to the maximum across all plotted variants
 output.global.TFs.filteredSummary = filter(output.global.TFs, pvalue <= max(par.l$significanceThresholds))
 
-nTF_label = nrow(output.global.TFs.filteredSummary)
+nTF_label = min(par.l$maxTFsToDraw, nrow(output.global.TFs.filteredSummary))
 
 TFLabelSize = ifelse(nTF_label < 20, 8,
                      ifelse(nTF_label < 40, 7,
@@ -1064,104 +1070,151 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
     ################
     # VOLCANO PLOT #
     ################
-   
-    output.global.TFs = output.global.TFs %>%
-      mutate( pValueAdj_log10 = transform_yValues(pvalueAdj),
-              pValue_sig = pvalueAdj <= significanceThresholdCur)
     
-    ggrepel_df = filter(output.global.TFs, pValue_sig == TRUE)
-
-
+    output.global.TFs = output.global.TFs.origReal %>%
+        mutate( pValueAdj_log10 = transform_yValues(pvalueAdj),
+                pValue_log10 = transform_yValues(pvalue),
+                pValueAdj_sig = pvalueAdj <= significanceThresholdCur,
+                pValue_sig = pvalue <= significanceThresholdCur)  %>%
+        filter(classification %in% showClasses)
     
-    # Increase the ymax a bit more
-    ymax = max(transform_yValues(significanceThresholdCur), max(output.global.TFs$pValueAdj_log10, na.rm = TRUE)) * 1.1
-    alphaValueNonSign = 0.3
+    
+    for (pValueStrCur in c("pvalue", "pvalueAdj")) {
+        
+        
+        if (pValueStrCur == "pvalue") {
+            
+            pValueScoreCur = "pValue_log10"
+            pValueSigCur = "pValue_sig"
+            pValueStrLabel = "raw p-value"
+            
+            ggrepel_df = filter(output.global.TFs, pValue_sig == TRUE)
+            maxPValue = max(output.global.TFs$pValue_log10, na.rm = TRUE)
+            
+        } else {
+            
+            pValueScoreCur = "pValueAdj_log10"
+            pValueSigCur = "pValueAdj_sig"
+            pValueStrLabel = "adj. p-value"
+            
+            ggrepel_df = filter(output.global.TFs, pValueAdj_sig == TRUE)
+            maxPValue = max(output.global.TFs$pValueAdj_log10, na.rm = TRUE)
+        }
     
         
+        # Increase the ymax a bit more
+        ymax = max(transform_yValues(significanceThresholdCur), maxPValue) * 1.1
+        alphaValueNonSign = 0.3
+        
+            
         # Reverse here because negative values at left mean that the condition that has been specified in the beginning is higher. 
         # Reverse the rev() that was done before for this plot therefore to restore the original order
         labelsConditionsNew = rev(conditionComparison)
     
-    g = ggplot()
-    
-    if (par.l$plotRNASeqClassification) {
-      g = g + geom_point(data = output.global.TFs, aes(weighted_meanDifference, pValueAdj_log10, alpha = pValue_sig, size = TFBS, fill = classification), shape=21, stroke = 0.5, color = "black") +  scale_fill_manual("TF class", values = par.l$colorCategories)
-      
-      g = g +
-          geom_rect(aes(xmin = -Inf,xmax = 0,ymin = -Inf, ymax = Inf, color = par.l$colorConditions[2]),
-                    alpha = .3, fill = par.l$colorConditions[2], size = 0) +
-          geom_rect(aes(xmin = 0, xmax = Inf, ymin = -Inf,ymax = Inf, color = par.l$colorConditions[1]),                                                                                   alpha = .3, fill = par.l$colorConditions[1], size = 0) + 
-          scale_color_manual(name = 'TF activity higher in', values = par.l$colorConditions, labels = conditionComparison)
-      
-    } else {
+        g = ggplot()
         
-      g = g + geom_point(data = output.global.TFs, aes(weighted_meanDifference, pValueAdj_log10, alpha = pValue_sig, size = TFBS), shape=21, stroke = 0.5, color = "black")
-      g = g + geom_rect(aes(xmin = -Inf,
-                            xmax = 0,
+        if (par.l$plotRNASeqClassification) {
+          g = g + geom_point(data = output.global.TFs, aes_string("weighted_meanDifference", pValueScoreCur, alpha = pValueSigCur, size = "TFBS", fill = "classification"), shape=21, stroke = 0.5, color = "black") +  scale_fill_manual("TF class", values = par.l$colorCategories)
+          
+          g = g +
+              geom_rect(aes(xmin = -Inf,xmax = 0,ymin = -Inf, ymax = Inf, color = par.l$colorConditions[2]),
+                        alpha = .3, fill = par.l$colorConditions[2], size = 0) +
+              geom_rect(aes(xmin = 0, xmax = Inf, ymin = -Inf,ymax = Inf, color = par.l$colorConditions[1]),                                                                                   alpha = .3, fill = par.l$colorConditions[1], size = 0) + 
+              scale_color_manual(name = 'TF activity higher in', values = par.l$colorConditions, labels = conditionComparison)
+          
+        } else {
+            
+          g = g + geom_point(data = output.global.TFs, aes_string("weighted_meanDifference", pValueScoreCur, alpha = pValueSigCur, size = "TFBS"), shape=21, stroke = 0.5, color = "black")
+          g = g + geom_rect(aes(xmin = -Inf,
+                                xmax = 0,
+                                ymin = -Inf, 
+                                ymax = Inf, fill = par.l$colorConditions[2]),
+                            alpha = .3) + 
+              geom_rect(aes(xmin = 0,
+                            xmax = Inf,
                             ymin = -Inf, 
-                            ymax = Inf, fill = par.l$colorConditions[2]),
-                        alpha = .3) + 
-          geom_rect(aes(xmin = 0,
-                        xmax = Inf,
-                        ymin = -Inf, 
-                        ymax = Inf, fill = par.l$colorConditions[1]),
-                    alpha = .3)
-      g = g + scale_fill_manual(name = 'TF activity higher in', values = rev(par.l$colorConditions), labels = labelsConditionsNew)
-    }
- 
-
-    g = g + ylim(-0.1,ymax) + 
-        ylab(paste0(transform_yValues_caption(), " (adj. p-value)")) + 
-        xlab("weighted mean difference") + 
-        scale_alpha_manual(paste0("adj. p-value < ", significanceThresholdCur), values = c(alphaValueNonSign, 1), labels = c("no", "yes")) + 
-        geom_hline(yintercept = transform_yValues(significanceThresholdCur), linetype = "dotted") 
+                            ymax = Inf, fill = par.l$colorConditions[1]),
+                        alpha = .3)
+          g = g + scale_fill_manual(name = 'TF activity higher in', values = rev(par.l$colorConditions), labels = labelsConditionsNew)
+        }
+     
     
-    if (par.l$plotRNASeqClassification) {
-      g = g +  geom_label_repel(data = ggrepel_df, aes(weighted_meanDifference, pValueAdj_log10, label = TF, fill = classification),
-                                size = TFLabelSize, fontface = 'bold', color = 'white',
-                                segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
-                                label.padding = unit(0.2, "lines"), # how thick is connectin line
-                                nudge_y = 0.05, nudge_x = 0,  # how far from center points
-                                segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
-    } else {
-      g = g +  geom_label_repel(data = ggrepel_df, aes(weighted_meanDifference, pValueAdj_log10, label = TF),
-                                size = TFLabelSize, fontface = 'bold', color = 'black',
-                                segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
-                                label.padding = unit(0.2, "lines"), # how thick is connectin line
-                                nudge_y = 0.05, nudge_x = 0,  # how far from center points
-                                segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
-    }
-  
-      g = g + theme_bw() + 
-          theme(axis.text.x = element_text(size=rel(1.5)),
-                axis.text.y = element_text(size=rel(1.5)), 
-                axis.title.x = element_text(size=rel(1.5)),
-                axis.title.y = element_text(size=rel(1.5)),
-                legend.title=element_text(size=rel(1.5)), 
-                legend.text=element_text(size=rel(1.5))) 
-      
-      if (par.l$plotRNASeqClassification) {
-        g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
-                       fill = guide_legend(override.aes = list(size=5), order = 3),
-                       color = guide_legend(override.aes = list(size=5), order = 1))
+        g = g + ylim(-0.1,ymax) + 
+            ylab(paste0(transform_yValues_caption(), " (", pValueStrLabel, ")")) + 
+            xlab("weighted mean difference") + 
+            scale_alpha_manual(paste0(pValueStrLabel, " < ", significanceThresholdCur), values = c(alphaValueNonSign, 1), labels = c("no", "yes")) + 
+            geom_hline(yintercept = transform_yValues(significanceThresholdCur), linetype = "dotted") 
         
-        allPlots.l[["volcano"]] [[pValThrStr]] [[paste0(showClasses,collapse = "-")]] = g
-      } else {
-        g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
-                       fill = guide_legend(override.aes = list(size=5), order = 3))
- 
+        if (nrow(ggrepel_df) <= par.l$maxTFsToDraw) {
+            
+            if (par.l$plotRNASeqClassification) {
+                g = g +  geom_label_repel(data = ggrepel_df, aes_string("weighted_meanDifference", pValueScoreCur, label = "TF", fill = "classification"),
+                                          size = TFLabelSize, fontface = 'bold', color = 'white',
+                                          segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
+                                          label.padding = unit(0.2, "lines"), # how thick is connectin line
+                                          nudge_y = 0.05, nudge_x = 0,  # how far from center points
+                                          segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
+            } else {
+                g = g +  geom_label_repel(data = ggrepel_df, aes_string("weighted_meanDifference", pValueScoreCur, label = "TF"),
+                                          size = TFLabelSize, fontface = 'bold', color = 'black',
+                                          segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
+                                          label.padding = unit(0.2, "lines"), # how thick is connectin line
+                                          nudge_y = 0.05, nudge_x = 0,  # how far from center points
+                                          segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
+            }
+        } else {
+            
+            flog.warn(paste0("Not labeling significant TFs, maximum of ", par.l$maxTFsToDraw, " exceeded for ", pValThrStr, " and ", pValueStrCur))
+            
+            
+            if (nrow(ggrepel_df) > par.l$maxTFsToDraw) {
+                
+                labelPlot = paste0("*TF labeling skipped because number of significant TFs\nexceeds the maximum of ", par.l$maxTFsToDraw, " (", nrow(ggrepel_df), ")")
+                flog.warn(labelPlot)
+                
+                g = g + annotate("text", label = labelPlot, x = 0, y = ymax, size = 3)
+                
+            }
+            
+            
+            
+        }
         
-        allPlots.l[["volcano"]] [[pValThrStr]] = g
-      }
       
+          g = g + theme_bw() + 
+              theme(axis.text.x = element_text(size=rel(1.5)),
+                    axis.text.y = element_text(size=rel(1.5)), 
+                    axis.title.x = element_text(size=rel(1.5)),
+                    axis.title.y = element_text(size=rel(1.5)),
+                    legend.title=element_text(size=rel(1.5)), 
+                    legend.text=element_text(size=rel(1.5))) 
+          
+          if (par.l$plotRNASeqClassification) {
+            g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
+                           fill = guide_legend(override.aes = list(size=5), order = 3),
+                           color = guide_legend(override.aes = list(size=5), order = 1))
+            
+            allPlots.l[["volcano"]] [[pValThrStr]] [[paste0(showClasses,collapse = "-")]] [[pValueStrCur]] = g
+          } else {
+            g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
+                           fill = guide_legend(override.aes = list(size=5), order = 3))
+     
+            
+            allPlots.l[["volcano"]] [[pValThrStr]] [[pValueStrCur]] = g
+          }
+          
+      } # end separately for raw and adjusted p-values
+        
+    } # end for all showClasses
 
-    
-  } # end for all showClasses
 
 
 } # end for different significance thresholds
 
 
+#####################
+# CIRCULAR PLOT PDF #
+#####################
 height = width = max(nTF_label / 5, par.l$circularPlot_minDimensions)
 
 # Increase a bit towards smaller heights by a factor, empirical observation
@@ -1182,19 +1235,31 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
 }
 dev.off()
 
+
+####################
+# VOLCANO PLOT PDF #
+####################
 height = width = max(nTF_label / 15 , par.l$circularPlot_minDimensions)
 pdf(file = par.l$file_plotVolcano, height = height, width = width, useDingbats = FALSE)
 
-for (significanceThresholdCur in par.l$significanceThresholds) {
-  
-  for (showClasses in classesList.l) {
-    if (par.l$plotRNASeqClassification) {
-      plot(allPlots.l[["volcano"]] [[as.character(significanceThresholdCur)]] [[paste0(showClasses,collapse = "-")]])
-    } else {
-      plot(allPlots.l[["volcano"]] [[as.character(significanceThresholdCur)]])
-    }
+
+for (pValueStrCur in c("pvalueAdj", "pvalue")) {
     
-  }
+    for (significanceThresholdCur in par.l$significanceThresholds) {
+      
+      for (showClasses in classesList.l) {
+
+              if (par.l$plotRNASeqClassification) {
+                  plot(allPlots.l[["volcano"]] [[as.character(significanceThresholdCur)]] [[paste0(showClasses,collapse = "-")]] [[pValueStrCur]])
+              } else {
+                  plot(allPlots.l[["volcano"]] [[as.character(significanceThresholdCur)]] [[pValueStrCur]])
+              }
+          
+          
+        
+        
+      }
+    }
 }
 dev.off()
 

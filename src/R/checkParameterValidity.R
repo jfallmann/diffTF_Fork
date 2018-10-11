@@ -52,7 +52,7 @@ assertDirectoryExists(dirname(TFBS_dir), access = "r")
 
 fastaFile = snakemake@config$additionalInputFiles$refGenome_fasta
 assertFileExists(fastaFile)
-assertDirectoryExists(dirname(fastaFile), access = "w")
+assertDirectoryExists(dirname(fastaFile), access = "r")
 
 allTFs = strsplit(snakemake@config$par_general$TFs, ",")[[1]]
 

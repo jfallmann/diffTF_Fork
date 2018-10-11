@@ -210,8 +210,7 @@ nTFBS = nrow(overlapsAll.df)
 if (nTFBS >= par.l$minNoDatapoints) {
 
   
-  # Group by peak ID
-  # take only the maximum row mean of all samples, sample with biggest coverage
+  # Group by peak ID: To avoid biases and dependencies based on TFBS clustering within peaks, we then select the TFBS per TF per peak with the highest average read count across all samples.
   coverageAll_grouped.df = overlapsAll.df %>%
     dplyr::group_by(peakID) %>%
     dplyr::slice(which.max(mean)) %>%
@@ -395,7 +394,12 @@ if (skipTF) {
         }
         )
         
-        if (class(res_DESeq) == "character") skipTF = TRUE
+        if (class(res_DESeq) == "character") {
+          
+          skipTF = TRUE
+          TF_outputInclPerm.df = as.data.frame(matrix(nrow = 0, ncol = 2 + par.l$nPermutations + 1))
+          colnames(TF_outputInclPerm.df) = c("TF", "TFBSID", paste0("log2fc_perm", 0:par.l$nPermutations))
+        }
         
         if (!skipTF) {
             res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq))

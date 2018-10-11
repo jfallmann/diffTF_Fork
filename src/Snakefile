@@ -301,7 +301,7 @@ script_summaryFinal         = "summaryFinal.R"
 #########################################
 
 # For cluster usage:  The keyword localrules allows to mark a rule as local, so that it is not submitted to the cluster and instead executed on the host node
-localrules: all
+localrules: all,cleanUpLogFiles,filterSexChromosomesAndSortPeaks
 
 rule all:
     input:
