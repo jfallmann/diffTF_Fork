@@ -324,8 +324,7 @@ rule checkParameterValidity:
 rule produceConsensusPeaks:
     input:
         checkFlag = ancient(rules.checkParameterValidity.output.flag),
-        peaks     = allPeakFiles,
-        sampleFile= config["samples"]["summaryFile"]
+        peaks     = allPeakFiles
     output:
         consensusPeaks_bed = TEMP_DIR + "/" + compType + "consensusPeaks.bed",
         summaryPlot        = TEMP_DIR + "/" + compType + "consensusPeaks_lengthDistribution.pdf"
@@ -407,8 +406,7 @@ def getBamFilesBasedOnPairedEnd(wildcards):
 rule intersectPeaksAndBAM:
     input:
         consensusPeaks = rules.filterSexChromosomesAndSortPeaks.output.consensusPeaks_sorted,
-        allBAMs        = getBamFilesBasedOnPairedEnd,
-        sampleFile     = config["samples"]["summaryFile"]
+        allBAMs        = getBamFilesBasedOnPairedEnd
     output:
         peaksBamOverlapRaw = temp(PEAKS_DIR + '/' + compType + 'allBams.peaks.overlaps.bed'),
         peaksBamOverlap    = PEAKS_DIR + '/' + compType + 'allBams.peaks.overlaps.bed.gz',
@@ -474,8 +472,7 @@ rule intersectPeaksAndTFBS:
 rule intersectTFBSAndBAM:
     input:
         bed           = rules.intersectPeaksAndTFBS.output.TFBSinPeaksMod_bed,
-        allBAMs       = getBamFilesBasedOnPairedEnd,
-        sampleFile    = config["samples"]["summaryFile"]
+        allBAMs       = getBamFilesBasedOnPairedEnd
     output:
         BAMOverlapRaw = temp(TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.allBAMs.overlaps.bed"),
         BAMOverlap    =      TF_DIR + "/{TF}/" + extDir + "/" + compType + "{TF}.allBAMs.overlaps.bed.gz",

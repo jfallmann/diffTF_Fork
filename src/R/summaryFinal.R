@@ -67,10 +67,15 @@ par.l$legend_position = c(0.1, 0.9)
 
 # Which transformation of the y values to do?
 
-# TODO: Pseudocount also for line?
-transform_yValues <- function(values, addPseudoCount = TRUE) {
+transform_yValues <- function(values, addPseudoCount = TRUE, onlyForZero = TRUE) {
     
-    -log10(values + ifelse(addPseudoCount, par.l$pseudocountLogTransform, 0))
+    # Should only happen with the permutation-based approach
+    zeros = which(values == 0)
+    if (length(zeros) > 0 & addPseudoCount) {
+        values[zeros] = 1 / par.l$nPermutations
+    }
+    
+    -log10(values)
 }
 
 transform_yValues_caption <- function() {
@@ -168,52 +173,51 @@ printParametersLog(par.l)
 #############
 # FUNCTIONS #
 #############
-plotCircular <- function(output.global.TFs, par.l, showClasses, significanceThresholdCur, conditionComparison, variableXAxis) {
+plotCircular <- function(dataCur, par.l, showClasses, significanceThresholdCur, conditionComparison, variableXAxis) {
   
   if (par.l$plotRNASeqClassification) {
     # Filter by classes to show
-    output.global.TFs = filter(output.global.TFs, classification %in% showClasses)
-    output.global.TFs$classification = factor(output.global.TFs$classification, levels = showClasses)
-    
+    dataCur = filter(dataCur, classification %in% showClasses)
+    dataCur$classification = factor(dataCur$classification, levels = showClasses)
     
     colorCategoriesCur = par.l$colorCategories[which(names(par.l$colorCategories) %in% showClasses)]
   }
   
 
   # TODO: When adjust p-value? Before or after filtering?
-  output.global.TFs = mutate(output.global.TFs, sign = pvalueAdj <= significanceThresholdCur)
+  dataCur = mutate(dataCur, sign = pvalueAdj <= significanceThresholdCur)
   
   
   # Limits for x-axis. Multiple by a factor > 1 to account for the white legend part in which no point should be located
   # For this, extend the x axis limit so that radial positions are smaller and do not cross the border of the legend
   # Enforce a minimum of above 1 for enrichment analysis
-  limit_max = max(abs(output.global.TFs[,variableXAxis])) * (1 + par.l$extension_x_limits)
+  limit_max = max(abs(dataCur[,variableXAxis])) * (1 + par.l$extension_x_limits)
   limit_min = 0
   
   # Determine the value for 1 degree radial positions. 180 is the max
   radial_coeff = 180/limit_max
   
   # Calculate the radial positions
-  output.global.TFs$radial = 0
-  index_neg = which(output.global.TFs$weighted_meanDifference < 0)
-  index_pos = which(output.global.TFs$weighted_meanDifference > 0)
+  dataCur$radial = 0
+  index_neg = which(dataCur$weighted_meanDifference < 0)
+  index_pos = which(dataCur$weighted_meanDifference > 0)
   
   # extracting the labels from object in order to add them manually later
-  output.global.TFs$radial[index_neg] = 180 + (radial_coeff*abs(unlist(output.global.TFs[, variableXAxis])[index_neg]))
-  output.global.TFs$radial[index_pos] = 180 - (radial_coeff*abs(unlist(output.global.TFs[, variableXAxis])[index_pos]))
+  dataCur$radial[index_neg] = 180 + (radial_coeff*abs(unlist(dataCur[, variableXAxis])[index_neg]))
+  dataCur$radial[index_pos] = 180 - (radial_coeff*abs(unlist(dataCur[, variableXAxis])[index_pos]))
   
   # Which measure to use for the y value?
-  signThresholdPlot = transform_yValues(significanceThresholdCur)
+  signThresholdPlot = transform_yValues(significanceThresholdCur, addPseudoCount = FALSE)
   
   # Dont display TFs that are deemed non-significant
-  ggrepel_df = filter(output.global.TFs, sign == TRUE)
+  ggrepel_df = filter(dataCur, sign == TRUE)
   # ggrepel_df = filter(ggrepel_df, weighted_CD > par.l$cohensDThreshold)
   
   
-  ylimit = max(signThresholdPlot, sign(max(output.global.TFs$yValue)) * ceiling(abs(max(output.global.TFs$yValue)))) * par.l$extension_y_limits
+  ylimit = max(signThresholdPlot, sign(max(dataCur$yValue)) * ceiling(abs(max(dataCur$yValue)))) * par.l$extension_y_limits
   
   labels        = list()
-  startNo = sign(min(output.global.TFs$yValue)) * ceiling(abs(min(output.global.TFs$yValue)))
+  startNo = sign(min(dataCur$yValue)) * ceiling(abs(min(dataCur$yValue)))
   endNo   = ylimit
   stepsize = 1
   labels$breaks = round(seq(startNo, endNo, stepsize),0)
@@ -251,9 +255,9 @@ plotCircular <- function(output.global.TFs, par.l, showClasses, significanceThre
   
   
   if (par.l$plotRNASeqClassification) {
-    p1 = p1 +  geom_point(data = output.global.TFs, aes(x = radial, y = yValue, size = sign, fill = classification, color = classification), alpha = 1, shape = 21)
+    p1 = p1 +  geom_point(data = dataCur, aes(x = radial, y = yValue, size = sign, fill = classification, color = classification), alpha = 1, shape = 21)
   } else {
-    p1 = p1 +  geom_point(data = output.global.TFs, aes(x = radial, y = yValue, size = sign), alpha = 1, shape = 21)
+    p1 = p1 +  geom_point(data = dataCur, aes(x = radial, y = yValue, size = sign), alpha = 1, shape = 21)
   }
   
   p1 = p1 + geom_rect(data = NULL, aes(xmin = 180, xmax = 360 - width_whiteArea , ymin = signThresholdPlot, ymax =  ylimit), alpha = 0.5, fill = "white") 
@@ -443,15 +447,16 @@ output.global.TFs.orig = NULL
 nTF = length(par.l$files_input_permResults)
 for (fileCur in par.l$files_input_permResults) {
   
-  resultsCur.df =  read_tsv(fileCur, col_names = TRUE, col_types = list(
-    col_integer(), # "permutation"
-    col_character(), # "TF",
-    col_double(), # "weighted_meanDifference
-    col_double(), # weighted_CD
-    col_double(), # TFBS
-    col_double(), # weighted_Tstat
-    col_double() # variance
-  ))
+  resultsCur.df =  read_tsv(fileCur, col_names = TRUE)
+  # resultsCur.df =  read_tsv(fileCur, col_names = TRUE, col_types = list(
+  #   col_integer(), # "permutation"
+  #   col_character(), # "TF",
+  #   col_double(), # "weighted_meanDifference
+  #   col_double(), # weighted_CD
+  #   col_double(), # TFBS
+  #   col_double(), # weighted_Tstat
+  #   col_double() # variance
+  # ))
   assertIntegerish(nrow(resultsCur.df), lower = 1, upper = par.l$nPermutations + 1)
   
   if (is.null(output.global.TFs.orig)) {
@@ -462,6 +467,10 @@ for (fileCur in par.l$files_input_permResults) {
   
 }
 
+# Convert columns to numeric if they are not already
+output.global.TFs.orig$weighted_meanDifference = as.numeric(output.global.TFs.orig$weighted_meanDifference)
+output.global.TFs.orig$variance = as.numeric(output.global.TFs.orig$variance)
+output.global.TFs.orig$weighted_CD = as.numeric(output.global.TFs.orig$weighted_CD)
 
 
 # Remove rows with NA
@@ -532,40 +541,45 @@ if (par.l$nPermutations > 0) {
 } else {
   
   
-  # Calculate adjusted p values out of variance 
-  estimates = tryCatch( {
-    
-    locfdrRes = locfdr(output.global.TFs.orig$weighted_Tstat, plot = 4)
-    # Currently taken as default
-    MLE.delta  = locfdrRes$fp0["mlest", "delta"]
-    
-    # Not the current default
-    CME.delta  = locfdrRes$fp0["cmest", "delta"]
-    
-    c(MLE.delta, CME.delta)
-    
-  }, error = function(e) {
-    message = "Could not run locfdr, use the median instead..."
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-    
-    # For the fallback, simply return the median for both estimates for now
-    c(median(output.global.TFs.orig$weighted_Tstat, na.rm = TRUE), median(output.global.TFs.orig$weighted_Tstat, na.rm = TRUE))
-  }
-  )
+  # # Calculate adjusted p values out of variance 
+  # estimates = tryCatch( {
+  #   
+  #   locfdrRes = locfdr(output.global.TFs.orig$weighted_Tstat, plot = 4)
+  #   # Currently taken as default
+  #   MLE.delta  = locfdrRes$fp0["mlest", "delta"]
+  #   
+  #   # Not the current default
+  #   CME.delta  = locfdrRes$fp0["cmest", "delta"]
+  #   
+  #   c(MLE.delta, CME.delta)
+  #   
+  # }, error = function(e) {
+  #   message = "Could not run locfdr, use the median instead..."
+  #   checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+  #   
+  #   # For the fallback, simply return the median for both estimates for now
+  #   c(median(output.global.TFs.orig$weighted_Tstat, na.rm = TRUE), median(output.global.TFs.orig$weighted_Tstat, na.rm = TRUE))
+  # }
+  # )
+  # 
+  # MLE.delta = estimates[1]
+  # CME.delta = estimates[2]
+  # 
+  # # Compute two different measures for the mean
+  # # Which one to take? Depends, see page 101 in Bradley Efron-Large-Scale Inference_ Empirical Bayes Methods for Estimation, Testing, and Prediction
+  # # The default option in locfdr is the MLE method, not central matching. Slight irregularities in the central histogram,
+  # # as seen in Figure 6.1a, can derail central matching. The MLE method is more stable, but pays the price of possibly increased bias.
+  # 
+  # 
+  # output.global.TFs.orig$weighted_Tstat_centralized = output.global.TFs.orig$weighted_Tstat - MLE.delta
+  # 
   
-  MLE.delta = estimates[1]
-  CME.delta = estimates[2]
   
-  # Compute two different measures for the mean
-  # Which one to take? Depends, see page 101 in Bradley Efron-Large-Scale Inference_ Empirical Bayes Methods for Estimation, Testing, and Prediction
-  # The default option in locfdr is the MLE method, not central matching. Slight irregularities in the central histogram,
-  # as seen in Figure 6.1a, can derail central matching. The MLE method is more stable, but pays the price of possibly increased bias.
+  populationMean = 0
+  zScore = (output.global.TFs.orig$weighted_Tstat - populationMean) / sqrt(output.global.TFs.orig$variance)
   
-  
-  output.global.TFs.orig$weighted_Tstat_centralized = output.global.TFs.orig$weighted_Tstat - MLE.delta
-  
-  output.global.TFs.orig$variance = as.numeric(output.global.TFs.orig$variance)
-  output.global.TFs.orig$pvalue   = 2*pnorm(-abs(output.global.TFs.orig$weighted_Tstat_centralized), sd = sqrt(output.global.TFs.orig$variance))
+  # 2-sided test
+  output.global.TFs.orig$pvalue   = 2*pnorm(-abs(zScore))
   
   # Handle extreme cases with p-values that are practically 0 and would cause subsequent issues
   index0 = which(output.global.TFs.orig$pvalue < .Machine$double.xmin)
@@ -590,7 +604,7 @@ output.global.TFs$Cohend_factor = factor(output.global.TFs$Cohend_factor, levels
 output.global.TFs$pvalueAdj = p.adjust(output.global.TFs$pvalue, method = "BH")
 
 
-colnamesToPlot = colnames(output.global.TFs)[-which(colnames(output.global.TFs) %in% c("TF", "sign", "classification"))]
+colnamesToPlot = c("weighted_meanDifference", "weighted_CD", "TFBS", "weighted_Tstat", "variance", "pvalue", "pvalueAdj")
 
 
 for (pValueCur in c(par.l$significanceThresholds , 1)) {
@@ -600,6 +614,10 @@ for (pValueCur in c(par.l$significanceThresholds , 1)) {
   title = paste0("p-value: ", pValueCur, " (retaining ", nrow(filtered.df), " TF)")
   
   for (measureCur in colnamesToPlot) {
+      
+      if (all(!is.finite(unlist(filtered.df[,measureCur])))) {
+          next
+      }
     
     if (measureCur %in%  c("Cohend_factor")) {
       plot(ggplot(filtered.df, aes_string(measureCur))  + stat_count() + theme_bw() + ggtitle(title))
@@ -1075,9 +1093,11 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
         mutate( pValueAdj_log10 = transform_yValues(pvalueAdj),
                 pValue_log10 = transform_yValues(pvalue),
                 pValueAdj_sig = pvalueAdj <= significanceThresholdCur,
-                pValue_sig = pvalue <= significanceThresholdCur)  %>%
-        filter(classification %in% showClasses)
-    
+                pValue_sig = pvalue <= significanceThresholdCur) 
+       
+    if (par.l$plotRNASeqClassification) {
+        output.global.TFs = filter(output.global.TFs, classification %in% showClasses)
+    }
     
     for (pValueStrCur in c("pvalue", "pvalueAdj")) {
         
@@ -1103,7 +1123,7 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
     
         
         # Increase the ymax a bit more
-        ymax = max(transform_yValues(significanceThresholdCur), maxPValue) * 1.1
+        ymax = max(transform_yValues(significanceThresholdCur), maxPValue, na.rm = TRUE) * 1.1
         alphaValueNonSign = 0.3
         
             
@@ -1265,8 +1285,8 @@ dev.off()
 
 
 output.global.TFs.origReal = dplyr::select(output.global.TFs.origReal, -one_of("permutation", "yValue"))
-output.global.TFs.origReal = dplyr::mutate_if(output.global.TFs.origReal, is.numeric, as.character)
-write_tsv(output.global.TFs.origReal, path = par.l$file_output_summary, col_names = TRUE)
+output.global.TFs.origReal.transf = dplyr::mutate_if(output.global.TFs.origReal, is.numeric, as.character)
+write_tsv(output.global.TFs.origReal.transf, path = par.l$file_output_summary, col_names = TRUE)
 saveRDS(allPlots.l, file = par.l$file_output_plots)
 
 .printExecutionTime(start.time)

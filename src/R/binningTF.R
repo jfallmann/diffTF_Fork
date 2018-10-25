@@ -32,7 +32,9 @@ createDebugFile(snakemake)
 par.l = list()
 par.l$verbose = TRUE
 par.l$log_minlevel = "INFO"
-par.l$minNoDatapoints = 5
+
+# This value was determined empirically. Below 20, the estimated variance from the bootstrap is estimated to be artifically high and not reliable enough
+par.l$minNoDatapoints = 20
 
 # Used for plotting
 par.l$includePlots = FALSE
@@ -109,9 +111,10 @@ if (calculateVariance) {
   boostrapResults.l[[TFCur]] = list() 
 }
 
-output.global.TFs = tribble(~permutation, ~TF, ~weighted_meanDifference, ~weighted_CD, ~TFBS, ~weighted_Tstat, ~variance)
+output.global.TFs = tribble(~permutation, ~TF, ~weighted_meanDifference, ~weighted_CD, ~TFBS, ~weighted_Tstat,  ~variance)
 perm.l[[TFCur]]   = tribble(~permutation, ~bin, ~meanDifference, ~nDataAll, ~nDataBin, ~ratio_TFBS, ~cohensD, ~variance, ~df, ~pvalue, ~Tstat)
 summaryCov.df     = tribble(~permutation, ~bin1, ~bin2, ~weight1, ~weight2, ~cov)
+
 
 
 ######################
@@ -377,6 +380,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
     
     message = paste0(" Not enough data for any of the ", nBins, " bins, this TF will be skipped in subsequent steps")
     checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    calculateVariance  = FALSE
   } else {
     flog.info(paste0(" Finished calculation across bins successfully for ", nBinsWithData, " out of ", nBins, " bins"))
   }
@@ -442,7 +446,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
       # see the paper for a derivation of the formula
       varianceFinal = sum(weights^2 * varianceIndividual) + (2 * sum(summaryCov.filt.df$weight1 * summaryCov.filt.df$weight2 * summaryCov.filt.df$cov))
       
-      
+
     } else {
       
       message = paste0("Could not calculate variance due to missing values. Set variance to NA")
@@ -461,17 +465,27 @@ for (fileCur in par.l$files_input_TF_allMotives) {
     perm.filtered.df   = filter(perm.filtered.df, !is.na(df))
   }
   
-  wmd = weighted.mean(perm.filtered.df$meanDifference, perm.filtered.df$ratio_TFBS, na.rm = TRUE)
-  
+  if (nrow(perm.filtered.df) > 0) {
+      wmd = weighted.mean(perm.filtered.df$meanDifference, perm.filtered.df$ratio_TFBS, na.rm = TRUE)
+      
+      weighted_CD    = weighted.mean(perm.filtered.df$cohensD, perm.filtered.df$ratio_TFBS, na.rm = TRUE)
+      weighted_Tstat = weighted.mean(perm.filtered.df$Tstat  , perm.filtered.df$ratio_TFBS, na.rm = TRUE)
+      
+  } else {
+      wmd =  weighted_CD = weighted_Tstat = NA
+  }
   output.global.TFs = add_row(output.global.TFs,
                               permutation             = permutationCur,
                               TF                      = TFCur,
                               weighted_meanDifference = wmd,
-                              weighted_CD             = weighted.mean(perm.filtered.df$cohensD, perm.filtered.df$ratio_TFBS, na.rm = TRUE),
-                              weighted_Tstat          = weighted.mean(perm.filtered.df$Tstat  , perm.filtered.df$ratio_TFBS, na.rm = TRUE),
+                              weighted_CD             =  weighted_CD,
+                              weighted_Tstat          = weighted_Tstat,
                               TFBS                    = nRowsTF,
-                              variance                = varianceFinal)
-  
+                              variance                = varianceFinal
+                              )
+ 
+
+   
 
   if (par.l$includePlots) {
       xlabStr = paste0("log2 fold-change of TFBS")
@@ -500,7 +514,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
 
 # Save objects
 
-saveRDS(perm.l, file = par.l$file_output_permResults)
+saveRDS(list( binSummary =  perm.l, covarianceSummary = summaryCov.df), file = par.l$file_output_permResults)
 
 # Convert all numeric data types to character in order to prevent any scientific notation
 output.global.TFs = mutate_if(output.global.TFs, is.numeric, as.character)

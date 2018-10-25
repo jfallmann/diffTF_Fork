@@ -31,6 +31,10 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
+Version 1.1.7 (2018-10-25)
+    - the default value of the minimum number of data points for a CG bin to be included has been raised from 5 to 20 to make the variance calculation more reliable
+    - various small updates to the ``summaryFinal.R`` script
+
 Version 1.1.6 (2018-10-11)
     - fixed small issue in ``checkParameterValidity.R`` when not having sufficient permissions for the folder in which the fasta file is located
     - updated the ``summaryFinal.R`` script. Now, for the Volcano plot PDF, in addition to adj. p-values, also the raw p-values are plotted in the end. This might be helpful for datasets with small signal when no adj. p-value is significant. In addition, labeling of TFs is now skipped when the number of TFs to label exceeds 150. THis makes the step faster and the PDF smaller and less crowded.
