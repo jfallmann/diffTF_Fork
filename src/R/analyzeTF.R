@@ -494,7 +494,21 @@ if (skipTF) {
     
           # d) Comparisons between peaks and binding sites
           
-          modeNum     = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)
+          # Check the version of modeest, because version 2.3.2 introduced an implementation change that breaks things
+          
+          if (packageVersion("modeest") < "2.3.2") {
+              
+              modeNum     = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)
+              
+              stopifnot(is.list(modeNum))
+              l2fc_mode = ifelse(is.null(modeNum$M), NA, modeNum$M)
+              l2fc_skewness = ifelse(is.null(modeNum$skewness), NA, modeNum$skewness)
+          } else {
+              
+              l2fc_mode = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)[1]
+              l2fc_skewness = skewness(final.TF.df$l2FC, na.rm = TRUE)[1]
+          }
+          
           
           # We have to filter now by NAs because for some permutations, limma might have been unable to calculate the coefficients
           final.TF.filtered.df = dplyr::filter(final.TF.df, !is.na(l2FC))
@@ -518,10 +532,10 @@ if (skipTF) {
                                        Pos_l2FC        = nrow(final.TF.df[final.TF.df$l2FC > 0,]) / nrow(final.TF.df),
                                        Mean_l2FC       = mean(final.TF.df$l2FC, na.rm = TRUE),
                                        Median_l2FC     = median(final.TF.df$l2FC, na.rm = TRUE),
-                                       Mode_l2FC       = modeNum[[1]],
+                                       Mode_l2FC       = l2fc_mode,
                                        sd_l2FC         = sd(final.TF.df$l2FC, na.rm = TRUE),
                                        pvalue_raw      = tTest_pVal,
-                                       skewness_l2FC   = modeNum[[2]], 
+                                       skewness_l2FC   = l2fc_skewness, 
                                        T_statistic     = tTest_stat, 
                                        TFBS_num        = nrow(final.TF.df)
             )

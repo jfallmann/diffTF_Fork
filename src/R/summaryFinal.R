@@ -471,6 +471,8 @@ for (fileCur in par.l$files_input_permResults) {
 output.global.TFs.orig$weighted_meanDifference = as.numeric(output.global.TFs.orig$weighted_meanDifference)
 output.global.TFs.orig$variance = as.numeric(output.global.TFs.orig$variance)
 output.global.TFs.orig$weighted_CD = as.numeric(output.global.TFs.orig$weighted_CD)
+output.global.TFs.orig$weighted_Tstat = as.numeric(output.global.TFs.orig$weighted_Tstat)
+
 
 
 # Remove rows with NA

@@ -31,6 +31,9 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
+Version 1.1.8 (2018-11-07)
+    - changed the call to the mlv function from the modeest package due to a breaking implementation change in version 2.3.2 that was published end of October 2018. ``diffTF`` now checks the package version for modeest and calls the functions in dependence of the specific version.
+
 Version 1.1.7 (2018-10-25)
     - the default value of the minimum number of data points for a CG bin to be included has been raised from 5 to 20 to make the variance calculation more reliable
     - various small updates to the ``summaryFinal.R`` script

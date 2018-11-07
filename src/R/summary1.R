@@ -146,16 +146,30 @@ if (nTFMissing == nrow(summary.df)) {
 # Replace p-values of 0 with the smallest p-value on the system
 summary.df$pvalue_raw[summary.df$pvalue_raw == 0] = .Machine$double.xmin
 
+# Check the version of modeest, because version 2.3.2 introduced an implementation change that breaks things
 
-mode_peaks = mlv(peaks.df$l2FC, method = "mfv", na.rm = TRUE)
+if (packageVersion("modeest") < "2.3.2") {
+    
+    mode_peaks = mlv(peaks.df$l2FC, method = "mfv", na.rm = TRUE)
+    
+    stopifnot(is.list(mode_peaks))
+    l2fc_mode = ifelse(is.null(mode_peaks$M), NA, mode_peaks$M)
+    l2fc_skewness = ifelse(is.null(mode_peaks$skewness), NA, mode_peaks$skewness)
+} else {
+    
+    l2fc_mode = mlv(peaks.df$l2FC, method = "mfv", na.rm = TRUE)[1]
+    l2fc_skewness = skewness(peaks.df$l2FC, na.rm = TRUE)[1]
+}
+
+
 
 summary.df = summary.df %>%
               dplyr::mutate(
                   adj_pvalue  = p.adjust(pvalue_raw, method = "fdr"),
                   Diff_mean   = Mean_l2FC    -   mean(peaks.df$l2FC, na.rm = TRUE), 
                   Diff_median = Median_l2FC  - median(peaks.df$l2FC, na.rm = TRUE),
-                  Diff_mode   = Mode_l2FC    - mode_peaks[[1]],    
-                  Diff_skew   = skewness_l2FC - mode_peaks[[2]])  %>%
+                  Diff_mode   = Mode_l2FC    - l2fc_mode,    
+                  Diff_skew   = skewness_l2FC - l2fc_skewness)  %>%
               na.omit(summary.df)
 
 summary.df = mutate_if(summary.df, is.numeric, as.character)
