@@ -75,6 +75,14 @@ In addition, the following files are need, all of which we provide already for h
 - TF-specific list of TFBS (see :ref:`parameter_dir_TFBS`)
 - mapping table (see :ref:`parameter_HOCOMOCO_mapping`)
 
+
+Lastly, some metadata files are needed that specify diffTF-specific and Snakemake-specific parameters. They are explained in detail in the next sections. If this sounds complicated, don't worry, just take the example analysis, and you will understand within a few minutes what these files are:
+
+- a general configuration file (:ref:`configurationFile`)
+- a metadata file for the samples (:ref:`section_metadata`)
+- optionally, if run on a cluster, a cluster configuration file (see in particular the Snakemake documentation for details, but we also provide example cluster files as well as Section :ref:`clusterEnvironment`)
+
+
 .. _configurationFile:
 
 General configuration file
