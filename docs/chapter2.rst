@@ -198,7 +198,7 @@ PARAMETER ``designVariableTypes``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  String. Default  *conditionSummary:factor*.   The data types of all elements listed in ``designContrast`` (:ref:`parameter_designContrast`).
+  String. Default  *conditionSummary:factor*.   The data types of **all** elements listed in ``designContrast`` (:ref:`parameter_designContrast`).
 
 Details
   Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if ``designContrast`` (:ref:`parameter_designContrast`) is specified as "*~ Treatment + conditionSummary*", the corresponding types might be "Treatment:factor, conditionSummary:factor". If a data type is specified as either "logical" or "factor", the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). *conditionSummary* is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If *conditionSummary* is specified as "integer" or "numeric", however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.
@@ -340,10 +340,10 @@ Details
     2. Start position
     3. End position
 
-  - Optional:
+  - Optional (content for each is ignored and not checked for validity):
 
     4. Identifier (will be made unique for each if this is not the case already)
-    5.  Score
+    5. Score
     6. Strand
 
 .. _parameter_peakType:
@@ -870,15 +870,23 @@ Running *diffTF* in a cluster environment
 
 If *diffTF* should be run in a cluster environment, the changes are minimal due to the flexibility of *Snakemake*. You only need to change the following:
 
-- create a cluster configuration file in JSON format. See the files in the *clusterConfigurationTemplates* folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via *Snakemake*.
-- invoke *Snakemake* with a cluster parameter. As an example, we use the following for our *SLURM* cluster:
+- create a cluster configuration file in JSON format. See the files in the ``clusterConfigurationTemplates`` folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via *Snakemake*.
+- invoke *Snakemake* with a cluster parameter. As an example, you may use the following for a *SLURM* cluster:
 
-.. code-block:: Bash
+  .. code-block:: Bash
 
-  snakemake -s path/to/Snakefile --reason --configfile path/to/configfile --latency-wait 30 --notemp --printshellcmds --rerun-incomplete --timestamp --cores 16  --keep-going --jobs 400 --cluster-config path/to/clusterconfigfile --cluster " sbatch -p {cluster.queueSLURM} -J {cluster.name} -A {cluster.group} -C {cluster.nodes} --cpus-per-task {cluster.nCPUs} --mem {cluster.memory} --time {cluster.maxTime} -o "{cluster.output}" -e "{cluster.error}"   --mail-type=None --parsable " --local-cores 1
+    snakemake -s path/to/Snakefile \
+    --configfile path/to/configfile --latency-wait 30 \
+    --notemp --rerun-incomplete --reason --keep-going \
+    --cores 16 --local-cores 1 --jobs 400 \
+    --cluster-config path/to/clusterconfigfile \
+    --cluster " sbatch -p {cluster.queueSLURM} -J {cluster.name} \
+       -A {cluster.group} -C {cluster.nodes} --cpus-per-task {cluster.nCPUs} \
+       --mem {cluster.memory} --time {cluster.maxTime} -o \"{cluster.output}\" \
+       -e \"{cluster.error}\"  --mail-type=None --parsable "
 
 
-Note that the *--cluster* string is the only part that has to be adjusted for your cluster system.
+Note that the ``--cluster`` argument is the only part that has to be adjusted for your cluster system. In it, you refer to the cluster configuration file via the ``cluster.`` string, followed by the name of the parameter in the cluster configuration. Essentially, you link the content of the configuration file to the cluster system you want to submit the jobs to.
 
 
 Frequently asked questions
@@ -903,7 +911,9 @@ Here a few typical use cases, which we will extend regularly in the future if th
   Simply add or modify rules to the Snakefile, it is as easy as that.
 
 5. *diffTF* finished successfully, but nothing is significant.
+
   This can and will happen, depending on the analysis. The following list provides some potential reasons for this:
+
     - The two conditions are in fact very similar and there is no signal that surpasses the significance threshold. You could, for example, check in a PCA plot based on the peaks that are used as input for *diffTF* whether they show a clear signal and separation.
     - There is a confounding factor (like age) that dilutes the signal. One solution is to add the confounding variable into the design model, see above fo details. Again, check in a PCA plot whether samples cluster also according to another variable.
     - You have a small number of samples or one of the groups contains a small number of samples. In both cases, if you run the permutation-based approach, the number of permutations is small, and there might not be enough permutations to achieve significance. For example, if you run an analysis with only 10 permutations, you cannot surpass the 0.05 significance threshold. As a solution, you may switch to the analytical version. Be aware that this requires to rerun large parts of the pipeline from the *diffPeaks* step onwards.
@@ -937,6 +947,13 @@ Errors occur during the *Snakemake* run can principally be divided into:
 
   * indicates a real error related to the specific command that is executed
   * rerunning does not fix the problem as they are systematic (such as a missing tool, a library problem in R)
+
+
+From our experience, most errors occur due to the following issues:
+
+- Software-related problems such as R library issues, non-working conda installation etc. Consider using the Singularity-enhanced version of *diffTF* (version 1.2 and above) that immediately solves these issues.
+- issues arising from the data itself. Here, it is more difficult to find the cause. We tried to cover all cases for which *diffTF* may fail, so please post an issue on our `Bitbucket Issue Tracker <https://bitbucket.org/chrarnold/diffTF>`_ if you believe you found a new problem.
+
 
 Identify the cause
 ==============================
@@ -999,6 +1016,8 @@ We here provide a list of some of the errors that can happen and that users repo
 
 
   More generally, however, such messages point to a problem with your R and R libraries installation and have per se nothing to do with *diffTF*. In such cases, we advise to reinstall the latest version of *Bioconductor* and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.
+
+  .. note:: We strongly recommend running the Singularity version of *diffTF* (version 1.2 and above) that immediately solves these issues. See the :ref:`changelog` for more details and the section :ref:`docs-quickstart`
 
 
 Fixing the error

@@ -24,18 +24,26 @@
 
   
 
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Workflow" href="chapter2.html" /> 
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="diffTF 1.0.0 documentation" href="index.html"/>
+        <link rel="prev" title="Workflow" href="chapter2.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
@@ -84,8 +92,10 @@
               <p class="caption"><span class="caption-text">Quick Start and Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="chapter1.html">Try it out now!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chapter1.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter1.html#prerequisites-for-the-easy-way">Prerequisites for the “easy” way</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter1.html#prerequisites-for-the-manual-way">Prerequisites for the “manual” way</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chapter1.html#run-your-own-analysis">Run your own analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter1.html#adaptations-and-notes-when-running-with-singularity">Adaptations and notes when running with Singularity</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Pipeline Details</span></p>
 <ul>
@@ -113,7 +123,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">diffTF</a>
@@ -121,10 +131,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -181,16 +190,49 @@
 <div class="section" id="citation">
 <h1>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h1>
 <p>If you use this software, please cite the following reference:</p>
-<p>Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin &amp; Judith B. Zaugg. <em>Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</em>. 2018. <em>Molecular Systems Biology</em>. in review.</p>
+<p>Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin &amp; Judith B. Zaugg. <em>Quantification of differential transcription factor activity and multiomics-based classification into activators and repressors: diffTF</em>. 2018. in review.</p>
 <p>We also put the paper on <em>bioRxiv</em>, please read all methodological details here:
-<a class="reference external" href="https://www.biorxiv.org/content/early/2018/07/13/368498">Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</a>.</p>
+<a class="reference external" href="https://www.biorxiv.org/content/early/2018/12/01/368498">Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF</a>.</p>
 </div>
 <div class="section" id="change-log">
-<h1>Change log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<span id="changelog"></span><h1>Change log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
 <dl class="docutils">
+<dt>SOON: Version 1.2 (2018-12-XX)</dt>
+<dd><ul class="first last simple">
+<li>The Snakemake / <em>diffTF</em> pipeline can now be combined with <strong>Singularity</strong>. Singularity is similar to Docker and provides a containerization approach. This has significant implications for users: Except for Snakemake and Singularity, no other tool, R or R package has to be installed prior to using <em>diffTF</em> anymore, which makes installing <em>diffTF</em> much easier and completely independent of the underlying operating system. We now provide two Singularity containers with all necessary tools and packages that are automatically integrated into the workflow. See the section <a class="reference internal" href="chapter1.html#docs-singularitynotes"><span class="std std-ref">Adaptations and notes when running with Singularity</span></a> and <a class="reference internal" href="chapter1.html#docs-quickstart"><span class="std std-ref">Try it out now!</span></a> for more details. <strong>Please note that for this to work reliably, Snakemake must be updated to at least version 5.3.1</strong>.</li>
+</ul>
+</dd>
+<dt>Version 1.1.8 (2018-11-07)</dt>
+<dd><ul class="first last simple">
+<li>changed the call to the <code class="docutils literal notranslate"><span class="pre">mlv</span></code> function from the <code class="docutils literal notranslate"><span class="pre">modeest</span></code> package due to a breaking implementation change in version 2.3.2 that was published end of October 2018. <em>diffTF</em> now checks the package version for <code class="docutils literal notranslate"><span class="pre">modeest</span></code> and calls the functions in dependence of the specific version.</li>
+</ul>
+</dd>
+<dt>Version 1.1.7 (2018-10-25)</dt>
+<dd><ul class="first last simple">
+<li>the default value of the minimum number of data points for a CG bin to be included has been raised from 5 to 20 to make the variance calculation more reliable</li>
+<li>various small updates to the <code class="docutils literal notranslate"><span class="pre">summaryFinal.R</span></code> script</li>
+</ul>
+</dd>
+<dt>Version 1.1.6 (2018-10-11)</dt>
+<dd><ul class="first last simple">
+<li>fixed small issue in <code class="docutils literal notranslate"><span class="pre">checkParameterValidity.R</span></code> when not having sufficient permissions for the folder in which the fasta file is located</li>
+<li>updated the <code class="docutils literal notranslate"><span class="pre">summaryFinal.R</span></code> script. Now, for the Volcano plot PDF, in addition to adj. p-values, also the raw p-values are plotted in the end. This might be helpful for datasets with small signal when no adj. p-value is significant. In addition, labeling of TFs is now skipped when the number of TFs to label exceeds 150. THis makes the step faster and the PDF smaller and less crowded.</li>
+<li>small updates to the translation table for mm10</li>
+<li>adding two local rules to the Snakefile for potential minor speed improvements when running in cluster mode</li>
+</ul>
+</dd>
+<dt>Version 1.1.5 (2018-08-14)</dt>
+<dd><ul class="first last simple">
+<li>optimized <code class="docutils literal notranslate"><span class="pre">checkParameterValidity.R</span></code> script, only TFBS files for TFs included in the analysis are now checked</li>
+<li>addressed an R library compatibility issue independent of <em>diffTF</em> that users reported. In some cases, for particular versions of R and Bioconductor, R exited with a <em>segfault</em> (memory not mapped) error in the <code class="docutils literal notranslate"><span class="pre">checkParameterValidity.R</span></code> that seems to be caused by the combination of <em>DiffBind</em> and <em>DESeq2</em>. Specifically, when <em>DiffBind</em> is loaded <em>before</em> <em>DESeq2</em>, R crashes with a segmentation fault upon exiting, whereas loading <em>DiffBind</em> <em>after</em> <em>DESeq2</em> causes no issue. If there are further issues, please let us know. Thanks to Gyan Prakash Mishra, who first reported this.</li>
+<li>fixed an issue when the number of peaks is very small so that some TFs have no overlapping TFBS at all in the peak regions. This caused the rule <code class="docutils literal notranslate"><span class="pre">intersectTFBSAndBAM</span></code> to exit with an error due to grep’s policy of returning exit code 1 if no matches are returned (thanks to Jonas Ungerbeck, again).</li>
+<li>removed the <code class="docutils literal notranslate"><span class="pre">--timestamp</span></code> option in the helper script <code class="docutils literal notranslate"><span class="pre">startAnalysis.sh</span></code> because this option has been removed for Snakemake &gt;5.2.1</li>
+<li>Documentation updates</li>
+</ul>
+</dd>
 <dt>Version 1.1.4 (2018-08-09)</dt>
 <dd><ul class="first last simple">
-<li>minor, updated the checkParameterValidity.R script and the documentation (one package was not mentioned)</li>
+<li>minor, updated the <code class="docutils literal notranslate"><span class="pre">checkParameterValidity.R</span></code> script and the documentation (one package was not mentioned)</li>
 </ul>
 </dd>
 <dt>Version 1.1.3 (2018-08-06)</dt>
@@ -200,7 +242,7 @@
 </dd>
 <dt>Version 1.1.2 (2018-08-03)</dt>
 <dd><ul class="first last simple">
-<li>fixed a bug that made the <code class="docutils literal notranslate"><span class="pre">3.analyzeTF</span></code> script fail in case when the number of permutations has been changed throughout the analysis or when the value is higher than the actual maximum number (thanks to Jonas Ungerbeck)</li>
+<li>fixed a bug that made the <code class="docutils literal notranslate"><span class="pre">3.analyzeTF.R</span></code> script fail in case when the number of permutations has been changed throughout the analysis or when the value is higher than the actual maximum number (thanks to Jonas Ungerbeck)</li>
 </ul>
 </dd>
 <dt>Version 1.1.1 (2018-08-01)</dt>
@@ -236,7 +278,7 @@
 <div class="section" id="license">
 <h1>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
 <p>diffTF is licensed under the MIT License:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Copyright (c) 2017 Christian Arnold (carnold@embl.de) &amp; Ivan Berest (berest@embl.de)
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Copyright (c) 2018 Christian Arnold (carnold@embl.de) &amp; Ivan Berest (berest@embl.de)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the &quot;Software&quot;), to deal in the Software without
@@ -259,7 +301,9 @@ DEALINGS IN THE SOFTWARE.
 
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -279,7 +323,7 @@ DEALINGS IN THE SOFTWARE.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -298,7 +342,6 @@ DEALINGS IN THE SOFTWARE.
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'1.0.0',
-            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -308,16 +351,23 @@ DEALINGS IN THE SOFTWARE.
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
-  <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
 
+  
+  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
+          SphinxRtdTheme.StickyNav.enable();
       });
-  </script> 
+  </script>
+   
 
 </body>
 </html>

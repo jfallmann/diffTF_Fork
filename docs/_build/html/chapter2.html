@@ -24,19 +24,27 @@
 
   
 
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Biological motivation" href="projectInfo.html" />
-    <link rel="prev" title="Try it out now!" href="chapter1.html" /> 
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="diffTF 1.0.0 documentation" href="index.html"/>
+        <link rel="next" title="Biological motivation" href="projectInfo.html"/>
+        <link rel="prev" title="Try it out now!" href="chapter1.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav" role="document">
 
    
   <div class="wy-grid-for-nav">
@@ -85,8 +93,10 @@
               <p class="caption"><span class="caption-text">Quick Start and Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="chapter1.html">Try it out now!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chapter1.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter1.html#prerequisites-for-the-easy-way">Prerequisites for the “easy” way</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter1.html#prerequisites-for-the-manual-way">Prerequisites for the “manual” way</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chapter1.html#run-your-own-analysis">Run your own analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter1.html#adaptations-and-notes-when-running-with-singularity">Adaptations and notes when running with Singularity</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Pipeline Details</span></p>
 <ul class="current">
@@ -222,7 +232,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">diffTF</a>
@@ -230,10 +240,9 @@
       </nav>
 
 
+      
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
           
 
 
@@ -337,6 +346,12 @@
 <li>TF-specific list of TFBS (see <a class="reference internal" href="#parameter-dir-tfbs"><span class="std std-ref">PARAMETER dir_TFBS</span></a>)</li>
 <li>mapping table (see <a class="reference internal" href="#parameter-hocomoco-mapping"><span class="std std-ref">PARAMETER HOCOMOCO_mapping</span></a>)</li>
 </ul>
+<p>Lastly, some metadata files are needed that specify diffTF-specific and Snakemake-specific parameters. They are explained in detail in the next sections. If this sounds complicated, don’t worry, just take the example analysis, and you will understand within a few minutes what these files are:</p>
+<ul class="simple">
+<li>a general configuration file (<a class="reference internal" href="#configurationfile"><span class="std std-ref">General configuration file</span></a>)</li>
+<li>a metadata file for the samples (<a class="reference internal" href="#section-metadata"><span class="std std-ref">Input metadata</span></a>)</li>
+<li>optionally, if run on a cluster, a cluster configuration file (see in particular the Snakemake documentation for details, but we also provide example cluster files as well as Section <a class="reference internal" href="#clusterenvironment"><span class="std std-ref">Running diffTF in a cluster environment</span></a>)</li>
+</ul>
 </div>
 <div class="section" id="general-configuration-file">
 <span id="configurationfile"></span><h2>General configuration file<a class="headerlink" href="#general-configuration-file" title="Permalink to this headline">¶</a></h2>
@@ -426,7 +441,7 @@
 <span id="id9"></span><h4>PARAMETER <code class="docutils literal notranslate"><span class="pre">designVariableTypes</span></code><a class="headerlink" href="#parameter-designvariabletypes" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt>Summary</dt>
-<dd>String. Default  <em>conditionSummary:factor</em>.   The data types of all elements listed in <code class="docutils literal notranslate"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>).</dd>
+<dd>String. Default  <em>conditionSummary:factor</em>.   The data types of <strong>all</strong> elements listed in <code class="docutils literal notranslate"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>).</dd>
 <dt>Details</dt>
 <dd><p class="first">Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if <code class="docutils literal notranslate"><span class="pre">designContrast</span></code> (<a class="reference internal" href="#parameter-designcontrast"><span class="std std-ref">PARAMETER designContrast</span></a>) is specified as “<em>~ Treatment + conditionSummary</em>”, the corresponding types might be “Treatment:factor, conditionSummary:factor”. If a data type is specified as either “logical” or “factor”, the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). <em>conditionSummary</em> is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If <em>conditionSummary</em> is specified as “integer” or “numeric”, however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.</p>
 <div class="last admonition note">
@@ -566,7 +581,7 @@
 <li>End position</li>
 </ol>
 </li>
-<li>Optional:<ol class="arabic" start="4">
+<li>Optional (content for each is ignored and not checked for validity):<ol class="arabic" start="4">
 <li>Identifier (will be made unique for each if this is not the case already)</li>
 <li>Score</li>
 <li>Strand</li>
@@ -1088,14 +1103,24 @@
 <div class="section" id="running-difftf-in-a-cluster-environment">
 <span id="clusterenvironment"></span><h2>Running <em>diffTF</em> in a cluster environment<a class="headerlink" href="#running-difftf-in-a-cluster-environment" title="Permalink to this headline">¶</a></h2>
 <p>If <em>diffTF</em> should be run in a cluster environment, the changes are minimal due to the flexibility of <em>Snakemake</em>. You only need to change the following:</p>
-<ul class="simple">
-<li>create a cluster configuration file in JSON format. See the files in the <em>clusterConfigurationTemplates</em> folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via <em>Snakemake</em>.</li>
-<li>invoke <em>Snakemake</em> with a cluster parameter. As an example, we use the following for our <em>SLURM</em> cluster:</li>
-</ul>
-<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>snakemake -s path/to/Snakefile --reason --configfile path/to/configfile --latency-wait <span class="m">30</span> --notemp --printshellcmds --rerun-incomplete --timestamp --cores <span class="m">16</span>  --keep-going --jobs <span class="m">400</span> --cluster-config path/to/clusterconfigfile --cluster <span class="s2">&quot; sbatch -p {cluster.queueSLURM} -J {cluster.name} -A {cluster.group} -C {cluster.nodes} --cpus-per-task {cluster.nCPUs} --mem {cluster.memory} --time {cluster.maxTime} -o &quot;</span><span class="o">{</span>cluster.output<span class="o">}</span><span class="s2">&quot; -e &quot;</span><span class="o">{</span>cluster.error<span class="o">}</span><span class="s2">&quot;   --mail-type=None --parsable &quot;</span> --local-cores <span class="m">1</span>
+<ul>
+<li><p class="first">create a cluster configuration file in JSON format. See the files in the <code class="docutils literal notranslate"><span class="pre">clusterConfigurationTemplates</span></code> folder for examples. In a nutshell, this file specifies the computational requirements and job details for each job that is run via <em>Snakemake</em>.</p>
+</li>
+<li><p class="first">invoke <em>Snakemake</em> with a cluster parameter. As an example, you may use the following for a <em>SLURM</em> cluster:</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>snakemake -s path/to/Snakefile <span class="se">\</span>
+--configfile path/to/configfile --latency-wait <span class="m">30</span> <span class="se">\</span>
+--notemp --rerun-incomplete --reason --keep-going <span class="se">\</span>
+--cores <span class="m">16</span> --local-cores <span class="m">1</span> --jobs <span class="m">400</span> <span class="se">\</span>
+--cluster-config path/to/clusterconfigfile <span class="se">\</span>
+--cluster <span class="s2">&quot; sbatch -p {cluster.queueSLURM} -J {cluster.name} \</span>
+<span class="s2">   -A {cluster.group} -C {cluster.nodes} --cpus-per-task {cluster.nCPUs} \</span>
+<span class="s2">   --mem {cluster.memory} --time {cluster.maxTime} -o \&quot;{cluster.output}\&quot; \</span>
+<span class="s2">   -e \&quot;{cluster.error}\&quot;  --mail-type=None --parsable &quot;</span>
 </pre></div>
 </div>
-<p>Note that the <em>–cluster</em> string is the only part that has to be adjusted for your cluster system.</p>
+</li>
+</ul>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">--cluster</span></code> argument is the only part that has to be adjusted for your cluster system. In it, you refer to the cluster configuration file via the <code class="docutils literal notranslate"><span class="pre">cluster.</span></code> string, followed by the name of the parameter in the cluster configuration. Essentially, you link the content of the configuration file to the cluster system you want to submit the jobs to.</p>
 </div>
 <div class="section" id="frequently-asked-questions">
 <h2>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h2>
@@ -1121,6 +1146,20 @@
 <blockquote>
 <div>Simply add or modify rules to the Snakefile, it is as easy as that.</div></blockquote>
 <ol class="arabic simple" start="5">
+<li><em>diffTF</em> finished successfully, but nothing is significant.</li>
+</ol>
+<blockquote>
+<div><p>This can and will happen, depending on the analysis. The following list provides some potential reasons for this:</p>
+<blockquote>
+<div><ul class="simple">
+<li>The two conditions are in fact very similar and there is no signal that surpasses the significance threshold. You could, for example, check in a PCA plot based on the peaks that are used as input for <em>diffTF</em> whether they show a clear signal and separation.</li>
+<li>There is a confounding factor (like age) that dilutes the signal. One solution is to add the confounding variable into the design model, see above fo details. Again, check in a PCA plot whether samples cluster also according to another variable.</li>
+<li>You have a small number of samples or one of the groups contains a small number of samples. In both cases, if you run the permutation-based approach, the number of permutations is small, and there might not be enough permutations to achieve significance. For example, if you run an analysis with only 10 permutations, you cannot surpass the 0.05 significance threshold. As a solution, you may switch to the analytical version. Be aware that this requires to rerun large parts of the pipeline from the <em>diffPeaks</em> step onwards.</li>
+<li>You have a very small number of peaks and therefore also a small number of TF binding sites within the peaks, resulting in many TFs to be skipped in the analysis due to an insufficient number of binding sites. As a solution, try increasing the number of peaks. We recommend having at least a few thousand peaks, but this can hardly be generalized and depends too much on the biology, the size of the peaks etc.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<ol class="arabic simple" start="6">
 <li>I want to change the value of a parameter.</li>
 </ol>
 <blockquote>
@@ -1144,6 +1183,11 @@
 <li>rerunning does not fix the problem as they are systematic (such as a missing tool, a library problem in R)</li>
 </ul>
 </li>
+</ul>
+<p>From our experience, most errors occur due to the following issues:</p>
+<ul class="simple">
+<li>Software-related problems such as R library issues, non-working conda installation etc. Consider using the Singularity-enhanced version of <em>diffTF</em> (version 1.2 and above) that immediately solves these issues.</li>
+<li>issues arising from the data itself. Here, it is more difficult to find the cause. We tried to cover all cases for which <em>diffTF</em> may fail, so please post an issue on our <a class="reference external" href="https://bitbucket.org/chrarnold/diffTF">Bitbucket Issue Tracker</a> if you believe you found a new problem.</li>
 </ul>
 </div>
 <div class="section" id="identify-the-cause">
@@ -1197,7 +1241,15 @@ Segmentation fault
 ...
 </pre></div>
 </div>
-<p>This unfortunate message points to a problem with your R and R libraries installation and has per se nothing to do with <em>diffTF</em>. At least one of the installed libraries has an issue. We advise to reinstall <em>Bioconductor</em> in such a case, and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions as this type of error is very general. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This particular message may also be related to an incompatibility of the <em>DiffBind</em> and <em>DESeq2</em> libraries. See the changelog for details, as this has been addressed in version 1.1.5.</p>
+</div>
+<p>More generally, however, such messages point to a problem with your R and R libraries installation and have per se nothing to do with <em>diffTF</em>. In such cases, we advise to reinstall the latest version of <em>Bioconductor</em> and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">We strongly recommend running the Singularity version of <em>diffTF</em> (version 1.2 and above) that immediately solves these issues. See the <a class="reference internal" href="projectInfo.html#changelog"><span class="std std-ref">Change log</span></a> for more details and the section <a class="reference internal" href="chapter1.html#docs-quickstart"><span class="std std-ref">Try it out now!</span></a></p>
+</div>
 </div></blockquote>
 </div>
 <div class="section" id="fixing-the-error">
@@ -1229,7 +1281,9 @@ Segmentation fault
 
 
            </div>
-           
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -1251,7 +1305,7 @@ Segmentation fault
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1270,7 +1324,6 @@ Segmentation fault
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'1.0.0',
-            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -1280,16 +1333,23 @@ Segmentation fault
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
-  <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
 
+  
+  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
+          SphinxRtdTheme.StickyNav.enable();
       });
-  </script> 
+  </script>
+   
 
 </body>
 </html>

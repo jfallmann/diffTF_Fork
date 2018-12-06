@@ -3,13 +3,27 @@
 Try it out now!
 ============================================================
 
-diffTF runs on Linux and macOS. The following quick start briefly summarizes the necessary steps to use our pipeline:
+``diffTF`` runs on Linux and macOS and is even independent on the operating system if combined with ``Singularity``. The following quick start briefly summarizes the necessary steps to install and use it.
 
-1. Install the necessary tools (*Snakemake*, *samtools*, *bedtools*, and *Subread*).
+Principally, there are two ways of installing ``diffTF`` and the proper tools:
+
+1a. The "easy" way: Using ``Singularity`` and our preconfigured ``diffTF`` containers that contain all necessary tools, R, and R libraries
+
+  You only need to install Snakemake (see below for details) and ``Singularity``. Snakemake supports Singularity in Versions >=2.4. You can check whether you already have ``Singularity`` installed by simply typing
+
+  .. code-block:: Bash
+
+    singularity --version
+
+  Snakemake requires at least version 2.4. If your version is below, please update to the latest ``Singularity`` version.
+
+  .. note:: Make to read the section :ref:`docs-singularityNotes` properly!
+
+1b. The "more complicated" way:  Install the necessary tools (*Snakemake*, *samtools*, *bedtools*, *Subread*, and *R* along with various packages).
 
   .. note:: Note that all tools require Python 3.
 
-  We recommend installing them via conda, in which case the installation then becomes as easy as
+  We recommend installing all tools except R via conda, in which case the installation then becomes as easy as
 
   .. code-block:: Bash
 
@@ -23,6 +37,8 @@ diffTF runs on Linux and macOS. The following quick start briefly summarizes the
   .. note:: You do not need to uninstall other Python installations or packages in order to use conda. Even if you already have a system Python, another Python installation from a source such as the macOS Homebrew package manager and globally installed packages from pip such as pandas and NumPy, you do not need to uninstall, remove, or change any of them before using conda.
 
   If you want to install the tools manually and outside of the conda framework, see the following instructions for each of the tools: `snakemake  <http://snakemake.readthedocs.io/en/stable/getting_started/installation.html>`_, `samtools <http://www.htslib.org/download>`_, `bedtools <http://bedtools.readthedocs.io/en/latest/content/installation.html>`_, `Subread <http://subread.sourceforge.net>`_.
+
+  In addition, *R* is needed along with various packages (see below for details).
 
 2. Clone the Git repository:
 
@@ -64,7 +80,7 @@ diffTF runs on Linux and macOS. The following quick start briefly summarizes the
 
           sh startAnalysisDryRun.sh
 
-  * Once the dryrun is successful, start the analysis via the second helper script
+  * Once the dryrun is successful, start the analysis via the second helper script. If you want to include ``Singularity`` (which we strongly recommend), simply edit the file and add the ``--use-singularity`` command line argument in addition to the other arguments (see the Snakemake documentation and the section :ref:`docs-singularityNotes` for more details).
 
         .. code-block:: Bash
 
@@ -75,20 +91,26 @@ diffTF runs on Linux and macOS. The following quick start briefly summarizes the
 
 .. _docs-prerequisites:
 
-Prerequisites
-============================================================
+Prerequisites for the "easy" way
+==================================
 
-This section lists the required software and how to install them. As outlined in Section :ref:`docs-quickstart`, the easiest way is to install all of them via ``conda``. However, it is of course also possible to install the tools separately.
+The only prerequisite here is that Snakemake and ``Singularity`` must be installed on the system you want to run ``diffTF``. See above for details with respect to the supported versions etc. For details how to install Snakemake, see below.
+
+
+Prerequisites for the "manual" way
+=====================================
+
+Note that most of this section is only relevant if you use Snakemake without ``Singularity``. This section lists the required software and how to install them. As outlined in Section :ref:`docs-quickstart`, the easiest way is to install all of them via ``conda``. However, it is of course also possible to install the tools separately.
 
 Snakemake
 --------------------------
 
-Please ensure that you have at least version 4.3 installed. Principally, there are `multiple ways to install Snakemake <http://snakemake.readthedocs.io/en/stable/getting_started/installation.html>`_. We recommend installing it, along with all the other required software, via conda.
+Please ensure that you have at least version 5.3 installed. Principally, there are `multiple ways to install Snakemake <http://snakemake.readthedocs.io/en/stable/getting_started/installation.html>`_. We recommend installing it, along with all the other required software, via conda.
 
 *samtools*, *bedtools*, *Subread*
 ----------------------------------
 
-In addition, `samtools <http://www.htslib.org/download>`_, `bedtools <http://bedtools.readthedocs.io>`_ and `Subread <http://subread.sourceforge.net>`_ are needed to run *diffTF*. We recommend installing them, along with all the other required software, via conda.
+In addition, `samtools <http://www.htslib.org/download>`_, `bedtools <http://bedtools.readthedocs.io>`_ and `Subread <http://subread.sourceforge.net>`_ are needed to run ``diffTF``. We recommend installing them, along with all the other required software, via conda.
 
 
 R and R packages
@@ -113,5 +135,16 @@ Running your own analysis is almost as easy as running the example analysis. Car
 1. Copy the files ``config.json`` and ``startAnalysis.sh`` to a directory of your choice.
 2. Modify the file ``config.json`` accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section :ref:`configurationFile` for details about the meaning of the parameters. Do not delete or rename any parameters or sections.
 3. Create a tab-separated file that defines the input data, in analogy to the file ``sampleData.tsv`` from the example analysis, and refer to that in the file ``config.json`` (parameter ``summaryFile``)
-4. Adapt the file ``startAnalysis.sh`` if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters)
-5. Since running the pipeline is often computationally demanding, read Section :ref:`timeMemoryRequirements` and decide on which machine to run the pipeline. In most cases, we recommend running *diffTF* in a cluster environment (see Section :ref:`clusterEnvironment` for details). The pipeline is written in Snakemake, and we strongly suggest to also read Section :ref:`workingWithPipeline` to get a basic understanding of how the pipeline works.
+4. Adapt the file ``startAnalysis.sh`` if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters). If you run with Singularity, see the section below for modifications.
+5. Since running the pipeline is often computationally demanding, read Section :ref:`timeMemoryRequirements` and decide on which machine to run the pipeline. In most cases, we recommend running ``diffTF`` in a cluster environment (see Section :ref:`clusterEnvironment` for details). The pipeline is written in Snakemake, and we strongly suggest to also read Section :ref:`workingWithPipeline` to get a basic understanding of how the pipeline works.
+
+
+.. _docs-singularityNotes:
+
+Adaptations and notes when running with Singularity
+============================================================
+You only have to add the ``--use-singularity`` argument to Snakemake. In that case, each rule will be executed in pre-configured isolated containers that contain all necessary tools. Please note the following important issues related to ``Singularity``:
+
+- You may want to add the ``--singularity-prefix`` argument to store all ``Singularity`` containers in a central place as opposed to being stored in the local ``.snakemake`` directory. If you intend to run multiple ``diffTF`` analyses in different locations, you can save space and time because the containers won't have to be downloaded each time and stored in multiple locations
+- .. warning:: If you use ``Singularity`` version 3, make sure you have at least version 3.0.2 installed or the latest pull from version 3.0.1, as there was an issue with Snakemake and particular ``Singularity`` versions. For more details, see `here <https://bitbucket.org/snakemake/snakemake/issues/1017/snakemake-process-suspended-upon-execution>`_.
+- .. warning:: If you reference files in the ``config.json`` that are located outside of the directory from which you call Snakemake (that is, parent directories), you have to use the ``--singularity-args`` command line argument to bind additional parent directories to the container so they are available inside the container as well. Otherwise, only (!) the directory from which you start the analysis and subfolders are visible inside the container, but no parent folders. In addition, make sure the mounted paths are identical inside and outside the container. For example, if you reference the files ``/g/group1/user1/mm10.fa`` and ``/g/group2/user1/files/bla.txt`` in the config file, use ``--singularity-args "--bind /g:/g"``. Thus, you have to mount the parent directory of all files you reference outside of your current directory. If both files were located in ``/g/group1``, you could therefore also use ``--bind /g/group1:/g/group1``
