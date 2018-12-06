@@ -22,17 +22,20 @@ Citation
 
 If you use this software, please cite the following reference:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF*. 2018. *Molecular Systems Biology*. in review.
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Quantification of differential transcription factor activity and multiomics-based classification into activators and repressors: diffTF*. 2018. in review.
 
 We also put the paper on *bioRxiv*, please read all methodological details here:
-`Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/07/13/368498>`_.
+`Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/12/01/368498>`_.
 
 
 Change log
 ============================
 
+SOON: Version 1.2 (2018-12-XX)
+    - The Snakemake -*diffTF* pipeline can now be combined with Singularity. This may sound unspectacular but has significant implications for users: Except for Snakemake and Singularity, no other tool, R or R package has to be installed prior to using *diffTF*, which makes installing *diffTF* much easier and completely independent of the underlying machine. We provide two Singularity containers with all necessary tools and packages that are automatically integrated into the workflow. See the Documentation for more details. Please note that for this to work reliably, Snakemake must be updated to at least version 5.3.1.
+
 Version 1.1.8 (2018-11-07)
-    - changed the call to the mlv function from the modeest package due to a breaking implementation change in version 2.3.2 that was published end of October 2018. ``diffTF`` now checks the package version for modeest and calls the functions in dependence of the specific version.
+    - changed the call to the ``mlv`` function from the ``modeest`` package due to a breaking implementation change in version 2.3.2 that was published end of October 2018. *diffTF* now checks the package version for ``modeest`` and calls the functions in dependence of the specific version.
 
 Version 1.1.7 (2018-10-25)
     - the default value of the minimum number of data points for a CG bin to be included has been raised from 5 to 20 to make the variance calculation more reliable
