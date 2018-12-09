@@ -24,27 +24,19 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="diffTF 1.0.0 documentation" href="index.html"/>
-        <link rel="next" title="Biological motivation" href="projectInfo.html"/>
-        <link rel="prev" title="Try it out now!" href="chapter1.html"/> 
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Biological motivation" href="projectInfo.html" />
+    <link rel="prev" title="Try it out now!" href="chapter1.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -232,7 +224,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">diffTF</a>
@@ -240,9 +232,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -572,20 +565,28 @@
 <li>The format of the peak files, as specified in <code class="docutils literal notranslate"><span class="pre">peakType</span></code> (<a class="reference internal" href="#parameter-peaktype"><span class="std std-ref">PARAMETER peakType</span></a>)</li>
 </ul>
 <p>If a file is provided, it must be a valid <em>BED</em> file with at least 3 columns:</p>
-<ul class="last simple">
-<li>tab-separated columns</li>
-<li>no column names in the first row</li>
-<li>Columns 1 to 3:<ol class="arabic">
+<ul class="last">
+<li><p class="first">tab-separated columns</p>
+</li>
+<li><p class="first">no column names in the first row</p>
+</li>
+<li><p class="first">Columns 1 to 3:</p>
+<ol class="arabic simple">
 <li>Chromosome</li>
 <li>Start position</li>
 <li>End position</li>
 </ol>
 </li>
-<li>Optional (content for each is ignored and not checked for validity):<ol class="arabic" start="4">
+<li><p class="first">Optional (content for each is ignored and not checked for validity):</p>
+<ol class="arabic simple" start="4">
 <li>Identifier (will be made unique for each if this is not the case already)</li>
 <li>Score</li>
 <li>Strand</li>
 </ol>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><em>diffTF</em> will take a long time to run if the number of peaks is too high. We recommend having less than 100,000 peaks. If the number of peaks is higher for your analysis, we strongly recommend filtering the peaks beforehand to include only the most relevant peaks.</p>
+</div>
 </li>
 </ul>
 </dd>
@@ -1112,15 +1113,68 @@
 --notemp --rerun-incomplete --reason --keep-going <span class="se">\</span>
 --cores <span class="m">16</span> --local-cores <span class="m">1</span> --jobs <span class="m">400</span> <span class="se">\</span>
 --cluster-config path/to/clusterconfigfile <span class="se">\</span>
---cluster <span class="s2">&quot; sbatch -p {cluster.queueSLURM} -J {cluster.name} \</span>
-<span class="s2">   -A {cluster.group} -C {cluster.nodes} --cpus-per-task {cluster.nCPUs} \</span>
+--cluster <span class="s2">&quot; sbatch -p {cluster.queue} -J {cluster.name} \</span>
+<span class="s2">    --cpus-per-task {cluster.nCPUs} \</span>
 <span class="s2">   --mem {cluster.memory} --time {cluster.maxTime} -o \&quot;{cluster.output}\&quot; \</span>
 <span class="s2">   -e \&quot;{cluster.error}\&quot;  --mail-type=None --parsable &quot;</span>
 </pre></div>
 </div>
 </li>
+<li><p class="first">the corresponding cluster configuration file might look like this:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;__default__&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;queue&quot;</span><span class="p">:</span> <span class="s2">&quot;htc&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;nCPUs&quot;</span><span class="p">:</span> <span class="s2">&quot;{threads}&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;memory&quot;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;{rule}.{wildcards}&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;output&quot;</span><span class="p">:</span> <span class="s2">&quot;{rule}.{wildcards}.out&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;{rule}.{wildcards}.err&quot;</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;intersectPeaksAndPWM&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;queue&quot;</span><span class="p">:</span> <span class="s2">&quot;1day&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;memory&quot;</span><span class="p">:</span> <span class="mi">5000</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;intersectPeaksAndBAM&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;queue&quot;</span><span class="p">:</span> <span class="s2">&quot;1day&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;memory&quot;</span><span class="p">:</span> <span class="mi">5000</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;sortPWM&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;memory&quot;</span><span class="p">:</span> <span class="mi">1000</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;filterSexChromosomesAndSortPeaks&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;memory&quot;</span><span class="p">:</span> <span class="mi">1000</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;intersectTFBSAndBAM&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;queue&quot;</span><span class="p">:</span> <span class="s2">&quot;1day&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;memory&quot;</span><span class="p">:</span> <span class="mi">5000</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
 </ul>
-<p>Note that the <code class="docutils literal notranslate"><span class="pre">--cluster</span></code> argument is the only part that has to be adjusted for your cluster system. In it, you refer to the cluster configuration file via the <code class="docutils literal notranslate"><span class="pre">cluster.</span></code> string, followed by the name of the parameter in the cluster configuration. Essentially, you link the content of the configuration file to the cluster system you want to submit the jobs to.</p>
+<p>A few motes might help you to get started:</p>
+<ul>
+<li><p class="first"><strong>each</strong> name in the <code class="docutils literal notranslate"><span class="pre">--cluster</span></code> argument string from the command line (here: <code class="docutils literal notranslate"><span class="pre">queue</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> <code class="docutils literal notranslate"><span class="pre">nCPUs</span></code>, <code class="docutils literal notranslate"><span class="pre">memory</span></code>, <code class="docutils literal notranslate"><span class="pre">maxTime</span></code>, <code class="docutils literal notranslate"><span class="pre">output</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code>) must appear also in the <code class="docutils literal notranslate"><span class="pre">__default__</span></code> section of the referenced cluster configuration file (via <code class="docutils literal notranslate"><span class="pre">--cluster-config</span></code>)</p>
+</li>
+<li><p class="first">the <code class="docutils literal notranslate"><span class="pre">--cluster</span></code> argument is the only part that has to be adjusted for your cluster system.  It is quite simple really, you essentially just link the content of the configuration file to the cluster system you want to submit the jobs to. More specifically, you refer to the cluster configuration file via the <code class="docutils literal notranslate"><span class="pre">cluster.</span></code> string, followed by the name of the parameter in the cluster configuration. For parameters that refer to filenames, an extra escaped quotation mark <code class="docutils literal notranslate"><span class="pre">\&quot;</span></code> has been added so that the command also works in case of spaces in filenames (which should <em>always</em> be avoided at all costs)</p>
+</li>
+<li><p class="first">the cluster configuration file has multiple sections defined that correspond to the names of the rules as defined in the Snakefile, plus the special section <code class="docutils literal notranslate"><span class="pre">__default__</span></code> at the very top, the latter of which specifies the default cluster options that apply to all rules unless overwritten via its own rule-specific section</p>
+</li>
+<li><p class="first"><strong>each</strong> name (e.g., here: <code class="docutils literal notranslate"><span class="pre">queue</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> <code class="docutils literal notranslate"><span class="pre">nCPUs</span></code>, <code class="docutils literal notranslate"><span class="pre">`memory</span></code>, <code class="docutils literal notranslate"><span class="pre">maxTime</span></code>, <code class="docutils literal notranslate"><span class="pre">output</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code>) <strong>must be defined</strong> in the <code class="docutils literal notranslate"><span class="pre">__default__</span></code> section of the cluster configuration file</p>
+</li>
+<li><p class="first">note that in this example, we provided some extra parameters for convenience such as <code class="docutils literal notranslate"><span class="pre">name</span></code> (so the cluster job will have a reasonable name and can be recognized) that are not strictly necessary</p>
+</li>
+<li><p class="first">the <code class="docutils literal notranslate"><span class="pre">{threads}</span></code> syntax of the <code class="docutils literal notranslate"><span class="pre">nCPUs</span></code> name can be generally used and is a placeholder for the specified number of threads for the particular rule, as specified in the corresponding <code class="docutils literal notranslate"><span class="pre">Snakefile</span></code></p>
+</li>
+<li><p class="first">in our example, memory is given in Megabytes, so 5000 refers to roughly 5 GB. Queue names are either <code class="docutils literal notranslate"><span class="pre">htc</span></code> or <code class="docutils literal notranslate"><span class="pre">1day</span></code>. Adjust this accordingly to your cluster system.</p>
+</li>
+<li><div class="first admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">From a practical point of view, just try to mimic the parameters that you usually use for your cluster system, and modify the cluster configuration file accordingly. For example, if you need an additional argument such as <code class="docutils literal notranslate"><span class="pre">-A</span></code> (which stands for the <em>group</em> you are in for a SLURM-based system), simply add <code class="docutils literal notranslate"><span class="pre">-A</span> <span class="pre">{cluster.group}</span></code>  to the command line call and add a <code class="docutils literal notranslate"><span class="pre">group</span></code> parameter to the <code class="docutils literal notranslate"><span class="pre">__default__</span></code> section (see also the note below).</p>
+</div>
+</li>
+</ul>
 </div>
 <div class="section" id="frequently-asked-questions">
 <h2>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h2>
@@ -1281,9 +1335,7 @@ Segmentation fault
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -1301,11 +1353,11 @@ Segmentation fault
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Christian Arnold, Ivan Berest, Judith B. Zaugg.
+        &copy; Copyright 2017, Christian Arnold, Ivan Berest, Judith B. Zaugg
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1320,36 +1372,23 @@ Segmentation fault
 
   
 
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'1.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

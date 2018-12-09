@@ -346,6 +346,8 @@ Details
     5. Score
     6. Strand
 
+    .. warning:: *diffTF* will take a long time to run if the number of peaks is too high. We recommend having less than 100,000 peaks. If the number of peaks is higher for your analysis, we strongly recommend filtering the peaks beforehand to include only the most relevant peaks.
+
 .. _parameter_peakType:
 
 
@@ -880,13 +882,56 @@ If *diffTF* should be run in a cluster environment, the changes are minimal due 
     --notemp --rerun-incomplete --reason --keep-going \
     --cores 16 --local-cores 1 --jobs 400 \
     --cluster-config path/to/clusterconfigfile \
-    --cluster " sbatch -p {cluster.queueSLURM} -J {cluster.name} \
-       -A {cluster.group} -C {cluster.nodes} --cpus-per-task {cluster.nCPUs} \
+    --cluster " sbatch -p {cluster.queue} -J {cluster.name} \
+        --cpus-per-task {cluster.nCPUs} \
        --mem {cluster.memory} --time {cluster.maxTime} -o \"{cluster.output}\" \
        -e \"{cluster.error}\"  --mail-type=None --parsable "
 
+- the corresponding cluster configuration file might look like this:
 
-Note that the ``--cluster`` argument is the only part that has to be adjusted for your cluster system. In it, you refer to the cluster configuration file via the ``cluster.`` string, followed by the name of the parameter in the cluster configuration. Essentially, you link the content of the configuration file to the cluster system you want to submit the jobs to.
+  .. code-block:: json
+
+    {
+      "__default__": {
+        "queue": "htc",
+        "nCPUs": "{threads}",
+        "memory": 10000,
+        "name": "{rule}.{wildcards}",
+        "output": "{rule}.{wildcards}.out",
+        "error": "{rule}.{wildcards}.err"
+      },
+      "intersectPeaksAndPWM": {
+        "queue": "1day",
+        "memory": 5000
+      },
+      "intersectPeaksAndBAM": {
+        "queue": "1day",
+        "memory": 5000
+      },
+      "sortPWM": {
+        "memory": 1000
+      },
+      "filterSexChromosomesAndSortPeaks": {
+        "memory": 1000
+      },
+      "intersectTFBSAndBAM": {
+        "queue": "1day",
+        "memory": 5000
+      }
+    }
+
+
+A few motes might help you to get started:
+
+- **each** name in the ``--cluster`` argument string from the command line (here: ``queue``, ``name`` ``nCPUs``, ``memory``, ``maxTime``, ``output``, and ``error``) must appear also in the ``__default__`` section of the referenced cluster configuration file (via ``--cluster-config``)
+- the ``--cluster`` argument is the only part that has to be adjusted for your cluster system.  It is quite simple really, you essentially just link the content of the configuration file to the cluster system you want to submit the jobs to. More specifically, you refer to the cluster configuration file via the ``cluster.`` string, followed by the name of the parameter in the cluster configuration. For parameters that refer to filenames, an extra escaped quotation mark ``\"`` has been added so that the command also works in case of spaces in filenames (which should *always* be avoided at all costs)
+- the cluster configuration file has multiple sections defined that correspond to the names of the rules as defined in the Snakefile, plus the special section ``__default__`` at the very top, the latter of which specifies the default cluster options that apply to all rules unless overwritten via its own rule-specific section
+- **each** name (e.g., here: ``queue``, ``name`` ``nCPUs``, ```memory``, ``maxTime``, ``output``, and ``error``) **must be defined** in the ``__default__`` section of the cluster configuration file
+- note that in this example, we provided some extra parameters for convenience such as ``name`` (so the cluster job will have a reasonable name and can be recognized) that are not strictly necessary
+- the ``{threads}`` syntax of the ``nCPUs`` name can be generally used and is a placeholder for the specified number of threads for the particular rule, as specified in the corresponding ``Snakefile``
+- in our example, memory is given in Megabytes, so 5000 refers to roughly 5 GB. Queue names are either ``htc`` or ``1day``. Adjust this accordingly to your cluster system.
+- for more details, see the Snakemake documentation
+- .. note:: From a practical point of view, just try to mimic the parameters that you usually use for your cluster system, and modify the cluster configuration file accordingly. For example, if you need an additional argument such as ``-A`` (which stands for the *group* you are in for a SLURM-based system), simply add ``-A {cluster.group}``  to the command line call and add a ``group`` parameter to the ``__default__`` section (see also the note below).
 
 
 Frequently asked questions

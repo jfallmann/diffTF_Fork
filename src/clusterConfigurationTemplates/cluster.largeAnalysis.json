@@ -1,44 +1,30 @@
 {
-  "__default__" :
-  {
-        "queue"     : "1day",
-        "nCPUs"     : "{threads}",
-        "memory"    : 30000,
-        "name"      : "{rule}.{wildcards}",
-        "output"    : "{rule}.{wildcards}.out",
-        "error"     : "{rule}.{wildcards}.err"
+  "__default__": {
+    "queue": "1day",
+    "nCPUs": "{threads}",
+    "memory": 20000,
+    "name": "{rule}.{wildcards}",
+    "output": "{rule}.{wildcards}.out",
+    "error": "{rule}.{wildcards}.err"
   },
-
-  "intersectPeaksAndPWM":
-  {
-    "memory" : 10000
+  "intersectPeaksAndPWM": {
+    "memory": 10000
   },
-
-  "intersectPeaksAndBAM":
-  {
-     "memory": 5000
-  },
-
-  "sortPWM":
-  {
-      "queue" : "htc",
-      "memory": 1000
-  },
-
-  "filterSexChromosomesAndSortPeaks":
-  {
-    "queue" : "htc",
-    "memory": 1000
-  },
-
-  "intersectTFBSAndBAM":
-  {
+  "intersectPeaksAndBAM": {
     "memory": 5000
   },
-
-  "analyzeTF":
-  {
-    "memory": 20000
+  "sortPWM": {
+    "queue": "htc",
+    "memory": 1000
   },
-
+  "filterSexChromosomesAndSortPeaks": {
+    "queue": "htc",
+    "memory": 1000
+  },
+  "intersectTFBSAndBAM": {
+    "memory": 5000
+  },
+  "analyzeTF": {
+    "memory": 15000
+  }
 }

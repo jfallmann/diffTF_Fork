@@ -24,27 +24,19 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="diffTF 1.0.0 documentation" href="index.html"/>
-        <link rel="next" title="Workflow" href="chapter2.html"/>
-        <link rel="prev" title="Welcome to the documentation of diffTF!" href="index.html"/> 
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Workflow" href="chapter2.html" />
+    <link rel="prev" title="Welcome to the documentation of diffTF!" href="index.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -129,7 +121,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">diffTF</a>
@@ -137,9 +129,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -183,9 +176,9 @@
             
   <div class="section" id="try-it-out-now">
 <span id="docs-quickstart"></span><h1>Try it out now!<a class="headerlink" href="#try-it-out-now" title="Permalink to this headline">¶</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">diffTF</span></code> runs on Linux and macOS and is even independent on the operating system if combined with <code class="docutils literal notranslate"><span class="pre">Singularity</span></code>. The following quick start briefly summarizes the necessary steps to install and use it.</p>
-<p>Principally, there are two ways of installing <code class="docutils literal notranslate"><span class="pre">diffTF</span></code> and the proper tools:</p>
-<p>1a. The “easy” way: Using <code class="docutils literal notranslate"><span class="pre">Singularity</span></code> and our preconfigured <code class="docutils literal notranslate"><span class="pre">diffTF</span></code> containers that contain all necessary tools, R, and R libraries</p>
+<p><em>diffTF</em> runs on Linux and macOS and is even independent on the operating system if combined with <code class="docutils literal notranslate"><span class="pre">Singularity</span></code>. The following quick start briefly summarizes the necessary steps to install and use it.</p>
+<p>Principally, there are two ways of installing <em>diffTF</em> and the proper tools:</p>
+<p>1a. The “easy” way: Using <code class="docutils literal notranslate"><span class="pre">Singularity</span></code> and our preconfigured <em>diffTF</em> containers that contain all necessary tools, R, and R libraries</p>
 <blockquote>
 <div><p>You only need to install Snakemake (see below for details) and <code class="docutils literal notranslate"><span class="pre">Singularity</span></code>. Snakemake supports Singularity in Versions &gt;=2.4. You can check whether you already have <code class="docutils literal notranslate"><span class="pre">Singularity</span></code> installed by simply typing</p>
 <div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>singularity --version
@@ -277,7 +270,7 @@ conda install snakemake bedtools samtools subread
 </div>
 <div class="section" id="prerequisites-for-the-easy-way">
 <span id="docs-prerequisites"></span><h1>Prerequisites for the “easy” way<a class="headerlink" href="#prerequisites-for-the-easy-way" title="Permalink to this headline">¶</a></h1>
-<p>The only prerequisite here is that Snakemake and <code class="docutils literal notranslate"><span class="pre">Singularity</span></code> must be installed on the system you want to run <code class="docutils literal notranslate"><span class="pre">diffTF</span></code>. See above for details with respect to the supported versions etc. For details how to install Snakemake, see below.</p>
+<p>The only prerequisite here is that Snakemake and <code class="docutils literal notranslate"><span class="pre">Singularity</span></code> must be installed on the system you want to run <em>diffTF</em>. See above for details with respect to the supported versions etc. For details how to install Snakemake, see below.</p>
 </div>
 <div class="section" id="prerequisites-for-the-manual-way">
 <h1>Prerequisites for the “manual” way<a class="headerlink" href="#prerequisites-for-the-manual-way" title="Permalink to this headline">¶</a></h1>
@@ -288,7 +281,7 @@ conda install snakemake bedtools samtools subread
 </div>
 <div class="section" id="samtools-bedtools-subread">
 <h2><em>samtools</em>, <em>bedtools</em>, <em>Subread</em><a class="headerlink" href="#samtools-bedtools-subread" title="Permalink to this headline">¶</a></h2>
-<p>In addition, <a class="reference external" href="http://www.htslib.org/download">samtools</a>, <a class="reference external" href="http://bedtools.readthedocs.io">bedtools</a> and <a class="reference external" href="http://subread.sourceforge.net">Subread</a> are needed to run <code class="docutils literal notranslate"><span class="pre">diffTF</span></code>. We recommend installing them, along with all the other required software, via conda.</p>
+<p>In addition, <a class="reference external" href="http://www.htslib.org/download">samtools</a>, <a class="reference external" href="http://bedtools.readthedocs.io">bedtools</a> and <a class="reference external" href="http://subread.sourceforge.net">Subread</a> are needed to run <em>diffTF</em>. We recommend installing them, along with all the other required software, via conda.</p>
 </div>
 <div class="section" id="r-and-r-packages">
 <h2>R and R packages<a class="headerlink" href="#r-and-r-packages" title="Permalink to this headline">¶</a></h2>
@@ -306,16 +299,16 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 <ol class="arabic simple">
 <li>Copy the files <code class="docutils literal notranslate"><span class="pre">config.json</span></code> and <code class="docutils literal notranslate"><span class="pre">startAnalysis.sh</span></code> to a directory of your choice.</li>
 <li>Modify the file <code class="docutils literal notranslate"><span class="pre">config.json</span></code> accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section <a class="reference internal" href="chapter2.html#configurationfile"><span class="std std-ref">General configuration file</span></a> for details about the meaning of the parameters. Do not delete or rename any parameters or sections.</li>
-<li>Create a tab-separated file that defines the input data, in analogy to the file <code class="docutils literal notranslate"><span class="pre">sampleData.tsv</span></code> from the example analysis, and refer to that in the file <code class="docutils literal notranslate"><span class="pre">config.json</span></code> (parameter <code class="docutils literal notranslate"><span class="pre">summaryFile</span></code>)</li>
+<li>Create a <strong>tab-separated</strong> file that defines the input data, in analogy to the file <code class="docutils literal notranslate"><span class="pre">sampleData.tsv</span></code> from the example analysis, and refer to that in the file <code class="docutils literal notranslate"><span class="pre">config.json</span></code> (parameter <code class="docutils literal notranslate"><span class="pre">summaryFile</span></code>)</li>
 <li>Adapt the file <code class="docutils literal notranslate"><span class="pre">startAnalysis.sh</span></code> if necessary (the exact command line call to Snakemake and the various Snakemake-related parameters). If you run with Singularity, see the section below for modifications.</li>
-<li>Since running the pipeline is often computationally demanding, read Section <a class="reference internal" href="chapter2.html#timememoryrequirements"><span class="std std-ref">Executing diffTF - Running times and memory requirements</span></a> and decide on which machine to run the pipeline. In most cases, we recommend running <code class="docutils literal notranslate"><span class="pre">diffTF</span></code> in a cluster environment (see Section <a class="reference internal" href="chapter2.html#clusterenvironment"><span class="std std-ref">Running diffTF in a cluster environment</span></a> for details). The pipeline is written in Snakemake, and we strongly suggest to also read Section <a class="reference internal" href="chapter2.html#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a> to get a basic understanding of how the pipeline works.</li>
+<li>Since running the pipeline is often computationally demanding, read Section <a class="reference internal" href="chapter2.html#timememoryrequirements"><span class="std std-ref">Executing diffTF - Running times and memory requirements</span></a> and decide on which machine to run the pipeline. In most cases, we recommend running <em>diffTF</em> in a cluster environment (see Section <a class="reference internal" href="chapter2.html#clusterenvironment"><span class="std std-ref">Running diffTF in a cluster environment</span></a> for details). The pipeline is written in Snakemake, and we strongly suggest to also read Section <a class="reference internal" href="chapter2.html#workingwithpipeline"><span class="std std-ref">Working with diffTF and FAQs</span></a> to get a basic understanding of how the pipeline works.</li>
 </ol>
 </div>
 <div class="section" id="adaptations-and-notes-when-running-with-singularity">
 <span id="docs-singularitynotes"></span><h1>Adaptations and notes when running with Singularity<a class="headerlink" href="#adaptations-and-notes-when-running-with-singularity" title="Permalink to this headline">¶</a></h1>
 <p>You only have to add the <code class="docutils literal notranslate"><span class="pre">--use-singularity</span></code> argument to Snakemake. In that case, each rule will be executed in pre-configured isolated containers that contain all necessary tools. Please note the following important issues related to <code class="docutils literal notranslate"><span class="pre">Singularity</span></code>:</p>
 <ul>
-<li><p class="first">You may want to add the <code class="docutils literal notranslate"><span class="pre">--singularity-prefix</span></code> argument to store all <code class="docutils literal notranslate"><span class="pre">Singularity</span></code> containers in a central place as opposed to being stored in the local <code class="docutils literal notranslate"><span class="pre">.snakemake</span></code> directory. If you intend to run multiple <code class="docutils literal notranslate"><span class="pre">diffTF</span></code> analyses in different locations, you can save space and time because the containers won’t have to be downloaded each time and stored in multiple locations</p>
+<li><p class="first">You may want to add the <code class="docutils literal notranslate"><span class="pre">--singularity-prefix</span></code> argument to store all <code class="docutils literal notranslate"><span class="pre">Singularity</span></code> containers in a central place as opposed to being stored in the local <code class="docutils literal notranslate"><span class="pre">.snakemake</span></code> directory. If you intend to run multiple <em>diffTF</em> analyses in different locations, you can save space and time because the containers won’t have to be downloaded each time and stored in multiple locations</p>
 </li>
 <li><div class="first admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -332,9 +325,7 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -352,11 +343,11 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Christian Arnold, Ivan Berest, Judith B. Zaugg.
+        &copy; Copyright 2017, Christian Arnold, Ivan Berest, Judith B. Zaugg
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -371,36 +362,23 @@ biocLite<span class="p">(</span><span class="kt">c</span><span class="p">(</span
 
   
 
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'1.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>
