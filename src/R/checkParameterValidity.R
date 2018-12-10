@@ -107,7 +107,7 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "modeest", "checkmate", "gg
 checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "methods", "boot"), verbose = FALSE)
 
 # Step 6
-checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmate", "tools", "methods", "grDevices", "pheatmap"), verbose = TRUE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmate", "tools", "methods", "grDevices", "pheatmap"), verbose = FALSE)
 
 
 
@@ -310,7 +310,9 @@ for (TFCur in allTFs) {
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
   }
   
-  tableCur.df = read_tsv(fileCur, col_names = FALSE, col_types = cols())
+  tableCur.df = read_tsv(fileCur, col_names = FALSE, 
+                         col_types = "ciicic")
+  
   if (nrow(problems(tableCur.df)) > 0) {
     flog.fatal(paste0("Parsing errors: "), problems(tableCur.df), capture = TRUE)
     stop("Parsing errors for file ", TFCur, ". See the log file for more information")
@@ -321,6 +323,10 @@ for (TFCur in allTFs) {
     message = paste0("Number of columns must be 6, but file ", TFCur, " has ", ncols, " instead")
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
   }
+  
+  assertIntegerish(tableCur.df$X2, lower = 0)
+  assertIntegerish(tableCur.df$X3, lower = 0)
+  
   
 }
 

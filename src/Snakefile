@@ -318,6 +318,7 @@ rule checkParameterValidity:
     message: "{ruleDisplayMessage}Check parameter validity {script_checkParValidity}..."
     threads: 1
     priority: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_r"
     params:
     script: dir_scripts + script_checkParValidity
 
@@ -331,6 +332,7 @@ rule produceConsensusPeaks:
     log: expand('{dir}/produceConsensusPeaks.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Calculate consensus peaks for all peak files with the script {script_createConsensusPeaks}..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_r"
     params:
     script: dir_scripts + script_createConsensusPeaks
 
@@ -349,6 +351,7 @@ rule filterSexChromosomesAndSortPeaks:
         consensusPeaks_sorted   = PEAKS_DIR + "/" + compType + "consensusPeaks.filtered.sorted.bed"
     message: "{ruleDisplayMessage}Filter sex and unassembled chromosomes..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     shell: """
             grep -v "^chrX\|^chrY\|^chrM\|^chrUn\|random\|hap\|_gl" {input.consensusPeaks} | sort -k1,1 -k2,2n > {output.consensusPeaks_sorted}
            """
@@ -386,11 +389,12 @@ rule resortBAM:
         BAMSorted = TEMP_BAM_DIR + "/" + "{BAM}.bam"
     message: "{ruleDisplayMessage} Sort BAM file {input.BAM}..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         compression = "-c",
         noSeqInf = "-t"
     shell:
-        """sh -c 'repair {params.compression} {params.noSeqInf} -i {input.BAM} -o {output.BAMSorted} '"""
+        """repair {params.compression} {params.noSeqInf} -i {input.BAM} -o {output.BAMSorted}"""
 
 
 
@@ -414,6 +418,7 @@ rule intersectPeaksAndBAM:
     log:
     message: "{ruleDisplayMessage} Intersect for file {input.consensusPeaks} with all BAM files..."
     threads: threadsMax
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         pairedEnd     = pairedEndOptions,
         readFiltering = "-Q 10",
@@ -453,6 +458,7 @@ rule intersectPeaksAndTFBS:
         TFBSinPeaksMod_bed = expand('{dir}/{compType}allTFBS.peaks.extension.bed.gz', dir = TEMP_EXTENSION_DIR, compType = compType)
     message: "{ruleDisplayMessage} Obtain binding sites from peaks: Intersect all TFBS files and {input.consensusPeaks}..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         extension = config["par_general"]["regionExtension"],
         ulimitMax = ulimitMax
@@ -480,6 +486,7 @@ rule intersectTFBSAndBAM:
     log:
     message: "{ruleDisplayMessage} Intersect file {input.bed} against all BAM files for TF {wildcards.TF}..."
     threads: 4
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         pairedEnd = pairedEndOptions,
         readFiltering = "-Q 10",
@@ -526,6 +533,7 @@ rule DiffPeaks:
     log: expand('{dir}/DiffPeaks.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_DiffPeaks}"
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_r"
     params:
         doCyclicLoess = "true"
     script: dir_scripts + script_DiffPeaks
@@ -549,6 +557,7 @@ rule analyzeTF:
     log: expand('{dir}/analyzeTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_analyzeTF} for TF {wildcards.TF}..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_r"
     params:
         doCyclicLoess = "true",
         allBAMS       = list(allBamFiles)
@@ -564,6 +573,7 @@ rule summary1:
     log: expand('{dir}/summary1.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_summary1} ..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_r"
     script: dir_scripts + script_summary1
 
 
@@ -579,7 +589,7 @@ rule concatenateMotifsPerm:
     log:
     message: "{ruleDisplayMessage}Concatenate all motifs for permutation {wildcards.perm}..."
     threads: 1
-    benchmark: LOG_BENCHMARK_DIR + "/concatenateMotifsPerm.{perm}.benchmark"
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         motifsShortPerm = TF_DIR + "/*/" + extDir + "/" + compType + "*.outputPerm.tsv.gz",
         colToExtract= lambda wc: str(int(wc.perm) + 3)
@@ -601,6 +611,7 @@ rule calcNucleotideContent:
     log:
     message: "{ruleDisplayMessage}Calculate nucleotide content via bedtools nuc for all TFBS..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         motifsShort = TF_DIR + "/*/" + extDir + "/" + compType + "*.output.tsv.gz",
         # TFMotifes = construct a string that resembles the call to tail,
@@ -622,6 +633,7 @@ rule binningTF:
     log: expand('{dir}/binningTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_binningTF} for TF {wildcards.TF}..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_r"
     script: dir_scripts + script_binningTF
 
 # Determine which files are produced by the rule depending on whether the classifiation should be run
@@ -647,6 +659,7 @@ rule summaryFinal:
     log: expand('{dir}/summaryFinal.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_summaryFinal} ..."
     threads: 1
+    singularity: "shub://chrarnold/Singularity_images:difftf_r"
     params: TFs = ",".join(allTF)
     script: dir_scripts + script_summaryFinal
 
@@ -660,6 +673,7 @@ rule cleanUpLogFiles:
     message: "{ruleDisplayMessage}Clean and summarize Logs_and_Benchmark directory..."
     threads: 1
     params: dir = LOG_BENCHMARK_DIR
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     shell:
       """
         grep -i "^WARN"  {params.dir}/*.log > {output.warnLog} || true &&
