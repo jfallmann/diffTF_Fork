@@ -215,15 +215,17 @@ Summary
   Integer >=  0. Default 50. The number of random sample permutations.
 
 Details
-  If set to a value > 0, in addition to the real data, the sample conditions as specified in the sample table will be randomly permuted *nPermutations* times. This is the recommended way of computing statistical significances for each TF. Note that the maximum number of possible permutations is limited by the number of samples and can be computed with the binomial coefficient *n* over *k*. For example, if you have *n* = 8 samples in total and they split up in the two conditions/groups as *k* = 5 / *k* = 3, the total number of permutations is 8 over 5 or 8 over 3 (they are both identical). We generally recommend setting this value to high values such as 1,000. If the value is set to a number higher than the number of possible permutations, it will be adjusted automatically to the maximum number of permutations as determined by the binomial coefficient.
+  If set to a value > 0, in addition to the real data, the sample conditions as specified in the sample table will be randomly permuted *nPermutations* times. This is the recommended way of computing statistical significances for each TF.
+  In this approach, the resulting significance value captures the significance of the effect size (that is, the TF activity) for the real data as compared to permuted one.
+  Note that the maximum number of possible permutations is limited by the number of samples and can be computed with the binomial coefficient *n* over *k*. For example, if you have *n* = 8 samples in total and they split up in the two conditions/groups as *k* = 5 / *k* = 3, the total number of permutations is 8 over 5 or 8 over 3 (they are both identical). We generally recommend setting this value to high values such as 1,000. If the value is set to a number higher than the number of possible permutations, it will be adjusted automatically to the maximum number of permutations as determined by the binomial coefficient.
 
   If set to 0, an alternative way of computing significances that is not based on permutations is performed. First, in the CG normalization step, a Welch Two Sample t-test is performed for each bin and the overall significance by treating the T-statistics as z-scores is calculated, which allows to summarize them across the bins and convert them to one p-value per TF. For this conversion of z-scores per bin to p-value an estimate of the variance of the T-scores is approximated (see the publication for details). This procedure reduces the dependency of the p-value on the sample size (since the number of TFBS can range between a few dozen and multiple tens of thousands depending on the TF).
 
-  .. note:: If set to a value > 0, the parameter ``nBootstraps`` (:ref:`parameter_nBootstraps`) is ignored.
+  .. note:: If set to a value > 0, the parameter ``nBootstraps`` (:ref:`parameter_nBootstraps`) is ignored and can be set to any value.
 
   .. note:: While using permutations is the recommended approach for assessing statistical significance, in some cases it might be useful to use the alternative approach: If the number of samples is small or the groups show a very uneven distributions, the number of possible permutations is very small and therefore also the permutation-based approach might not accurately assess significance.
 
-  .. note:: The running time of the pipeline increases with the number of permutations.
+  .. note:: The permutation-based approach is computationally more expensive than the analytical approach. The running time of the pipeline increases with the number of permutations.
 
 .. warning:: Do not change the value of this parameter after (parts of) the pipeline have been run, some steps may fail due to this change. If you really need to change the value, rerun the pipeline from the *diffPeaks* step onwards.
 
@@ -240,7 +242,7 @@ Details
 
   .. note:: Only relevant if the parameter ``nPermutations`` (:ref:`parameter_nPermutations`) is set to 0. If both are set to 0, an error is thrown.
 
-  .. warning:: If bootstraps are used, it is highly recommended to use a large number of bootstraps. We recommend at least a value of 1,000.
+  .. warning:: If bootstraps are used, it is recommended to use a reasonable large number. We recommend a value 1,000 and found that higher numbers do not add much benefit but instead only increase running time unnecessarily.
 
 
 
