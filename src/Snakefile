@@ -14,7 +14,7 @@ start = time.time()
 
 
 # Enforce a minimum Snakemake version because of various features
-min_version("4.7")
+min_version("5.3.1")
 
 __author__  = "Christian Arnold & Ivan Berest"
 __license__ = "MIT"
