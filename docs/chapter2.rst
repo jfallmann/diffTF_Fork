@@ -897,28 +897,47 @@ If *diffTF* should be run in a cluster environment, the changes are minimal due 
       "__default__": {
         "queue": "htc",
         "nCPUs": "{threads}",
-        "memory": 10000,
+        "memory": 2000,
+        "maxTime": "1:00:00",
         "name": "{rule}.{wildcards}",
         "output": "{rule}.{wildcards}.out",
         "error": "{rule}.{wildcards}.err"
       },
+      "resortBAM": {
+        "memory": 5000,
+        "maxTime": "1:00:00"
+      },
       "intersectPeaksAndPWM": {
-        "queue": "1day",
-        "memory": 5000
+        "memory": 5000,
+        "maxTime": "1:00:00"
       },
       "intersectPeaksAndBAM": {
-        "queue": "1day",
-        "memory": 5000
-      },
-      "sortPWM": {
-        "memory": 1000
-      },
-      "filterSexChromosomesAndSortPeaks": {
-        "memory": 1000
+        "memory": 5000,
+        "maxTime": "1:00:00"
       },
       "intersectTFBSAndBAM": {
-        "queue": "1day",
-        "memory": 5000
+        "memory": 5000,
+        "maxTime": "1:00:00"
+      },
+      "DiffPeaks": {
+        "memory": 5000,
+        "maxTime": "1:00:00"
+      },
+      "analyzeTF": {
+        "memory": 5000,
+        "maxTime": "1:00:00"
+      },
+      "binningTF": {
+        "memory": 5000,
+        "maxTime": "1:00:00"
+      },
+      "summaryFinal": {
+        "memory": 5000,
+        "maxTime": "0:30:00"
+      },
+      "cleanUpLogFiles": {
+        "memory": 1000,
+        "maxTime": "0:30:00"
       }
     }
 
@@ -926,6 +945,7 @@ If *diffTF* should be run in a cluster environment, the changes are minimal due 
 A few motes might help you to get started:
 
 - **each** name in the ``--cluster`` argument string from the command line (here: ``queue``, ``name`` ``nCPUs``, ``memory``, ``maxTime``, ``output``, and ``error``) must appear also in the ``__default__`` section of the referenced cluster configuration file (via ``--cluster-config``)
+- for brevity here, only rules with requirements different from the specified default have been included here in the online version, while the templates in the repository contain all rules, even if they have the same requirements as the default. The latter makes it easier for practical purposes to change requirements later on
 - the ``--cluster`` argument is the only part that has to be adjusted for your cluster system.  It is quite simple really, you essentially just link the content of the configuration file to the cluster system you want to submit the jobs to. More specifically, you refer to the cluster configuration file via the ``cluster.`` string, followed by the name of the parameter in the cluster configuration. For parameters that refer to filenames, an extra escaped quotation mark ``\"`` has been added so that the command also works in case of spaces in filenames (which should *always* be avoided at all costs)
 - the cluster configuration file has multiple sections defined that correspond to the names of the rules as defined in the Snakefile, plus the special section ``__default__`` at the very top, the latter of which specifies the default cluster options that apply to all rules unless overwritten via its own rule-specific section
 - **each** name (e.g., here: ``queue``, ``name`` ``nCPUs``, ```memory``, ``maxTime``, ``output``, and ``error``) **must be defined** in the ``__default__`` section of the cluster configuration file
