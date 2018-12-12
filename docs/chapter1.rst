@@ -7,7 +7,7 @@ Try it out now!
 
 Principally, there are two ways of installing *diffTF* and the proper tools:
 
-1a. The "easy" way: Using ``Singularity`` and our preconfigured *diffTF* containers that contain all necessary tools, R, and R libraries
+1a. **The "easy" way**: Using ``Singularity`` and our preconfigured *diffTF* containers that contain all necessary tools, R, and R libraries
 
   You only need to install Snakemake (see below for details) and ``Singularity``. Snakemake supports Singularity in Versions >=2.4. You can check whether you already have ``Singularity`` installed by simply typing
 
@@ -19,7 +19,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
   .. note:: Make to read the section :ref:`docs-singularityNotes` properly!
 
-1b. The "more complicated" way:  Install the necessary tools (*Snakemake*, *samtools*, *bedtools*, *Subread*, and *R* along with various packages).
+1b. **The "more complicated" way**:  Install the necessary tools (*Snakemake*, *samtools*, *bedtools*, *Subread*, and *R* along with various packages).
 
   .. note:: Note that all tools require Python 3.
 
@@ -40,7 +40,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
   In addition, *R* is needed along with various packages (see below for details).
 
-2. Clone the Git repository:
+2. **Clone the Git repository:**
 
     .. code-block:: Bash
 
@@ -60,7 +60,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
     Otherwise, consult the internet on how to best install Git for your system.
 
-3. To run the example analysis for 50 TF, simply perform the following steps:
+3. **To run the example analysis for 50 TF, simply perform the following steps:**
 
   * Change into the ``example/input`` directory within the Git repository
 
@@ -80,14 +80,26 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
           sh startAnalysisDryRun.sh
 
-  * Once the dryrun is successful, start the analysis via the second helper script. If you want to include ``Singularity`` (which we strongly recommend), simply edit the file and add the ``--use-singularity`` command line argument in addition to the other arguments (see the Snakemake documentation and the section :ref:`docs-singularityNotes` for more details).
+  * Once the dryrun is successful, start the analysis via the second helper script.
+
+    .. code-block:: Bash
+
+      sh startAnalysis.sh
+
+    If you want to include ``Singularity`` (which we strongly recommend), simply edit the file and add the ``--use-singularity`` and ``--singularity-args`` command line arguments in addition to the other arguments (see the Snakemake documentation and the section :ref:`docs-singularityNotes` for more details).
+
+    Thus, the command you execute should look like this:
 
         .. code-block:: Bash
 
-          sh startAnalysis.sh
+          snakemake --snakefile ../../src/Snakefile --cores 2 --configfile config.json \
+           --use-singularity --singularity-args "--bind /your/diffTF/path"
 
-4. To run your own analysis, modify the files ``config.json`` and ``sampleData.ts``. See the instructions in the section `Run your own analysis`_ for more details.
-5. If your analysis finished successfully, take a look into the ``FINAL_OUTPUT`` folder within your specified output directory, which contains the summary tables and visualization of your analysis. If you received an error, take a look in Section :ref:`docs-errors` to troubleshoot.
+    Read in section :ref:`docs-singularityNotes` about the ``--bind`` option and what ``/your/diffTF/path`` means here , it is actually very easy!
+
+
+4. **To run your own analysis**, modify the files ``config.json`` and ``sampleData.tsv``. See the instructions in the section `Run your own analysis`_ for more details.
+5. **If your analysis finished successfully**, take a look into the ``FINAL_OUTPUT`` folder within your specified output directory, which contains the summary tables and visualization of your analysis. If you received an error, take a look in Section :ref:`docs-errors` to troubleshoot.
 
 .. _docs-prerequisites:
 
@@ -143,8 +155,14 @@ Running your own analysis is almost as easy as running the example analysis. Car
 
 Adaptations and notes when running with Singularity
 ============================================================
-You only have to add the ``--use-singularity`` argument to Snakemake. In that case, each rule will be executed in pre-configured isolated containers that contain all necessary tools. Please note the following important issues related to ``Singularity``:
+ With ``Singularity``, each rule will be executed in pre-configured isolated containers that contain all necessary tools.  To enable it, you only have to add the following arguments when you execute Snakemake:
 
-- You may want to add the ``--singularity-prefix`` argument to store all ``Singularity`` containers in a central place as opposed to being stored in the local ``.snakemake`` directory. If you intend to run multiple *diffTF* analyses in different locations, you can save space and time because the containers won't have to be downloaded each time and stored in multiple locations
+1. ``--use-singularity``: Just type it like this, that's all!
+
+2. ``--singularity-args``: You need to make all directories that contain files that are referenced in the *diffTF* configuration file available within the container also. By default, only the directory and subdirectories from which you start the analysis are automatically mounted inside the container. Since the *diffTF* source code is outside the ``input`` folder for the example analysis, however, at least the root directory of the Git repository has to be mounted. This is actually quite simple! Just use ``--singularity-args "--bind /your/diffTF/path"`` and replace ``/your/diffTF/path`` with the root path in which you cloned the *diffTF* Git repository (the one that has the subfolders ``example``, ``src`` etc.). If you reference additional files, simply add one or multiple directories to the bind path (use the comma to separate them). For example, if you reference the files ``/g/group1/user1/mm10.fa`` and ``/g/group2/user1/files/bla.txt`` in the configuration file file, you may add ``/g/group1/user1,/g/group2/user1/files`` or even just ``/g`` to the bind path (as all files you reference are within ``/g``).
+
+3. ``--singularity-prefix /your/directory`` (optional): You do not have to, but you may want to add the ``--singularity-prefix`` argument to store all ``Singularity`` containers in a central place (here: ``/your/directory``) instead of the local ``.snakemake`` directory. If you intend to run multiple *diffTF* analyses in different folders, you can save space and time because the containers won't have to be downloaded each time and stored in multiple locations. 
+
+Please read the following additional notes and warnings related to ``Singularity``:
+
 - .. warning:: If you use ``Singularity`` version 3, make sure you have at least version 3.0.2 installed or the latest pull from version 3.0.1, as there was an issue with Snakemake and particular ``Singularity`` versions. For more details, see `here <https://bitbucket.org/snakemake/snakemake/issues/1017/snakemake-process-suspended-upon-execution>`_.
-- .. warning:: If you reference files in the ``config.json`` that are located outside of the directory from which you call Snakemake (that is, parent directories), you have to use the ``--singularity-args`` command line argument to bind additional parent directories to the container so they are available inside the container as well. Otherwise, only (!) the directory from which you start the analysis and subfolders are visible inside the container, but no parent folders. In addition, make sure the mounted paths are identical inside and outside the container. For example, if you reference the files ``/g/group1/user1/mm10.fa`` and ``/g/group2/user1/files/bla.txt`` in the config file, use ``--singularity-args "--bind /g:/g"``. Thus, you have to mount the parent directory of all files you reference outside of your current directory. If both files were located in ``/g/group1``, you could therefore also use ``--bind /g/group1:/g/group1``
