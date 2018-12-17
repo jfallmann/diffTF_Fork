@@ -97,6 +97,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
     Read in section :ref:`docs-singularityNotes` about the ``--bind`` option and what ``/your/diffTF/path`` means here , it is actually very easy!
 
+    You can also run the example analysis with all TF instead of only 50. For this, simply modify the ``TF`` parameter and set it to the special word ``all`` that tells *diffTF* to use all recognized TFs instead of a speciifc list only (see section :ref:`parameter_TFs` for details).
 
 4. **To run your own analysis**, modify the files ``config.json`` and ``sampleData.tsv``. See the instructions in the section `Run your own analysis`_ for more details.
 5. **If your analysis finished successfully**, take a look into the ``FINAL_OUTPUT`` folder within your specified output directory, which contains the summary tables and visualization of your analysis. If you received an error, take a look in Section :ref:`docs-errors` to troubleshoot.
@@ -161,7 +162,7 @@ Adaptations and notes when running with Singularity
 
 2. ``--singularity-args``: You need to make all directories that contain files that are referenced in the *diffTF* configuration file available within the container also. By default, only the directory and subdirectories from which you start the analysis are automatically mounted inside the container. Since the *diffTF* source code is outside the ``input`` folder for the example analysis, however, at least the root directory of the Git repository has to be mounted. This is actually quite simple! Just use ``--singularity-args "--bind /your/diffTF/path"`` and replace ``/your/diffTF/path`` with the root path in which you cloned the *diffTF* Git repository (the one that has the subfolders ``example``, ``src`` etc.). If you reference additional files, simply add one or multiple directories to the bind path (use the comma to separate them). For example, if you reference the files ``/g/group1/user1/mm10.fa`` and ``/g/group2/user1/files/bla.txt`` in the configuration file file, you may add ``/g/group1/user1,/g/group2/user1/files`` or even just ``/g`` to the bind path (as all files you reference are within ``/g``).
 
-3. ``--singularity-prefix /your/directory`` (optional): You do not have to, but you may want to add the ``--singularity-prefix`` argument to store all ``Singularity`` containers in a central place (here: ``/your/directory``) instead of the local ``.snakemake`` directory. If you intend to run multiple *diffTF* analyses in different folders, you can save space and time because the containers won't have to be downloaded each time and stored in multiple locations. 
+3. ``--singularity-prefix /your/directory`` (optional): You do not have to, but you may want to add the ``--singularity-prefix`` argument to store all ``Singularity`` containers in a central place (here: ``/your/directory``) instead of the local ``.snakemake`` directory. If you intend to run multiple *diffTF* analyses in different folders, you can save space and time because the containers won't have to be downloaded each time and stored in multiple locations.
 
 Please read the following additional notes and warnings related to ``Singularity``:
 

@@ -6,8 +6,7 @@ Transcription factor (TF) activity constitutes an important readout of cellular 
 
 For a graphical summary of the idea, see the section :ref:`workflow`
 
-We also put the paper on *bioRxiv*, please read all methodological details here:
-`Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/07/13/368498>`_.
+We also put the paper on *bioRxiv*, please see the section :ref:`citation` for details.
 
 
 Help, contribute and contact
@@ -16,6 +15,8 @@ Help, contribute and contact
 If you have questions or comments, feel free to contact us. We will be happy to answer any questions related to this project as well as questions related to the software implementation. For method-related questions, contact Judith B. Zaugg (judith.zaugg@embl.de) or Ivan Berest (berest@embl.de). For technical questions, contact Christian Arnold (christian.arnold@embl.de).
 
 If you have questions, doubts, ideas or problems, please use the `Bitbucket Issue Tracker <https://bitbucket.org/chrarnold/diffTF>`_. We will respond in a timely manner.
+
+.. _citation:
 
 Citation
 ============================

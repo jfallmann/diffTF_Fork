@@ -115,19 +115,6 @@ Summary
 Details
   The root output directory where all output is stored.
 
-.. _parameter_regionExtension:
-
-
-PARAMETER ``regionExtension``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Summary
-  Integer >= 0. Default 100. Target region extension in base pairs.
-
-Details
-  Specifies the number of base pairs each target region (from the peaks file) should be extended in both 5’ and 3’ direction.
-
-.. _parameter_maxCoresPerRule:
 
 
 PARAMETER ``maxCoresPerRule``
@@ -150,6 +137,23 @@ Summary
 
 Details
   If set to true, no additional sorting will be done, saving computation time because the rule *sortTFBSParallel* is not executed. Note that sorting is assumed to be according to the chromosome (first column) and start position (second column), essentially invoking *sort -k1,1 -k2,2n*.  If set to false, all files in ``dir_TFBS`` (:ref:`parameter_dir_TFBS`) will be sorted.
+
+
+.. _parameter_regionExtension:
+
+
+PARAMETER ``regionExtension``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Integer >= 0. Default 100. Target region extension in base pairs.
+
+Details
+  Specifies the number of base pairs each target region (from the peaks file) should be extended in both 5’ and 3’ direction.
+
+.. _parameter_maxCoresPerRule:
+
+
 
 
 .. _parameter_comparisonType:
@@ -205,6 +209,8 @@ Details
 
   .. note:: Importantly, if the variable of interest is continuous-valued (i.e., marked as being integer or numeric), then the reported log2 fold change is per unit of change of that variable. That is, in the final circular plot, TFs displayed in the left side have a negative slope  per unit of change of that variable, while TFs at the right side have a positive one.
 
+
+
 .. _parameter_nPermutations:
 
 
@@ -243,6 +249,20 @@ Details
   .. note:: Only relevant if the parameter ``nPermutations`` (:ref:`parameter_nPermutations`) is set to 0. If both are set to 0, an error is thrown.
 
   .. warning:: If bootstraps are used, it is recommended to use a reasonable large number. We recommend a value 1,000 and found that higher numbers do not add much benefit but instead only increase running time unnecessarily.
+
+
+.. _parameter_nGCBins:
+
+
+PARAMETER ``nGCBins``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Integer > 0. Default 10. Number of GC bins for the binning step.
+
+Details
+
+  This parameter sets the number of GC bins that are used during the binning step. The default is to split the data into 10 bins (0-10% GC content, 11-20%, ..., 91-100%), for each of which the significance is calculated independently (see Methods). Too many bins may result in bins being skipped due to an insufficient number of TFBS for that particular bin and TF, while too few bins may introduce GC-specific biases when summarizing the signal across all TFBS.
 
 
 
@@ -380,11 +400,12 @@ Details
 SECTION ``additionalInputFiles``
 --------------------------------------------
 
+
 .. _parameter_refGenome_fasta:
 
 
 PARAMETER ``refGenome_fasta``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
   String. Default ‘hg19.fasta’. Path to the reference genome *fasta* file.
@@ -435,7 +456,7 @@ Summary
   String. Default “”. Path to the file with RNA-Seq counts.
 
 Details
-  If no RNA-Seq data is included, set to the empty string “”. Otherwise, if ``RNASeqIntegration`` (:ref:`parameter_RNASeqIntegration`) is set to true,  specify the path to a tab-separated file with normalized RNA-Seq counts. It does not matter whether the values have been variance-stabilized or not, as long as values across samples are comparable. Also, consider filtering lowly expressed genes. For guidance, you may want to read `Question 4 here <https://labs.genetics.ucla.edu/horvath/CoexpressionNetwork/Rpackages/WGCNA/faq.html>`_.
+  If no RNA-Seq data is included, set to the empty string “”. Otherwise, if ``RNASeqIntegration`` (:ref:`parameter_RNASeqIntegration`) is set to true,  specify the path to a tab-separated file with normalized RNA-Seq counts. It does not matter whether the values have been variance-stabilized or not, as long as values across samples are comparable. Also, consider filtering lowly expressed genes. For guidance, you may want to read `Question 4 here <https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/faq.html>`_.
 
   The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (``summaryFile``, :ref:`parameter_summaryFile`). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then naturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., *ENSG00000028277*) without dots. The IDs are then matched to the IDs from the file as specified in ``HOCOMOCO_mapping`` (:ref:`parameter_HOCOMOCO_mapping`).
 
