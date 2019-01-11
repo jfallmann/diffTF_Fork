@@ -9,6 +9,27 @@ For a graphical summary of the idea, see the section :ref:`workflow`
 We also put the paper on *bioRxiv*, please see the section :ref:`citation` for details.
 
 
+
+.. _exampleDataset:
+
+Example dataset
+=================
+
+We provide a the toy dataset that is included in the Git repository to test diffTF. It is a small ATAC-Seq/RNA-Seq dataset comparing two cell types along the hematopoietic differentiation trajectory in mouse (multipotent progenitors - MPP - versus granulocyte-macrophage progenitors - GMP) and comes from `Rasmussen et al. 2018  <https://www.biorxiv.org/content/early/2018/05/31/336008>`_. Generally, hematopoiesis is organized in a hierarchical manner, and the following Figure shows the hematopoietic hierarchy in more detail and also places GMP and MPP cells:
+
+.. figure:: Figures/GMP_MPP.jpg
+      :scale: 40 %
+      :alt: The hematopoietic hierarchy
+      :align: center
+
+      U.Blank et. al., Blood 2015 (http://www.bloodjournal.org/content/bloodjournal/125/23/3542/F1.large.jpg)
+
+The data consists of ATAC-Seq data of 4 replicates for each of the two cell types (4 GMP vs. 4 MPP), and is limited to chr1 only to reduce running times and complexity. RNA-seq data are also available, which allows using the TF classification within the diffTF framework. As mentioned in the paper, the small number of samples makes the correlation-based classification of the TFs into activators and repressors unreliable, but we nevertheless include it here for the small dataset to show how to principally enable our AR classification in diffTF.
+
+In the example analysis, you can investigate the differential TF activity of a set of 50 (or even all of the 400+) TFs to identify the known drivers of the well-studied mouse hematopoietic differentiation system. Overall, we expect to see TFs that more specific for stem cells renewal being more active in the MPPs, while in GMPs, TFs responsible for the further myeloid cell differentiation (CEBP family, NFIL3) should be enriched.
+
+
+
 Help, contribute and contact
 ============================
 

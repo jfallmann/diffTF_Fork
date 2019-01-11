@@ -60,7 +60,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
     Otherwise, consult the internet on how to best install Git for your system.
 
-3. **To run the example analysis for 50 TF, simply perform the following steps:**
+3. **To run diffTF with an example ATAC-Seq / RNA-seq dataset for 50 TF, simply perform the following steps (see section**  :ref:`exampleDataset` **for dataset details)**:
 
   * Change into the ``example/input`` directory within the Git repository
 
@@ -97,7 +97,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
     Read in section :ref:`docs-singularityNotes` about the ``--bind`` option and what ``/your/diffTF/path`` means here , it is actually very easy!
 
-    You can also run the example analysis with all TF instead of only 50. For this, simply modify the ``TF`` parameter and set it to the special word ``all`` that tells *diffTF* to use all recognized TFs instead of a speciifc list only (see section :ref:`parameter_TFs` for details).
+    You can also run the example analysis with all TF instead of only 50. For this, simply modify the ``TF`` parameter and set it to the special word ``all`` that tells *diffTF* to use all recognized TFs instead of a specific list only (see section :ref:`parameter_TFs` for details).
 
 4. **To run your own analysis**, modify the files ``config.json`` and ``sampleData.tsv``. See the instructions in the section `Run your own analysis`_ for more details.
 5. **If your analysis finished successfully**, take a look into the ``FINAL_OUTPUT`` folder within your specified output directory, which contains the summary tables and visualization of your analysis. If you received an error, take a look in Section :ref:`docs-errors` to troubleshoot.
@@ -143,7 +143,7 @@ A working ``R`` installation is needed and a number of packages from either CRAN
 Run your own analysis
 ============================================================
 
-Running your own analysis is almost as easy as running the example analysis. Carefully read and follow the following steps and notes:
+Running your own analysis is almost as easy as running the example analysis (see section :ref:`exampleDataset`). Carefully read and follow the following steps and notes:
 
 1. Copy the files ``config.json`` and ``startAnalysis.sh`` to a directory of your choice.
 2. Modify the file ``config.json`` accordingly. For example, we strongly recommend running the analysis for all TF instead of just 50 as for the example analysis. For this, simply change the parameter “TFs” to “all”. See Section :ref:`configurationFile` for details about the meaning of the parameters. Do not delete or rename any parameters or sections.
