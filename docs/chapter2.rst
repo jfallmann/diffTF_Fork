@@ -40,8 +40,8 @@ We now show which rules are executed by *Snakemake* for a specific example (see 
 diffTF is implemented as a *Snakemake* pipeline. For a gentle introduction about *Snakemake*, see Section :ref:`workingWithPipeline`. As you can see, the workflow consists of the following steps or *rules*:
 
 - ``checkParameterValidity``: R script that checks whether the specified peak file has the correct format, whether the provided *fasta* file and the *BAM* files are compatible, and other checks
-- ``produceConsensusPeaks``:  R script that generates the consensus peaks if none are provided
-- ``filterSexChromosomesAndSortPeaks``: Filters various chromosomes 8sex, unassembled ones, contigs, etc) from the peak file.
+- ``produceConsensusPeaks``:  R script that generates the consensus peaks using the R package ``DiffBind`` if none are provided
+- ``filterSexChromosomesAndSortPeaks``: Filters various chromosomes (sex, unassembled ones, contigs, etc) from the peak file.
 - ``sortTFBSParallel``: Sort the TFBS lists by position
 - ``resortBAM``: Sort the *BAM* file for optimized processing (only run if data are paired-end)
 - ``intersectPeaksAndBAM``: Count all reads for peak regions across all input files
@@ -347,7 +347,7 @@ Summary
   String. Default "" (empty). Path to the consensus peak file.
 
 Details
-  If set to the empty string "", the pipeline will generate a consensus peaks out of the peak files from each individual sample. For this, you need to provide the following two things:
+  If set to the empty string "", the pipeline will generate a consensus peaks out of the peak files from each individual sample using the R package ``DiffBind``. For this, you need to provide the following two things:
 
   - a peak file for each sample in the metadata file in the column *peaks*, see the section :ref:`section_metadata` for details.
   - The format of the peak files, as specified in ``peakType`` (:ref:`parameter_peakType`)

@@ -12,7 +12,7 @@ Transcription factor (TF) activity constitutes an important readout of cellular 
 
 For more information, please check our paper on biorxiv:
 
-[Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF](https://www.biorxiv.org/content/early/2018/07/13/368498).
+[Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF](https://www.biorxiv.org/content/early/2018/12/01/368498).
 
 Documentation
 -------------
@@ -33,4 +33,4 @@ Citation
 --------
 *Please cite the following article if you use diffTF in your research*:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF. 2018. *Molecular Systems Biology*. in review.
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF. 2018. in review.

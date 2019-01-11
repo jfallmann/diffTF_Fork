@@ -134,7 +134,6 @@ for sectionCur in configDict:
 #############################
 
 # Maximum number of cores per rule.
-
 # For local computation, the minimum of this value and the --cores parameter will define the number of CPUs per rule,
 # while in a cluster setting, the minimum of this value and the number of cores onn the node the jobs runs is usedself.
 
@@ -577,9 +576,6 @@ rule summary1:
     script: dir_scripts + script_summary1
 
 
-# Python: Read in 640 files one by one, and for each loop through all 1000 permutations and output to the correpsonding output file.
-
-
 rule concatenateMotifsPerm:
     input:
         diagnosticPlots = rules.summary1.output,
@@ -614,7 +610,6 @@ rule calcNucleotideContent:
     singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         motifsShort = TF_DIR + "/*/" + extDir + "/" + compType + "*.output.tsv.gz",
-        # TFMotifes = construct a string that resembles the call to tail,
         refGenome = config["additionalInputFiles"]["refGenome_fasta"]
     shell:
       """
