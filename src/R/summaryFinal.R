@@ -1,5 +1,8 @@
 start.time  <-  Sys.time()
 
+# Increase the default of 5000, some users reported issues with the limit being reached in this script
+options(expressions=10000)
+
 #########################
 # LIBRARY AND FUNCTIONS #
 #########################

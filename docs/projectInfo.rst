@@ -54,6 +54,9 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 Change log
 ============================
 
+Version 1.2.1 (2019-01-22)
+    - Increased the value for ``expressions`` in R from 5000 (the R default) to 10000. Some users reported that they receive a "Error: evaluation nested too deeply: infinite recursion / options(expressions=)?" error message. Thanks to Benedict Man Hung Choi!
+
 Version 1.2 (2018-12-10)
     - The Snakemake / *diffTF* pipeline can now be combined with **Singularity**. Singularity is similar to Docker and provides a containerization approach. This has significant implications for users: Except for Snakemake and Singularity, no other tool, R or R package has to be installed prior to using *diffTF* anymore, which makes installing *diffTF* much easier and completely independent of the underlying operating system. We now provide two Singularity containers with all necessary tools and packages that are automatically integrated into the workflow. See the section :ref:`docs-singularityNotes` and :ref:`docs-quickstart` for more details. **Please note that for this to work reliably, Snakemake must be updated to at least version 5.3.1**.
     - added two validity checks in the ``checkParameterValidity.R`` script for the TFBS files. Start and end coordinates are now asserted whether they are non-negative.
