@@ -149,7 +149,6 @@ if (!all(sapply(components2,length) == 2)) {
 }
 
 components3 = unlist(lapply(components2, "[[", 1))
-
 components3types = tolower(unlist(lapply(components2, "[[", 2)))
 names(components3types) = components3
 checkAndLogWarningsAndErrors(sort(formulaVariables), checkSetEqual(sort(formulaVariables), sort(components3)))
@@ -190,8 +189,6 @@ if (datatypeVariableToPermute == "factor" & nLevels != 2) {
   message = paste0("The variable ", variableToPermute, " was specified as a factor, but it does not have two different levels but instead ", nLevels, ".")
   checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
 }
-
-
 
 
 
@@ -302,8 +299,14 @@ while (nPermutationsDone < par.l$nPermutations) {
 
 designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
 
-cds.peaks <- DESeqDataSetFromMatrix(countData = coverageAll.m,
-                                    colData = sampleData.df,
+
+# Enforce the correct order of sampleData and coverageAll so that the rownames match
+stopifnot(sampleData.df$SampleID %in% colnames(coverageAll.m))
+sampleData.temp.df = as.data.frame(sampleData.df)
+rownames(sampleData.temp.df) = sampleData.temp.df$SampleID
+
+cds.peaks <- DESeqDataSetFromMatrix(countData = coverageAll.m[, sampleData.temp.df$SampleID],
+                                    colData = sampleData.temp.df,
                                     design = designFormula)
 
 # Recent versions of DeSeq seem to do this automatically, whereas older versions don't, so enforce it here
@@ -422,9 +425,9 @@ if (par.l$nPermutations == 0) {
   }
   )
   
-  cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt))
+  #Enforce the correct order of the comparison
+  cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt, contrast = c(variableToPermute, comparisonDESeq[1], comparisonDESeq[2])))
   
-  # TODO: "peakID"      = rownames(results.df), CHECK
   final.peaks.df = data_frame( 
     "permutation" = 0,
     "peakID"    = rownames(cds.peaks.df), 

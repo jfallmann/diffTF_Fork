@@ -202,9 +202,11 @@ if (nrow(overlapsAll.df) > 0) {
 nTFBS = nrow(overlapsAll.df)
 
 
-
-
-
+# Create formula based on user-defined design
+designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
+formulaVariables = attr(terms(designFormula), "term.labels")
+# Extract the variable that defines the contrast. Always the last element in the formula
+variableToPermute = formulaVariables[length(formulaVariables)]
 
 
 if (nTFBS >= par.l$minNoDatapoints) {
@@ -241,16 +243,14 @@ if (skipTF) {
   
   
 } else {
-  
-  # Create formula based on user-defined design
-  designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
-  
+
   normFacs = readRDS(par.l$file_input_normFacs)
   
   
   TF.cds = tryCatch( {
       
       # create Deseq object from the TF specific data
+      # The correct order is already enforced due to the creation of the TF.table.m matrix before that is sorted after sampleData.df
       TF.cds <- DESeqDataSetFromMatrix(countData = TF.table.m,
                                        colData = sampleData.df,
                                        design = designFormula)
@@ -318,6 +318,8 @@ if (skipTF) {
   }
   
   peaksFiltered.df = readRDS(par.l$file_input_peaks)
+  
+  conditionComparison = readRDS(par.l$file_input_conditionComparison)
   
   ################################
   # ITERATE THROUGH PERMUTATIONS #
@@ -402,7 +404,9 @@ if (skipTF) {
         }
         
         if (!skipTF) {
-            res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq))
+            
+            # Enforce the correct order
+            res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq, contrast = c(variableToPermute, conditionComparison[1], conditionComparison[2])))
             
             final.TF.df = data_frame("TFBSID"    = rownames(res_DESeq.df), 
                                      "DESeq_baseMean" = res_DESeq.df$baseMean,
@@ -441,9 +445,7 @@ if (skipTF) {
             ######################
             ## DIAGNOSTIC PLOTS ##
             ######################
-            conditionComparison = readRDS(par.l$file_input_conditionComparison)
-            
-            
+  
             pdf(par.l$file_output_plot_diagnostic)
             if (par.l$nPermutations == 0) {
               plotDiagnosticPlots(TF.cds.filt, res_DESeq, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 

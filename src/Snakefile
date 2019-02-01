@@ -647,7 +647,6 @@ rule summaryFinal:
         sampleDataR           = rules.DiffPeaks.output.sampleDataR,
     output:
         summary         = FINAL_DIR + "/" + compType + "summary.tsv.gz",
-        circularPlot    = FINAL_DIR + "/" + compType + "summary.circular.pdf",
         volcanoPlot     = FINAL_DIR + "/" + compType + "summary.volcano.pdf",
         diagnosticPlots = allDiagnosticFiles,
         plotsRDS        = FINAL_DIR + "/" + compType + "summary.circular.rds",

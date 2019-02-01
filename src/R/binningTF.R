@@ -1,6 +1,8 @@
 ## README: prepare Permutations, to make it more efficient
 start.time  <-  Sys.time()
 
+# Increase the default of 5000, some users reported issues with the limit being reached
+options(expressions=10000)
 
 #########################
 # LIBRARY AND FUNCTIONS #

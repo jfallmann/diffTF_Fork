@@ -23,7 +23,6 @@ createDebugFile(snakemake)
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
 checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "DESeq2",  "matrixStats", "ggrepel", "checkmate", "tools", "grDevices", "locfdr", "pheatmap"), verbose = FALSE)
 
-# TODO: grdevices realyl needed? Only for adjustcolor so far
 
 ###################
 #### PARAMETERS ###
@@ -42,8 +41,9 @@ par.l$thresholds_CohensD = c(0.1, 0.5, 0.8)
 par.l$regressionMethod = "glm"
 par.l$filter_minCountsPerCondition = 5
 par.l$log_minlevel = "INFO"
-par.l$circularPlot_minDimensions  = 12
+par.l$volcanoPlot_minDimensions  = 12
 par.l$corMethod = "pearson"
+par.l$minPointSize = 0.3
 
 par.l$extension_x_limits = 0.025 
 par.l$extension_x_limits = 0.15 # 15 % x axis extension, regardless of the limits
@@ -60,13 +60,14 @@ par.l$colorCategories = c("activator" = "#4daf4a", "undetermined" = "black", "re
 
 par.l$colorConditions = c("#ef8a62", "#67a9cf")
 
-par.l$circularPlot_height = 12
-par.l$circularPlot_width = 16
+par.l$volcanoPlot_height = 12
+par.l$volcanoPlot_width = 16
 par.l$size_TFAnnotation = 5.5
 par.l$sizeLegend  = 20
 par.l$rootFontSize = 8
 par.l$sizeHelperLines = 0.3
 par.l$legend_position = c(0.1, 0.9)
+
 
 # Which transformation of the y values to do?
 
@@ -100,6 +101,7 @@ for (fileCur in par.l$files_input_permResults) {
   assertFileExists(fileCur, access = "r")
 }
 
+
 par.l$file_input_condCompDeSeq = snakemake@input$condComp
 assertFileExists(par.l$file_input_condCompDeSeq, access = "r")
 
@@ -111,10 +113,9 @@ assertFileExists(par.l$file_input_metadata, access = "r")
 
 ## OUTPUT ##
 assertList(snakemake@output, min.len = 1)
-assertSubset(c("", "summary", "circularPlot", "diagnosticPlots", "plotsRDS"), names(snakemake@output))
+assertSubset(c("", "summary", "diagnosticPlots", "plotsRDS"), names(snakemake@output))
 
 par.l$file_output_summary  = snakemake@output$summary
-par.l$file_plotCircular    = snakemake@output$circularPlot
 par.l$file_plotVolcano     = snakemake@output$volcanoPlot
 par.l$files_plotDiagnostic = snakemake@output$diagnosticPlots
 par.l$file_output_plots    = snakemake@output$plotsRDS
@@ -145,15 +146,13 @@ if (par.l$plotRNASeqClassification) {
 }
 
 
-
-
 ## LOG ##
 assertList(snakemake@log, min.len = 1)
 par.l$file_log = snakemake@log[[1]]
 
 
 allDirs = c(dirname(par.l$file_output_summary), 
-            dirname(par.l$file_plotCircular),
+            dirname(par.l$file_plotVolcano),
             dirname(par.l$files_plotDiagnostic),
             dirname(par.l$file_log)
 )
@@ -176,210 +175,6 @@ printParametersLog(par.l)
 #############
 # FUNCTIONS #
 #############
-plotCircular <- function(dataCur, par.l, showClasses, significanceThresholdCur, conditionComparison, variableXAxis) {
-  
-  if (par.l$plotRNASeqClassification) {
-    # Filter by classes to show
-    dataCur = filter(dataCur, classification %in% showClasses)
-    dataCur$classification = factor(dataCur$classification, levels = showClasses)
-    
-    colorCategoriesCur = par.l$colorCategories[which(names(par.l$colorCategories) %in% showClasses)]
-  }
-  
-
-  # TODO: When adjust p-value? Before or after filtering?
-  dataCur = mutate(dataCur, sign = pvalueAdj <= significanceThresholdCur)
-  
-  
-  # Limits for x-axis. Multiple by a factor > 1 to account for the white legend part in which no point should be located
-  # For this, extend the x axis limit so that radial positions are smaller and do not cross the border of the legend
-  # Enforce a minimum of above 1 for enrichment analysis
-  limit_max = max(abs(dataCur[,variableXAxis])) * (1 + par.l$extension_x_limits)
-  limit_min = 0
-  
-  # Determine the value for 1 degree radial positions. 180 is the max
-  radial_coeff = 180/limit_max
-  
-  # Calculate the radial positions
-  dataCur$radial = 0
-  index_neg = which(dataCur$weighted_meanDifference < 0)
-  index_pos = which(dataCur$weighted_meanDifference > 0)
-  
-  # extracting the labels from object in order to add them manually later
-  dataCur$radial[index_neg] = 180 + (radial_coeff*abs(unlist(dataCur[, variableXAxis])[index_neg]))
-  dataCur$radial[index_pos] = 180 - (radial_coeff*abs(unlist(dataCur[, variableXAxis])[index_pos]))
-  
-  # Which measure to use for the y value?
-  signThresholdPlot = transform_yValues(significanceThresholdCur, addPseudoCount = FALSE)
-  
-  # Dont display TFs that are deemed non-significant
-  ggrepel_df = filter(dataCur, sign == TRUE)
-  # ggrepel_df = filter(ggrepel_df, weighted_CD > par.l$cohensDThreshold)
-  
-  
-  ylimit = max(signThresholdPlot, sign(max(dataCur$yValue)) * ceiling(abs(max(dataCur$yValue)))) * par.l$extension_y_limits
-  
-  labels        = list()
-  startNo = sign(min(dataCur$yValue)) * ceiling(abs(min(dataCur$yValue)))
-  endNo   = ylimit
-  stepsize = 1
-  labels$breaks = round(seq(startNo, endNo, stepsize),0)
-  
-  
-  width_whiteArea = 15
-  
-  #p1 = ggplot(environment = localenv) + 
-  p1 = ggplot() +   
-    geom_rect(data = NULL,
-              aes(xmin = 0,
-                  xmax = 180,
-                  ymin = -Inf, 
-                  ymax = ylimit),
-              alpha = .45, 
-              fill = par.l$colorConditions[1]) + 
-    geom_rect(data = NULL,
-              aes(xmin = 180,
-                  xmax = 360,
-                  ymin = -Inf, 
-                  ymax = ylimit),
-              alpha = .45, 
-              fill = par.l$colorConditions[2]) + 
-    geom_rect(data = NULL, aes(xmin = 0, xmax = 360 , ymin = -Inf, ymax = signThresholdPlot), alpha = 0.5, fill = "white") +
-    coord_polar() + 
-    # limits of the angular plot 
-    scale_x_continuous(limits = c(0,360)) +
-    # sizes of the points for significance
-    scale_size_manual(values = c(0.5,1), guide = FALSE) 
-
-  p1 = p1 + geom_hline(yintercept = ylimit, size = 0.8, linetype = "solid", color = par.l$plot_grayColor, alpha = .9) +
-    # Make the white area separate into two to avoid strange artefacts
-    geom_rect(data = NULL,aes(xmin = 360 - width_whiteArea, xmax = 360 , ymin = -Inf, ymax = ylimit + 0.1), alpha = 1, fill = "white") +
-    geom_rect(data = NULL,aes(xmin = 0 , xmax = width_whiteArea , ymin = -Inf, ymax = ylimit + 0.1), alpha = 1, fill = "white")
-  
-  
-  if (par.l$plotRNASeqClassification) {
-    p1 = p1 +  geom_point(data = dataCur, aes(x = radial, y = yValue, size = sign, fill = classification, color = classification), alpha = 1, shape = 21)
-  } else {
-    p1 = p1 +  geom_point(data = dataCur, aes(x = radial, y = yValue, size = sign), alpha = 1, shape = 21)
-  }
-  
-  p1 = p1 + geom_rect(data = NULL, aes(xmin = 180, xmax = 360 - width_whiteArea , ymin = signThresholdPlot, ymax =  ylimit), alpha = 0.5, fill = "white") 
-    
-  p1 = p1 + geom_rect(data = NULL, aes(xmin = 0 + width_whiteArea, xmax = 180, ymin = signThresholdPlot, ymax =  ylimit), alpha = 0.5, fill = "white")
-    
-  
-  fontSize = par.l$rootFontSize + nrow(ggrepel_df) * 0.01
-  
-  # y axis labels
-  for (i in 1:(length(labels$breaks))) {
-    p1 = p1 + annotate(geom = "text", x = 0, y = labels$breaks[i], label = paste0(as.numeric(labels$breaks[i])), vjust = 0.5, hjust = 0.5, angle = 0, size = fontSize)
-  }
-  
-  p2 = p1
-
-  p2 = p2 + geom_segment(aes(x = 0 + width_whiteArea, xend = 360 - width_whiteArea, y = signThresholdPlot, yend = signThresholdPlot), size = 0.5, linetype = "solid", color = "red", alpha = .5) 
- 
-  
-  
-  # Increase the size of the poitns in the legend, see https://stackoverflow.com/questions/20415963/how-to-increase-the-size-of-points-in-legend-of-ggplot2
-  #p2 = p2 + guides(fill = guide_legend(override.aes = list(size = par.l$sizeLegend), nrow = 2))
-  p2 = p2 + guides(fill = guide_legend(override.aes = list(size = par.l$sizeLegend), nrow = 1))
-  
-  # Add the annotation outside of the plot (y axis) and draw helper lines
-  ## scaling to the angles automatically
-  
-  coeff_angle = (limit_max * 2) / 360
-  
-  anglesPos = c(seq(180, 15, -30))
-  anglesNeg = c(seq(180 + 30, 345, 30))
-  
-  df.axis = data.frame(angles = c(anglesPos, anglesNeg), 
-                       annotation = c(coeff_angle  * abs(anglesPos - 180),
-                                      -coeff_angle * abs(anglesNeg - 180)))
-  
-  
-  p2 = p2 + geom_segment(aes(x = df.axis$angles, xend = df.axis$angles , y = min(labels$breaks), yend = ylimit), 
-                         size = par.l$sizeHelperLines, linetype = "dotted", color = par.l$plot_grayColor, alpha = .9) 
-  
-  df.axis$annotation = signif(df.axis$annotation, 3)
-  
-  
-  for (i in anglesPos) {
-    
-    p2 = p2 + annotate(geom = "text", x = i, y = ylimit + 0.55, label = paste0(df.axis[which(df.axis$angles == i),]$annotation), vjust = 0, hjust = 0, size = fontSize)
-  }
-  for (i in anglesNeg) {
-    
-    p2 = p2 + annotate(geom = "text", x = i, y = ylimit + 0.55, label = paste0(df.axis[which(df.axis$angles == i),]$annotation), vjust = 0, hjust = 1, size = fontSize)
-  }
-  
-  
-  
-  p3 = p2 
-  
-  labelY = paste0("Sign. threshold: ", signif(significanceThresholdCur*100,2), "%\n", transform_yValues_caption(), " (adj. p-value)")
-
-
-  
-  #p3 = p3 + annotate(geom = "text", x = 0, y = 0, label = "log10 T stat.", vjust = 0.5, hjust = 0.1, angle = 90, size = fontSize, fontface = 'italic') + 
-  p3 = p3 + annotate(geom = "text", x = 0, y =  ylimit + 0.5, label = labelY, vjust = 0, hjust = 0.5, angle = 0, size = fontSize, fontface = 'italic')
-  
-  angleLegAct = 180
-  length_arrow = 80
-  yPos = ylimit * 1.4
-  yPosLabels = yPos - 0.1
-  
-  
-  
-  # Draw the legend in the lower part (arrows)
-  p3 = p3 + 
-    annotate(geom = "text", x = angleLegAct + 0, y = yPos, label = " TF activity ", vjust = 0, angle = 0, size = fontSize) + 
-    # First right side for positive values, corresponding to positive weighted mean difference values (first element of DESeq comparison)
-    annotate(geom = "text", x = angleLegAct - 30, y =  yPosLabels, label = conditionComparison[1], vjust = 0, angle = 30, size = fontSize) + 
-    # Now left side
-    annotate(geom = "text", x = (angleLegAct + 30), y = yPosLabels, label = conditionComparison[2], vjust = 0, angle = -30, size = fontSize) + 
-    geom_segment(aes(x = angleLegAct + 10, xend = angleLegAct + 10 + length_arrow , y = yPos, yend = yPos), size = 0.3, arrow = arrow(length = unit(0.6,"cm")))  +
-    geom_segment(aes(x = angleLegAct - 10, xend = angleLegAct - 10 - length_arrow , y = yPos, yend = yPos), size = 0.3, arrow = arrow(length = unit(0.6,"cm"))) 
-  
-  # Add minor y circular lines 
-  for (x in 1:length(labels$breaks)) {
-    p3 = p3 + geom_hline(yintercept = labels$breaks[x], size = par.l$sizeHelperLines, linetype = "dotted",  color = par.l$plot_grayColor, alpha = .9) 
-  }
-  
-  
-  # ggrepel function
-  
-  if (par.l$plotRNASeqClassification) {
-    p3 = p3 + scale_color_manual(values = colorCategoriesCur, guide = FALSE) + 
-      geom_label_repel(data = ggrepel_df, aes(x = radial, y = yValue, label = TF, fill = classification),
-                       size = par.l$size_TFAnnotation, fontface = 'bold', color = 'white',
-                       segment.size = 0.15,
-                       label.padding = unit(0.2, "lines"), # how thick is connectin line
-                       nudge_y = 0.15, nudge_x = 0,  # how far from center points
-                       segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE) + 
-      scale_fill_manual(values = colorCategoriesCur, name = "TF class")
-  } else {
-    
-    p3 = p3 + geom_label_repel(data = ggrepel_df, aes(x = radial,
-                                                      y = yValue,
-                                                      label = TF),
-                               fill = par.l$plot_grayColor, size = par.l$size_TFAnnotation, fontface = 'bold', color = 'white',
-                               segment.size = 0.15, label.padding = unit(0.1, "lines"), nudge_y = 0.15, nudge_x = 0, 
-                               segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
-  }
-  
-  
-  
-  p3 = p3 + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_text(), axis.line.x = element_blank(), axis.line.y = element_blank(), axis.ticks.y = element_blank(), panel.border = element_blank(), panel.background = element_blank(), panel.grid = element_blank(), legend.position = "top", legend.text = element_text(size = par.l$sizeLegend), legend.title = element_text(size = par.l$sizeLegend, face = "bold"),
-                  legend.margin = margin(t = 0, unit = "cm"), legend.key = element_blank(), legend.justification = "center",
-                  #plot.margin = grid::unit(c(0, 0, 0, 0), "mm")) + 
-                  #plot.margin = unit(c(0,-7,-4,-7), units = "cm")) + 
-                  plot.margin = unit(c(0,0,0,0), units = "cm")) + xlab("") + ylab("") 
-  
-  p3
-  
-} # end function plotCircular
-
 
 heatmap.act.rep <- function(df.tf.peak.matrix, tf2ensg.exp){
   
@@ -595,7 +390,6 @@ if (par.l$nPermutations > 0) {
 }
 
 
-#output.global.TFs.orig$percentileAbs =  pmin(output.global.TFs.orig$percentile, 1 - output.global.TFs.orig$percentile)
 output.global.TFs.permutations = filter(output.global.TFs.orig, permutation > 0)
 output.global.TFs              = filter(output.global.TFs.orig, permutation == 0)
 
@@ -696,16 +490,25 @@ if (par.l$plotRNASeqClassification) {
     
     nFiltRows = nrow(sampleData.l[["permutation0"]]) - nrow(sampleData.df)
     if (nFiltRows > 0) {
-      flog.warn(paste0("Filtered ", nFiltRows, " sample IDs afteer comparising sample names with RNA-Seq table"))
+      flog.info(paste0("Filtered ", nFiltRows, " sample IDs after comparising sample names with RNA-Seq table. Remaining: ", nrow(sampleData.df)))
     }
     
     par.l$designFormula = snakemake@config$par_general$designContrast
     designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
+    formulaVariables = attr(terms(designFormula), "term.labels")
+    
+    # Extract the variable that defines the contrast. Always the last element in the formula
+    variableToPermute = formulaVariables[length(formulaVariables)]
  
     ####################################
     # Run DeSeq2 on raw RNA-Seq counts #
     ####################################
-    dd <- DESeqDataSetFromMatrix(countData = TF.counts.df.all,
+    
+    # Enforce the correct order and rownames
+    sampleData.df.orig = sampleData.df
+    sampleData.df = as.data.frame(sampleData.df)
+    rownames(sampleData.df) = sampleData.df$SampleID
+    dd <- DESeqDataSetFromMatrix(countData = TF.counts.df.all[,sampleData.df$SampleID],
                                  colData = sampleData.df,
                                  design = designFormula)
     
@@ -716,6 +519,7 @@ if (par.l$plotRNASeqClassification) {
     
     # Check sample names and set column names
     # Match the column names and do the intersections
+    
     sharedColumns = intersect(colnames(TF.counts.df.all)[-1], sampleSummary.df$SampleID)
     
     if (length(sharedColumns) == 0) {
@@ -729,9 +533,7 @@ if (par.l$plotRNASeqClassification) {
     
     # Clean ENSEMBL IDs
     TF.counts.df.all$ENSEMBL = gsub("\\..+", "", TF.counts.df.all$ENSEMBL, perl = TRUE)
-    
 
-    
     # Filter them by the IDs that correspond to the TFs
     TF.counts.df = filter(TF.counts.df.all, ENSEMBL %in% HOCOMOCO_mapping.df$ENSEMBL)
     
@@ -785,10 +587,7 @@ if (par.l$plotRNASeqClassification) {
       TF.output.df = read.table(file = paste0(rootOutdir, "/TF-SPECIFIC/",TFCur,"/extension", extensionSize, "/", comparisonType, TFCur,  ".output.tsv.gz"), header = TRUE)
       TF.peakMatrix.l[[TFCur]] = peak.counts$peakID %in% TF.output.df$peakID
     }
-    
-    
-    # cor.m = is the peaks names separated with # 
-    
+
     # This is the peak (rows) and TF binding sites (columns)
     TF.peakMatrix.df = as.data.frame(TF.peakMatrix.l)
     
@@ -843,9 +642,6 @@ if (par.l$plotRNASeqClassification) {
     
     peak.counts = dplyr::select(peak.counts, -one_of("peakID"))
     
-    
-    
-    
     cor.m = t(cor(t(expressed.TF.counts.df), t(peak.counts), method = par.l$corMethod))
     
     # Mapping TFBS to TF 
@@ -856,9 +652,7 @@ if (par.l$plotRNASeqClassification) {
     # Some entries in the HOCOMOCO mapping can be repeated (i.e., the same ID for two different TFs, such as ZBTB4.S and ZBTB4.D)
     # Originally, we deleted these rows from the mapping and took the first entry only
     # However, since TFs with the same ENSEMBL ID can still be different with respect to their TFBS, we now duplicate such genes also in the correlation table
-    #HOCOMOCO_mapping.df.exp = HOCOMOCO_mapping.df.exp[!duplicated(HOCOMOCO_mapping.df.exp[, c("ENSEMBL")]),]
-    #assertSubset(as.character(HOCOMOCO_mapping.df.exp$ENSEMBL), colnames(sort.cor.m))
-    
+
     
     # Change the column names from ENSEMBL ID to TF names. Reorder the columns first to make sure the order is the same. Due to the duplication ID issue, the number of columns may increase after the column selection below
     sort.cor.m = sort.cor.m[,as.character(HOCOMOCO_mapping.df.exp$ENSEMBL)] 
@@ -899,8 +693,7 @@ if (par.l$plotRNASeqClassification) {
     # DIAGNOSTIC PLOTS #
     ####################
     ####################
-    
-    
+
     pdf(file = par.l$files_plotDiagnostic[2], width = 3, height = 8)
     xlab="median pearson correlation (r)"
     ylab=""
@@ -935,9 +728,7 @@ if (par.l$plotRNASeqClassification) {
     heatmap.act.rep(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp)
     dev.off()
     
-    
-    # TODO: TF_names_update = read_delim("/g/scb2/zaugg/berest/Projects/CLL/PREPARE/Armando.AR/52samplesAR/HOCOTFID2ENSEMBL.txt",delim = " ")
-    
+
     # Filter genes
     samples_cond1 = colData(dd)$SampleID[which(colData(dd)$conditionSummary == levels(colData(dd)$conditionSummary)[1])]
     samples_cond2 = colData(dd)$SampleID[which(colData(dd)$conditionSummary == levels(colData(dd)$conditionSummary)[2])]
@@ -947,33 +738,30 @@ if (par.l$plotRNASeqClassification) {
     dd.filt = dd[idx,]
     dd.filt <- DESeq(dd.filt)
     
-    # Process results
-    res.peaks.filt     = results(dd.filt) %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
+    # The variable conditionComparison already has the reversed order as compared to the config file
+    # Process results and enforce the same comparison as was done before
+    res.peaks.filt = dd.filt %>%
+                        results(contrast = c(variableToPermute, conditionComparison[1], conditionComparison[2])) %>% 
+                        as.data.frame() %>% 
+                        rownames_to_column("ENSEMBL") %>% 
+                        as.tibble()
+
     expression.df.filt = counts(dd.filt , normalized=TRUE) %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
     expresssion.df.all = full_join(expression.df.filt, res.peaks.filt, by = 'ENSEMBL')
     
-    # expresssion.df.all = plyr::join_all(list(expression.df.filt,res.peaks.filt), by = 'ENSEMBL', type = 'inner')
-    
-    # TODO
-    # In ivans version, he used a non-filtered HOCOMOCO table. I however filter it before, so that some ENSEMBL IDs might already be filtered
+    # NOTE: In Ivans original version, he used a non-filtered HOCOMOCO table. I however filter it before, so that some ENSEMBL IDs might already be filtered
     
     TF.specific = left_join(HOCOMOCO_mapping.subset.df, res.peaks.filt, by = "ENSEMBL") %>% filter(!is.na(baseMean))
     
-    
-    
-    # TODO:_ deal with NAs, where do they come from?
-    
+    # Some genes might have NA for adjp, that is expected and explained here: https://support.bioconductor.org/p/76144/
+    # As we do not use the adjusted p-value anyway, we can ignore this
 
-    
     output.global.TFs$weighted_meanDifference = as.numeric(output.global.TFs$weighted_meanDifference)
-    
-    par.l$minPointSize = 0.3
     
     output.global.TFs.merged = output.global.TFs %>%
       filter(classification != "not-expressed")  %>%
       full_join(TF.specific, by = c( "TF" = "HOCOID"))  %>%
-      # TODO check and implemenmt differently
-      mutate(log2FoldChange = log2FoldChange * -1) %>%
+      # Transform the base mean and normalize them to represent them as a dot with a particular (minimum) size.
       mutate(baseMeanNorm = (baseMean - min(baseMean, na.rm = TRUE)) / (max(baseMean, na.rm = TRUE) - min(baseMean, na.rm = TRUE)) + par.l$minPointSize)  %>%
       filter(!is.na(classification)) 
     
@@ -1036,8 +824,6 @@ if (par.l$plotRNASeqClassification) {
     } 
     dev.off()
     
-    
-
 } else {
   classesList.l = list(c())
 }
@@ -1049,7 +835,6 @@ output.global.TFs.origReal = output.global.TFs
 # PLOT FOR DIFFERENT P VALUE THRESHOLDS #
 #########################################
 
-# TODO: change pvalue to pvalueAdj ?
 # Set the page dimensions to the maximum across all plotted variants
 output.global.TFs.filteredSummary = filter(output.global.TFs, pvalue <= max(par.l$significanceThresholds))
 
@@ -1062,16 +847,11 @@ TFLabelSize = ifelse(nTF_label < 20, 8,
                           ifelse(nTF_label < 60, 4, 3)))))
 
 
-
-
-
-allPlots.l = list("circular" = list(), "volcano" = list())
-
-
-
+################
+# VOLCANO PLOT #
+################
+allPlots.l = list("volcano" = list())
 variableXAxis = "weighted_meanDifference"
-
-
 
 for (significanceThresholdCur in par.l$significanceThresholds) {
   
@@ -1079,21 +859,6 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
 
   for (showClasses in classesList.l) {
 
-    #################
-    # CIRCULAR PLOT #
-    #################
-    plotFinal = plotCircular(output.global.TFs.origReal, par.l, showClasses, significanceThresholdCur, conditionComparison, variableXAxis)
-    #plotFinal = NA
-    if (par.l$plotRNASeqClassification) {
-      allPlots.l[["circular"]] [[pValThrStr]] [[paste0(showClasses,collapse = "-")]] = plotFinal
-    } else {
-      allPlots.l[["circular"]] [[pValThrStr]]  = plotFinal
-    }
-    
-    ################
-    # VOLCANO PLOT #
-    ################
-    
     output.global.TFs = output.global.TFs.origReal %>%
         mutate( pValueAdj_log10 = transform_yValues(pvalueAdj),
                 pValue_log10 = transform_yValues(pvalue),
@@ -1163,7 +928,6 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
           g = g + scale_fill_manual(name = 'TF activity higher in', values = rev(par.l$colorConditions), labels = labelsConditionsNew)
         }
      
-    
         g = g + ylim(-0.1,ymax) + 
             ylab(paste0(transform_yValues_caption(), " (", pValueStrLabel, ")")) + 
             xlab("weighted mean difference") + 
@@ -1200,12 +964,8 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
                 g = g + annotate("text", label = labelPlot, x = 0, y = ymax, size = 3)
                 
             }
-            
-            
-            
         }
-        
-      
+
           g = g + theme_bw() + 
               theme(axis.text.x = element_text(size=rel(1.5)),
                     axis.text.y = element_text(size=rel(1.5)), 
@@ -1232,39 +992,13 @@ for (significanceThresholdCur in par.l$significanceThresholds) {
         
     } # end for all showClasses
 
-
-
 } # end for different significance thresholds
-
-
-#####################
-# CIRCULAR PLOT PDF #
-#####################
-height = width = max(nTF_label / 5, par.l$circularPlot_minDimensions)
-
-# Increase a bit towards smaller heights by a factor, empirical observation
-if (height < 20) {
-  height = width = height * 1.2
-}
-pdf(file = par.l$file_plotCircular, height = height, width = width, useDingbats = FALSE)
-for (significanceThresholdCur in par.l$significanceThresholds) {
-  
-  for (showClasses in classesList.l) {
-    if (par.l$plotRNASeqClassification) {
-      plot(allPlots.l[["circular"]] [[as.character(significanceThresholdCur)]] [[paste0(showClasses,collapse = "-")]])
-    } else {
-      plot(allPlots.l[["circular"]] [[as.character(significanceThresholdCur)]])
-    }
-    
-  }
-}
-dev.off()
 
 
 ####################
 # VOLCANO PLOT PDF #
 ####################
-height = width = max(nTF_label / 15 , par.l$circularPlot_minDimensions)
+height = width = max(nTF_label / 15 , par.l$volcanoPlot_minDimensions)
 pdf(file = par.l$file_plotVolcano, height = height, width = width, useDingbats = FALSE)
 
 
@@ -1279,10 +1013,6 @@ for (pValueStrCur in c("pvalueAdj", "pvalue")) {
               } else {
                   plot(allPlots.l[["volcano"]] [[as.character(significanceThresholdCur)]] [[pValueStrCur]])
               }
-          
-          
-        
-        
       }
     }
 }

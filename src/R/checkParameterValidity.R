@@ -214,7 +214,7 @@ if (file_peaks != "") {
   assertFileExists(snakemake@config$peaks$consensusPeaks)
   peaks.df = read_tsv(snakemake@config$peaks$consensusPeaks, col_names = FALSE)
   if (nrow(problems(peaks.df)) > 0) {
-    flog.fatal(paste0("Parsing errors: "), problems(overlapsAll.df), capture = TRUE)
+    flog.fatal(paste0("Parsing errors: "), problems(peaks.df), capture = TRUE)
     stop("Parsing errors with file ", snakemake@config$peaks$consensusPeaks, ". See the log file for more information")
   }
   

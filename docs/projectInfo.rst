@@ -53,6 +53,8 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 
 Change log
 ============================
+Version 1.2.2 (2019-02-01)
+    - Minor code fixed. Removed the creation of the circular plot, which has been replaced with the Volcano plot over time. Fixed a bug that could have led to wrong log2 fold-change values for the RNA-Seq data under special circumstances. We recommend rerunning the ``summaryFinal`` rule. Ask us for more details if you are concerned about this.
 
 Version 1.2.1 (2019-01-22)
     - Increased the value for ``expressions`` in R from 5000 (the R default) to 10000. Some users reported that they receive a "Error: evaluation nested too deeply: infinite recursion / options(expressions=)?" error message. Thanks to Benedict Man Hung Choi!
