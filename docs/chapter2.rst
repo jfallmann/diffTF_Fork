@@ -207,7 +207,7 @@ Summary
 Details
   Names must be separated by commas, spaces are allowed and will be eliminated automatically. The data type must be specified with a “:”, followed by either “numeric”, “integer”, “logical”, or “factor”. For example, if ``designContrast`` (:ref:`parameter_designContrast`) is specified as "*~ Treatment + conditionSummary*", the corresponding types might be "Treatment:factor, conditionSummary:factor". If a data type is specified as either "logical" or "factor", the variable will be treated as a discrete variable with a finite number of distinct possibilities (something like batch, for example). *conditionSummary* is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If *conditionSummary* is specified as "integer" or "numeric", however, the variable is treated as continuously-scaled, which changes the interpretation of the results, see the note below.
 
-  .. note:: Importantly, if the variable of interest is continuous-valued (i.e., marked as being integer or numeric), then the reported log2 fold change is per unit of change of that variable. That is, in the final circular plot, TFs displayed in the left side have a negative slope  per unit of change of that variable, while TFs at the right side have a positive one.
+  .. note:: Importantly, if the variable of interest is continuous-valued (i.e., marked as being integer or numeric), then the reported log2 fold change is per unit of change of that variable. That is, in the final Volcano plot, TFs displayed in the left side have a negative slope  per unit of change of that variable, while TFs at the right side have a positive one.
 
 
 
@@ -304,7 +304,7 @@ Summary
   Logical. true or false. Default false. Should RNA-Seq data be integrated into the pipeline?
 
 Details
-  If set to true, RNA-Seq counts as specified in ``RNASeqCounts`` (:ref:`parameter_RNASeqCounts`) will be used to classify each TF into either “activator”, “repressor”, “unknown”, or “not-expressed” for the final circular visualization and the summary table.
+  If set to true, RNA-Seq counts as specified in ``RNASeqCounts`` (:ref:`parameter_RNASeqCounts`) will be used to classify each TF into either “activator”, “repressor”, “unknown”, or “not-expressed” for the final Volcano plot visualization and the summary table.
 
   .. note::RNA-Seq integration is only included in the very last step of the pipeline, so it can also be easily integrated later.
 
@@ -561,28 +561,17 @@ Details
 FILE ``{comparisonType}.summary.tsv.gz``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Summary
-  The final summary table that is also used for the final circular visualization.
+  The final summary table that is also used for the final Volcano plot visualization.
 
 Details
   The columns are as follows:
 
   - *TF*: name of the TF
-  - *weighted_meanDifference*: the weighted mean difference of the real and background distribution across all CG bins. This value is the basis for the final calculation of the x-axis position for the circular plot.
+  - *weighted_meanDifference*: the weighted mean difference of the real and background distribution across all CG bins. This value is the basis for the final calculation of the x-axis position for the Volcano plot.
   - *TFBS*: The number of TF binding sites for the particular TF that overlap with the peaks
   - *fdr*: the local FDR value that is derived from comparing the observed values against the permuted ones
   - *classification*: RNA-Seq classification (either activator, undetermined, repressor or not-expressed)
 
-FILE ``{comparisonType}.summary.circular.pdf``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Summary
-  The final (circular) visualization of the diffTF results.
-
-Details
-  The PDF contains multiple pages and iterates over either one or two different parameters:
-  - 1. Significance threshold based on adjusted p-values (0.001, 0.01, 0.05, 0.1 and 0.2.)
-  - 2. If RNA classification is integrated, different combinations of categories are shown for each individual significance threshold (1: activator-undetermined-repressor-not-expressed, 2: activator-undetermined-repressor, 3: activator-repressor).
-
-  For each variant, the values on the x-axis denote the effect size (weighted mean difference). TFs that are similarly active between the two conditions are close to 0, while higher values indicate a higher differential TF activity between the two conditions and are therefore away from 0. The y-axis (radial position) denotes the statistical significance (adjusted p-values). The significance threshold is indicated as red circular line. TFs that pass the significance threshold are labeled and, if RNA-Seq data is integrated, colored according to their predicted role (see above).
 
 FILE ``{comparisonType}.diagnosticPlots.pdf``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
