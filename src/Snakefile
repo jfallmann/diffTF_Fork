@@ -304,7 +304,7 @@ localrules: all,cleanUpLogFiles,filterSexChromosomesAndSortPeaks
 
 rule all:
     input:
-        plots       = expand("{dir}/{compType}summary.{plotType}.pdf", dir = FINAL_DIR, compType = compType, plotType = ["circular", "volcano"]),
+        plots       = expand("{dir}/{compType}summary.volcano.pdf", dir = FINAL_DIR, compType = compType),
         summaryLogs = LOG_BENCHMARK_DIR + "/" + compType + "all.warnings.log"
 
 
@@ -649,7 +649,7 @@ rule summaryFinal:
         summary         = FINAL_DIR + "/" + compType + "summary.tsv.gz",
         volcanoPlot     = FINAL_DIR + "/" + compType + "summary.volcano.pdf",
         diagnosticPlots = allDiagnosticFiles,
-        plotsRDS        = FINAL_DIR + "/" + compType + "summary.circular.rds",
+        plotsRDS        = FINAL_DIR + "/" + compType + "summary.plots.rds",
     log: expand('{dir}/summaryFinal.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_summaryFinal} ..."
     threads: 1
