@@ -265,11 +265,12 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   # MERGE #
   #########
   
-  # TODO: full join necessary?
+  
   TF.motifs.all =  TF.motifs.ori %>% 
     full_join(TF.motifs.CG, by = c("CG.identifier"))  %>% 
     mutate(CG.bins = cut(CG, breaks = CGBins, labels = paste0(round(CGBins[-1] * 100,0),"%"), include.lowest = TRUE))  %>%  
-    dplyr::select(-one_of("CG.identifier", "CG"))
+    dplyr::select(-one_of("CG.identifier", "CG")) %>%
+    dplyr::filter(!is.na(CG.bins)) # for rare cases of NA for CG:bins (which can happen if the number of samples is changed)
   
   
   # Not needed anymore, delete

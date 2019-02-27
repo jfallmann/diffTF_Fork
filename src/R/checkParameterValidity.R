@@ -269,7 +269,8 @@ if (file_peaks != "") {
   nRowsFiltered = rowsBefore - nrow(peaks.df)
   if (par.l$verbose & nRowsFiltered  > 0) flog.info(paste0("Filtered ", nRowsFiltered, " non-unique positions out of ", rowsBefore, " from peaks."))
   
-  write_tsv(peaks.df, path = par.l$output_peaksClean, col_names = FALSE)  
+  peaks.df.transf = dplyr::mutate_if(peaks.df, is.numeric, as.character)
+  write_tsv(peaks.df.transf, path = par.l$output_peaksClean, col_names = FALSE)  
   
 } else {
   

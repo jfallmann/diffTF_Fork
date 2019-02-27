@@ -53,6 +53,11 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 
 Change log
 ============================
+Version 1.2.3 (2019-02-27)
+  - Added a pre-compiled list of 768 human TF with in-silico predicted TFBS based on the *HOCOMOCO 11* database and *PWMScan* for hg38 as well as updating the other pre-compiled lists to account for recent changes and retractions in the *HOCOMOCO* database. See section :ref:`_parameter_dir_TFBS` for details.
+  - added an additional filtering in the binning step for a rare corner case due to changes in the number of samples during an analysis
+
+
 Version 1.2.2 (2019-02-01)
     - Minor code fixed. Removed the creation of the circular plot, which has been replaced with the Volcano plot over time. Fixed a bug that could have led to wrong log2 fold-change values for the RNA-Seq data under special circumstances. We recommend rerunning the ``summaryFinal`` rule. Ask us for more details if you are concerned about this.
 
