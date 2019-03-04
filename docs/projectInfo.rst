@@ -53,6 +53,10 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 
 Change log
 ============================
+Version 1.2.4 (2019-03-04)
+  - Fixed an issue with ``checkParameterValidity.R`` that caused an error message when loading TFBS files with a numeric score.  Thanks to Scott Berry for pointing it out.
+  - Updated the TFBS_hg38_FIMO_HOCOMOCOv11 archive. The bed files are now properly pre-sorted
+
 Version 1.2.3 (2019-02-27)
   - Added a pre-compiled list of 768 human TF with in-silico predicted TFBS based on the *HOCOMOCO 11* database and *PWMScan* for hg38 as well as updating the other pre-compiled lists to account for recent changes and retractions in the *HOCOMOCO* database. See section :ref:`_parameter_dir_TFBS` for details.
   - added an additional filtering in the binning step for a rare corner case due to changes in the number of samples during an analysis

@@ -312,7 +312,7 @@ for (TFCur in allTFs) {
   }
   
   tableCur.df = read_tsv(fileCur, col_names = FALSE, 
-                         col_types = "ciicic")
+                         col_types = "ciicnc")
   
   if (nrow(problems(tableCur.df)) > 0) {
     flog.fatal(paste0("Parsing errors: "), problems(tableCur.df), capture = TRUE)
