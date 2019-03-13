@@ -53,6 +53,9 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 
 Change log
 ============================
+Version 1.2.5 (2019-03-13)
+  - Updated the TFBS_hg38_FIMO_HOCOMOCOv11 archive one more time to exclude non-assembled contigs such as HLA*. To make the pipeline more stable for such edge cases, the parameter ``dir_TFBS_sorted`` has been removed, and sorting and filtering of chromosomes is now always performed. Only chromosomes are kept in both the consensus peak files and the TFBS bed files that start with ``chr`` and are neither sex chromosomes (``chrX`` or ``chrY``) nor ``chrM``. If you want to keep sex chromosomes in your analysis (although we think this is not recommended), simply edit the Snakefile and remove the "chrX" and "chrY" occurences in the two filtering rules.
+
 Version 1.2.4 (2019-03-04)
   - Fixed an issue with ``checkParameterValidity.R`` that caused an error message when loading TFBS files with a numeric score.  Thanks to Scott Berry for pointing it out.
   - Updated the TFBS_hg38_FIMO_HOCOMOCOv11 archive. The bed files are now properly pre-sorted

@@ -143,11 +143,14 @@ except KeyError:
   print("The parameter \"coresPerRule\" in section \"par_general\" has not been defined. Jobs/rules with multithreading support will use the default of 16 cores.")
   threadsMax = 16
 
-try:
-  TFBSSorted = config["par_general"]["dir_TFBS_sorted"]
-except KeyError:
-  print("The parameter \"dir_TFBS_sorted\" in section \"par_general\" has not been defined. Presorted BED files will be assumed.")
-  TFBSSorted = True
+# This has been disabled to catch reported edge cases from version 1.2.5 onwards
+# try:
+#   TFBSSorted = config["par_general"]["dir_TFBS_sorted"]
+# except KeyError:
+#   TFBSSorted = False
+
+# Changed from version 1.2.5 onwards
+TFBSSorted = False
 
 # Increase ulimit -n for analysis with high number of TF and/or input files. The standard value of 1024 may not be enough.
 ulimitMax = 4096
@@ -343,6 +346,8 @@ def retrieveConsensusPeakFile (par_consensusPeaks):
     else:
         return rules.checkParameterValidity.output.consPeaks
 
+# Sort the consensus peak file and only include "regular" chromosomes denoted with "chr"
+# that are neither sex chromosomes nor chrM
 rule filterSexChromosomesAndSortPeaks:
     input:
         consensusPeaks = retrieveConsensusPeakFile(config["peaks"]["consensusPeaks"])
@@ -352,13 +357,12 @@ rule filterSexChromosomesAndSortPeaks:
     threads: 1
     singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     shell: """
-            grep -v "^chrX\|^chrY\|^chrM\|^chrUn\|random\|hap\|_gl" {input.consensusPeaks} | sort -k1,1 -k2,2n > {output.consensusPeaks_sorted}
+            grep ^chr {input.consensusPeaks} | grep -v "^chrX\|^chrY\|^chrM\|^chrUn"  | sort -k1,1 -k2,2n > {output.consensusPeaks_sorted}
            """
 
 
 overlapPattern = "overlaps.bed.gz"
 
-# This rule is only run when parameter TFBSSorted = False
 rule sortTFBSParallel:
     input:
         flag = ancient(rules.checkParameterValidity.output.flag),
@@ -369,7 +373,7 @@ rule sortTFBSParallel:
     threads: 1
     run:
         for fi,fo in zip(input.allBed, output.allBedSorted):
-          shell("sort -k1,1 -k2,2n {fi}  > {fo}")
+          shell("grep ^chr {fi} | grep -v \"^chrX\|^chrY\|^chrM\|^chrUn\" | sort -k1,1 -k2,2n > {fo}")
 
 
 def getBamFileFromBasename(basename):
@@ -441,6 +445,7 @@ rule intersectPeaksAndBAM:
 
 # TF-specific part:
 
+# As of now, this is currently set to false in all cases to avoid potential issues with unassembled contigs
 def retrieveInputFilesTFBS (TFBSSorted):
 
     if not TFBSSorted:
@@ -457,7 +462,7 @@ rule intersectPeaksAndTFBS:
         TFBSinPeaksMod_bed = expand('{dir}/{compType}allTFBS.peaks.extension.bed.gz', dir = TEMP_EXTENSION_DIR, compType = compType)
     message: "{ruleDisplayMessage} Obtain binding sites from peaks: Intersect all TFBS files and {input.consensusPeaks}..."
     threads: 1
-    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
+    #singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         extension = config["par_general"]["regionExtension"],
         ulimitMax = ulimitMax

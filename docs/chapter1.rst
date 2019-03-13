@@ -166,4 +166,4 @@ Adaptations and notes when running with Singularity
 
 Please read the following additional notes and warnings related to ``Singularity``:
 
-- .. warning:: If you use ``Singularity`` version 3, make sure you have at least version 3.0.2 installed or the latest pull from version 3.0.1, as there was an issue with Snakemake and particular ``Singularity`` versions. For more details, see `here <https://bitbucket.org/snakemake/snakemake/issues/1017/snakemake-process-suspended-upon-execution>`_.
+- .. warning:: If you use ``Singularity`` version 3, make sure you have at least version 3.0.3 installed, as there was an issue with Snakemake and particular ``Singularity`` versions. For more details, see `here <https://bitbucket.org/snakemake/snakemake/issues/1017/snakemake-process-suspended-upon-execution>`_.

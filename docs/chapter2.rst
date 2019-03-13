@@ -127,18 +127,6 @@ Details
   This affects currently only rules involving *featureCounts* - that is, *intersectPeaksAndBAM* while for rule *intersectTFBSAndBAM*, the number of cores is hard-coded to 4. When running *Snakemake* locally, each rule will use at most this number of cores, while in a cluster setting, this value refers to the maximum number of CPUs an individual job / rule will occupy. If the node the job is executed on has fewer nodes, then the maximum number of cores on the node will be taken.
 
 
-.. _parameter_dir_TFBS_sorted:
-
-PARAMETER ``dir_TFBS_sorted``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Summary
-    Logical. true or false. Default false. Are the files in ``dir_TFBS`` (:ref:`parameter_dir_TFBS`) already pre-sorted?
-
-Details
-  If set to true, no additional sorting will be done, saving computation time because the rule *sortTFBSParallel* is not executed. Note that sorting is assumed to be according to the chromosome (first column) and start position (second column), essentially invoking *sort -k1,1 -k2,2n*.  If set to false, all files in ``dir_TFBS`` (:ref:`parameter_dir_TFBS`) will be sorted.
-
-
 .. _parameter_regionExtension:
 
 
@@ -444,7 +432,6 @@ Details
 
   However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as *FIMO* or *MOODS*.
 
-  Also see the parameter ``dir_TFBS_sorted`` (:ref:`parameter_dir_TFBS_sorted`) to specify whether the files are already sorted or not.
 
 .. _parameter_RNASeqCounts:
 
@@ -594,7 +581,7 @@ Summary
   Only present if no consensus peak file was provided (``consensusPeaks``, :ref:`parameter_consensusPeaks`). Produced in rule ``filterSexChromosomesAndSortPeaks``. Generated consensus peaks, before filtering (see below).
 
 Details
-  Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn\*, \*random*, \*hap|_gl\*
+  Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn\*, and all contig names that do not start with "chr" such as \*random* or \*hap|_gl\*
 
 
 FILE ``{comparisonType}.allBams.peaks.overlaps.bed.gz``
@@ -803,7 +790,7 @@ Stores results related to the user-specified extension size (``regionExtension``
 - ``conditionComparison.rds``: Produced in rule ``DiffPeaks``. Stores the condition comparison as a string. Some steps in diffTF need this file as input.
 - ``{comparisonType}.motifs.coord.permutation{perm}.bed.gz`` and ``{comparisonType}.motifs.coord.nucContent.permutation{perm}.bed.gz`` for each permutation ``{perm}``: Produced in rule ``calcNucleotideContent``, and needed subsequently for the binning. Temporary and result file of *bedtools nuc*, respectively. The latter contains the GC content for all TFBS.
 - ``{comparisonType}.checkParameterValidity.done``: temporary flag file
-- ``{TF}_TFBS.sorted.bed`` for each TF ``{TF}``: Produced in rule ``sortTFBSParallel``. Coordinate-sorted version of the input TFBS.
+- ``{TF}_TFBS.sorted.bed`` for each TF ``{TF}``: Produced in rule ``sortTFBSParallel``. Coordinate-sorted version of the input TFBS. Only "regular" chromosomes starting with "chr" are kept, while sex chromosomes (chrX, chrY), chrM and unassembled contigs such as chrUn are additionally removed.
 - ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. *BED* file containing all TFBS from all TF that overlap with the peaks before motif extension
 
 .. _workingWithPipeline:
