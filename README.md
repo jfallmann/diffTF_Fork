@@ -10,7 +10,7 @@ Summary
 -------------
 Transcription factor (TF) activity constitutes an important readout of cellular signalling pathways and thus for assessing regulatory differences across conditions. However, current technologies lack the ability to simultaneously assessing activity changes for multiple TFs and surprisingly little is known about whether a TF acts as repressor or activator. To this end, we introduce the widely applicable genome-wide method diffTF to assess differential TF binding activity and classifying TFs as activator or repressor by integrating any type of genome-wide chromatin with RNA-Seq data and in-silico predicted TF binding sites.
 
-For more information, please check our paper on biorxiv:
+For more information, please check our paper on bioRxiv:
 
 [Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF](https://www.biorxiv.org/content/early/2018/12/01/368498).
 
@@ -33,4 +33,4 @@ Citation
 --------
 *Please cite the following article if you use diffTF in your research*:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF. 2018. in review.
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Holly Giles, Peter-Martin Bruch, Sascha Dietrich, Wolfgang Huber, Kristian Helin & Judith B. Zaugg. Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF. 2019. in review.
