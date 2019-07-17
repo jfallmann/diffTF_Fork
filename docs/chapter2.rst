@@ -485,11 +485,14 @@ Input metadata
 
 This file summarizes the data and corresponding available metadata  that should be used for the analysis. The format is flexible and may contain additional columns that are ignored by the pipeline, so it can be used to capture all available information in a single place. Importantly, the file must be saved as tab-separated, the exact name does not matter as long as it is correctly specified in the configuration file.
 
-  .. warning:: Make sure that the line endings are correct. Different operating systems use different characters to mark the end of line, and the line ending character must be compatible with the operationg system in which you run *diffTF*. For example, if you created the file in MAC, but you run it in a Linux environment (e.g., a cluster system), you may have to convert line endings to make them compatible with Linux. For more information, see `here <https://blog.shvetsov.com/2012/04/covert-unix-windows-mac-line-endings.html>`_ .
+  .. warning:: Make sure that the line endings are correct. Different operating systems use different characters to mark the end of line, and the line ending character must be compatible with the operating system in which you run *diffTF*. For example, if you created the file in MAC, but you run it in a Linux environment (e.g., a cluster system), you may have to convert line endings to make them compatible with Linux. For more information, see `here <https://blog.shvetsov.com/2012/04/covert-unix-windows-mac-line-endings.html>`_ .
 
 It must contain at least contain the following columns (the exact names do matter):
 
-- ``sampleID``: The ID of the sample
+- ``sampleID``: The ID of the sample.
+
+  .. note:: Note that each sample ID must be unique! If you want to include replicate samples, rename them, for example by adding "_1", "_2" etc at the end. All that *diffTF* cares about is the correct group assignment as defined by the column *conditionSummary*.
+
 - ``bamReads``:  path to the *BAM* file corresponding to the sample.
 
   .. warning:: All *BAM* files must meet *SAM* format specifications. You may use the program *ValidateSamFile* from the *Picard tools* to check and identify problems with your file. Chromosome names must have a "*chr*" as prefix, otherwise diffTF may crash.
@@ -1088,12 +1091,29 @@ We here provide a list of some of the errors that can happen and that users repo
     Segmentation fault
     ...
 
-  .. note:: This particular message may also be related to an incompatibility of the *DiffBind* and *DESeq2* libraries. See the changelog for details, as this has been addressed in version 1.1.5.
+  .. note:: This particular message may also be related to an incompatibility of the *DiffBind* and *DESeq2* libraries. See the Changelog for details, as this has been addressed in version 1.1.5.
 
 
   More generally, however, such messages point to a problem with your R and R libraries installation and have per se nothing to do with *diffTF*. In such cases, we advise to reinstall the latest version of *Bioconductor* and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.
 
-  .. note:: We strongly recommend running the Singularity version of *diffTF* (version 1.2 and above) that immediately solves these issues. See the :ref:`changelog` for more details and the section :ref:`docs-quickstart`
+  .. note:: We strongly recommend running the *Singularity* version of *diffTF* (version 1.2 and above) that immediately solves these issues. See the :ref:`changelog` for more details and the section :ref:`docs-quickstart`
+
+2. Singularity-related errors
+
+  Although *Singularity* errors are rare (up until now), it might happen that you receive an error that is related to it. Up until now, these were either of temporary nature (so trying again a while after fixes it) or related to the system you are running *Singularity* on (e.g., a misconfiguration of some sort), among others.
+
+  For example, in July 2019, SingularityHub was down for a few days due to a single user misusing the service, which had to be shutdown because of that. When trying to download the *diffTF* Singularity images in that time period, the error message was:
+
+  .. code-block:: Bash
+
+    FATAL: Failed to get manifest from Shub: No response received from singularity hub
+
+
+  Post an Issue in the Bitbucket tracker and we are hopefully able to help you.
+
+3. Data-specific errors
+
+  Errors can also be due to incompatible data. For example, if a BAM file contains both single-end and paired-end reads (which is unusual, lots of programs may exit with errors for such data) and in the configuration file the parameter *pairedEnd* is set to true, the *repair* step from *Subread* will fail with an error message. In such a case, the single-end reads should either be removed from the BAM file (this is the preferred option, unless the majority of reads are single-end) or *pairedEnd* is set to false, the latter of which then treats all reads to be single-end (with the consequence that then, not fragments are counted, but just individual reads, which may result in different results due to altered number of counts).
 
 
 Fixing the error
