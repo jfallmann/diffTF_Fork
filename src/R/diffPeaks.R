@@ -188,7 +188,7 @@ coverageAll.m = as.matrix(dplyr::select(coverageAll.df, -one_of("Geneid", "Chr",
 sampleIDs = sampleData.df$SampleID[which(basename(sampleData.df$bamReads) %in% basename(colnames(coverageAll.m)))]
 
 if (length(unique(sampleIDs)) != nrow(sampleData.df)) {
-    message = paste0("Colnames mismatch.")
+    message = paste0("Colnames mismatch. Make sure that each sampleID is unique in the sample summary table.")
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
 } 
 
