@@ -44,8 +44,9 @@ assertList(snakemake@config, min.len = 1)
 
 file_peaks = snakemake@config$peaks$consensusPeaks
 
-conditionComparison = strsplit(snakemake@config$par_general$conditionComparison, ",")[[1]]
-assertVector(conditionComparison, len = 2)
+par.l$designFormula = snakemake@config$par_general$designContrast
+checkAndLogWarningsAndErrors(par.l$designFormula, checkCharacter(par.l$designFormula, len = 1, min.chars = 3))
+
 
 TFBS_dir = snakemake@config$additionalInputFiles$dir_TFBS
 assertDirectoryExists(dirname(TFBS_dir), access = "r")
@@ -63,11 +64,14 @@ assertIntegerish(par.l$nPermutations, lower = 0, len = 1)
 par.l$nBootstraps = as.integer(snakemake@config$par_general$nBootstraps)
 assertIntegerish(par.l$nBootstraps, len = 1)
 
-par.l$designFormula = snakemake@config$par_general$designContrast
-checkAndLogWarningsAndErrors(par.l$designFormula, checkCharacter(par.l$designFormula, len = 1, min.chars = 3))
-
 par.l$file_input_sampleData = snakemake@config$samples$summaryFile
 checkAndLogWarningsAndErrors(par.l$file_input_sampleData, checkFileExists(par.l$file_input_sampleData, access = "r"))
+
+par.l$conditionComparison  = snakemake@config$par_general$conditionComparison
+checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$conditionComparison, len = 1))
+
+par.l$plotRNASeqClassification = as.logical(snakemake@config$par_general$RNASeqIntegration)
+assertFlag(par.l$plotRNASeqClassification)
 
 ## LOG ##
 assertList(snakemake@log, min.len = 1)
@@ -94,22 +98,26 @@ printParametersLog(par.l)
 # TODO: First loading DESeq2 before DiffBind seems to prevent the segfault
 checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "DiffBind", "checkmate", "stats"), verbose = FALSE)
 
-# Step 2
-checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "csaw", "checkmate", "limma", "tools", "geneplotter", "RColorBrewer"), verbose = FALSE)
+# Step 2: diffPeaks
+checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "csaw", "checkmate", "limma", "tools", "geneplotter", "RColorBrewer", "matrixStats"), verbose = FALSE)
 
-# Step 3
+# Step 3: analyzeTF
 checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "vsn", "modeest", "checkmate", "limma", "geneplotter", "RColorBrewer", "tools"), verbose = FALSE)
 
-# Step 4
+# Step 4: summary1
 checkAndLoadPackages(c("tidyverse", "futile.logger", "modeest", "checkmate", "ggrepel"), verbose = FALSE)
 
-# Step 5
-checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "methods", "boot"), verbose = FALSE)
+# Step 5: binningTF
+checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "methods", "boot", "lsr"), verbose = FALSE)
 
-# Step 6
-checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "ggrepel", "checkmate", "tools", "methods", "grDevices", "pheatmap"), verbose = FALSE)
+# Step 6: summaryFinal
+checkAndLoadPackages(c("tidyverse", "futile.logger","ggrepel", "checkmate", "tools", "methods", "grDevices", "pheatmap"), verbose = FALSE)
 
 
+if (par.l$plotRNASeqClassification) {
+    # Require some more packages here
+    checkAndLoadPackages(c( "lsr", "DESeq2",  "matrixStats",  "pheatmap", "preprocessCore"), verbose = FALSE)
+}
 
 # Check the version of readr, at least 1.1.0 is required to properly write gz files
 
@@ -129,17 +137,36 @@ if (par.l$nPermutations == 0 && par.l$nBootstraps < 1000) {
 
 sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_types = cols())
 
-# Check the sample table
-nDistValues = length(unique(sampleData.df$conditionSummary))
-if (nDistValues != 2) {
-  message = paste0("The column 'conditionSummary' must contain exactly 2 different values, but ", nDistValues, " were found.") 
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+
+components3types = checkDesignIntegrity(snakemake, par.l, sampleData.df)$types
+
+
+# Check the sample table. Distinguish between the two modes: Factor and integer for conditionSummary
+if (components3types["conditionSummary"] == "logical" | components3types["conditionSummary"] == "factor") {
+    
+    conditionComparison = strsplit(snakemake@config$par_general$conditionComparison, ",")[[1]]
+    assertVector(conditionComparison, len = 2)
+    
+    nDistValues = length(unique(sampleData.df$conditionSummary))
+    if (nDistValues != 2) {
+        message = paste0("The column 'conditionSummary' must contain exactly 2 different values, but ", nDistValues, " were found.") 
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+    }
+    
+    if (!testSubset(unique(sampleData.df$conditionSummary), conditionComparison)) {
+        message = paste0("The elements specified in 'conditionComparison' in the config file must be a subset of the values in the column 'conditionSummary' in the sample file") 
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+    }
+} else {
+    
+    # Test whether at least two distinct values are present
+    nDistinct = length(unique(sampleData.df$conditionSummary))
+    if (nDistinct < 2) {
+        message = paste0("At least 2 distinct values for the column 'conditionSummary' must be present in the sample file in the quantitative mode.") 
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+    }
 }
 
-if (!testSubset(unique(sampleData.df$conditionSummary), conditionComparison)) {
-  message = paste0("The elements specified in 'conditionComparison' in the config file must be a subset of the values in the column 'conditionSummary' in the sample file") 
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-}
 
 # Check the design formula
 
@@ -221,7 +248,7 @@ if (file_peaks != "") {
   flog.info(paste0("Peak file contains ", nrow(peaks.df), " peaks."))
   
   if (nrow(peaks.df) > 100000) {
-    message = paste0("The number of peaks is very high, subsequent steps may be slow, particularly in the prepareBinning and binningTF steps. Make sure the preparingBinning step has enough memory available. We recommend at least 50 GB. Alternatively, consider decreasing the number of peaks for improved performance.")
+    message = paste0("The number of peaks is high (", nrow(peaks.df), "), subsequent steps may be slow, particularly the binningTF steps. If you encounter problems related to execution time during the analysis, consider decreasing the number of peaks for improved performance.")
     checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
     
     if (snakemake@config$par_general$nPermutations > 5) {

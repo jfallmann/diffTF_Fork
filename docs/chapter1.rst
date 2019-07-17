@@ -133,9 +133,12 @@ A working ``R`` installation is needed and a number of packages from either CRAN
 
 .. code-block:: R
 
-  install.packages(c("checkmate", "futile.logger", "tidyverse", "reshape2", "RColorBrewer", "ggrepel", "lsr", "modeest", "boot", "grDevices", "pheatmap", "matrixStats", "locfdr", "pheatmap"))
-  source("https://bioconductor.org/biocLite.R")
-  biocLite(c("limma", "vsn", "csaw", "DESeq2", "DiffBind", "geneplotter", "Rsamtools"))
+  install.packages(c("checkmate", "futile.logger", "tidyverse", "reshape2", "RColorBrewer", "ggrepel", "lsr", "modeest", "boot", "grDevices", "pheatmap", "matrixStats", "locfdr"))
+
+  if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+  BiocManager::install(c("limma", "vsn", "csaw", "DESeq2", "DiffBind", "geneplotter", "Rsamtools", "preprocessCore"))
 
 
 .. _docs-runOwnAnalysis:

@@ -1,8 +1,5 @@
 start.time  <-  Sys.time()
 
-# Increase the default of 5000, some users reported issues with the limit being reached in this script
-options(expressions=10000)
-
 #########################
 # LIBRARY AND FUNCTIONS #
 #########################
@@ -18,73 +15,41 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 # Use the following line to load the Snakemake object to manually rerun this script (e.g., for debugging purposes)
 # Replace {outputFolder} correspondingly.
 # snakemake = readRDS("{outputFolder}/LOGS_AND_BENCHMARKS/summaryFinal.R.rds")
+# Note that one currently cannot overwrite valeus within the snakemake object; instead, assign them to a variable as done below and change if necessary
 createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
-checkAndLoadPackages(c("tidyverse", "futile.logger", "lsr", "DESeq2",  "matrixStats", "ggrepel", "checkmate", "tools", "grDevices", "locfdr", "pheatmap"), verbose = FALSE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "ggrepel", "checkmate", "tools", "grDevices", "locfdr"), verbose = FALSE)
 
 
 ###################
 #### PARAMETERS ###
 ###################
 
+# Currently hard-coded parameters
 par.l = list()
 
-# Hard-coded parameters
+# 1. Misc
 par.l$verbose = TRUE
-par.l$significanceThresholds  = c(0.001, 0.01, 0.05,0.1,0.2)
+par.l$log_minlevel = "INFO"
 
-par.l$expressionThreshold = 2
-par.l$cohensDThreshold = 0.1
+# 2. Statistical thresholds and values
+par.l$significanceThresholds  = c(0.001, 0.01, 0.05,0.1,0.2) # p-value thresholds
 par.l$classes_CohensD = c("small", "medium", "large", "very large")
 par.l$thresholds_CohensD = c(0.1, 0.5, 0.8)
-par.l$regressionMethod = "glm"
-par.l$filter_minCountsPerCondition = 5
-par.l$log_minlevel = "INFO"
+
+# 3. RNA-Seq specific
+par.l$corMethod = "pearson" # Expression-peak count correlation method. As we quantile normalize now, should be pearson
+par.l$regressionMethod = "glm" # for correlating RNA-Seq classification with TF activity
+par.l$filter_minCountsPerCondition = 5 # For filtering RNA-seq genes, see Documentation
+
+# 4. Volcano plot settings
+par.l$maxTFsToLabel = 150 # Maximum Tfs to label in the Volcano plot
 par.l$volcanoPlot_minDimensions  = 12
-par.l$corMethod = "pearson"
 par.l$minPointSize = 0.3
-
-par.l$extension_x_limits = 0.025 
-par.l$extension_x_limits = 0.15 # 15 % x axis extension, regardless of the limits
-par.l$extension_y_limits = 1.1
 par.l$plot_grayColor = "grey50"
-
-par.l$maxTFsToDraw = 150
-
-par.l$pseudocountLogTransform = 0.0001
-
-# diverging, modified
-par.l$colorCategories = c("activator" = "#d7191c", "undetermined" = "black", "repressor" = "#2b83ba", "not-expressed" = "slategrey")
-par.l$colorCategories = c("activator" = "#4daf4a", "undetermined" = "black", "repressor" = "#e41a1c", "not-expressed" = "Snow3")
-
-par.l$colorConditions = c("#ef8a62", "#67a9cf")
-
-par.l$volcanoPlot_height = 12
-par.l$volcanoPlot_width = 16
-par.l$size_TFAnnotation = 5.5
-par.l$sizeLegend  = 20
-par.l$rootFontSize = 8
-par.l$sizeHelperLines = 0.3
-par.l$legend_position = c(0.1, 0.9)
-
-
-# Which transformation of the y values to do?
-
-transform_yValues <- function(values, addPseudoCount = TRUE, onlyForZero = TRUE) {
-    
-    # Should only happen with the permutation-based approach
-    zeros = which(values == 0)
-    if (length(zeros) > 0 & addPseudoCount) {
-        values[zeros] = 1 / par.l$nPermutations
-    }
-    
-    -log10(values)
-}
-
-transform_yValues_caption <- function() {
-  "-log10"
-}
+par.l$colorCategories = c("activator" = "#4daf4a", "undetermined" = "black", "repressor" = "#e41a1c", "not-expressed" = "Snow3") # diverging, modified
+par.l$colorConditions = c("#ef8a62", "#67a9cf") # Colors of the two conditions for the background
 
 #####################
 # VERIFY PARAMETERS #
@@ -96,11 +61,11 @@ assertClass(snakemake, "Snakemake")
 assertList(snakemake@input, min.len = 1)
 assertSubset(c("", "allPermutationResults", "condComp", "normCounts"), names(snakemake@input))
 
+
 par.l$files_input_permResults  = snakemake@input$allPermutationResults
 for (fileCur in par.l$files_input_permResults) {
   assertFileExists(fileCur, access = "r")
 }
-
 
 par.l$file_input_condCompDeSeq = snakemake@input$condComp
 assertFileExists(par.l$file_input_condCompDeSeq, access = "r")
@@ -113,14 +78,12 @@ assertFileExists(par.l$file_input_metadata, access = "r")
 
 ## OUTPUT ##
 assertList(snakemake@output, min.len = 1)
-assertSubset(c("", "summary", "diagnosticPlots", "plotsRDS"), names(snakemake@output))
+assertSubset(c("", "summary", "volcanoPlot", "diagnosticPlots", "plotsRDS"), names(snakemake@output))
 
 par.l$file_output_summary  = snakemake@output$summary
 par.l$file_plotVolcano     = snakemake@output$volcanoPlot
 par.l$files_plotDiagnostic = snakemake@output$diagnosticPlots
 par.l$file_output_plots    = snakemake@output$plotsRDS
-
-
 
 ## CONFIG ##
 assertList(snakemake@config, min.len = 1)
@@ -128,13 +91,10 @@ assertList(snakemake@config, min.len = 1)
 par.l$plotRNASeqClassification = as.logical(snakemake@config$par_general$RNASeqIntegration)
 assertFlag(par.l$plotRNASeqClassification)
 
-
-
 par.l$nPermutations = snakemake@config$par_general$nPermutations
 assertIntegerish(par.l$nPermutations, lower = 0)
 
 par.l$outdir = snakemake@config$par_general$outdir
-
 
 if (par.l$plotRNASeqClassification) {
 
@@ -142,27 +102,17 @@ if (par.l$plotRNASeqClassification) {
   par.l$file_input_geneCountsPerSample = snakemake@config$additionalInputFiles$RNASeqCounts
   assertFileExists(par.l$file_input_HOCOMOCO_mapping, access = "r")
   assertFileExists(par.l$file_input_geneCountsPerSample, access = "r")
-
 }
-
 
 ## LOG ##
 assertList(snakemake@log, min.len = 1)
 par.l$file_log = snakemake@log[[1]]
 
-
-allDirs = c(dirname(par.l$file_output_summary), 
-            dirname(par.l$file_plotVolcano),
-            dirname(par.l$files_plotDiagnostic),
-            dirname(par.l$file_log)
-)
-
+allDirs = c(dirname(par.l$file_output_summary), dirname(par.l$files_plotDiagnostic),dirname(par.l$file_log))
 testExistanceAndCreateDirectoriesRecursively(allDirs)
-
 
 assertCharacter(par.l$colorCategories, len = 4)
 assertSubset(names(par.l$colorCategories), c("activator", "undetermined", "repressor", "not-expressed"))
-
 assertCharacter(par.l$colorConditions, len = 2)
 
 ######################
@@ -172,75 +122,15 @@ startLogger(par.l$file_log, par.l$log_minlevel,  removeOldLog = TRUE)
 printParametersLog(par.l)
 
 
-#############
-# FUNCTIONS #
-#############
-
-heatmap.act.rep <- function(df.tf.peak.matrix, tf2ensg.exp){
-  
-  
-  cor.r.pearson.m <- cor.m[,tf2ensg.exp$ENSEMBL]
-  
-  identical(colnames(df.tf.peak.matrix), tf2ensg.exp$HOCOID)
-  identical(colnames(cor.r.pearson.m), tf2ensg.exp$ENSEMBL)
-  colnames(cor.r.pearson.m) <- tf2ensg.exp$HOCOID
-  BREAKS = seq(-1,1,0.05)
-  diffDensityMat = matrix(NA, nrow = ncol(cor.r.pearson.m), ncol = length(BREAKS)-1)
-  rownames(diffDensityMat) = tf2ensg.exp$HOCOID
-  
-  TF_Peak_all.m <- df.tf.peak.matrix
-  TF_Peak.m <- TF_Peak_all.m
-  
-  for (i in 1:ncol(cor.r.pearson.m)){
-    TF = colnames(cor.r.pearson.m)[i]
-    TF_name = TF #as.character(tf2ensg.exp$HOCOID[tf2ensg.exp$HOCOID==TF])
-    ## for the background, use all peaks
-    h_noMotif = hist(cor.r.pearson.m[,TF][TF_Peak_all.m[,TF]==0], breaks = BREAKS, plot = FALSE)
-    ## for the foreground use only peaks with less than min_mot_n different TF motifs
-    h_Motif = hist(cor.r.pearson.m[,TF][TF_Peak.m[,TF]!=0], breaks = BREAKS, plot = FALSE)
-    diff_density = h_Motif$density - h_noMotif$density
-    diffDensityMat[rownames(diffDensityMat)==TF_name[1], ] <- diff_density
-  }
-  diffDensityMat = diffDensityMat[!is.na(diffDensityMat[,1]),]
-  colnames(diffDensityMat) = signif(h_Motif$mids,1)
-  quantile(diffDensityMat)
-  
-  ## check to what extent the number of TF motifs affects the density values
-  n_min = ifelse(colSums(TF_Peak.m)<nrow(TF_Peak.m),colSums(TF_Peak.m), nrow(TF_Peak.m)-colSums(TF_Peak.m))
-  names(n_min) = tf2ensg.exp$HOCOID#[match(names(n_min), as.character(tf2ensg$ENSEMBL))]
-  n_min <- sapply(split(n_min,names(n_min)),sum)
-  quantile(n_min)
-  remove_smallN = which(n_min<100)
-  cor(n_min[-remove_smallN],rowMax(diffDensityMat)[-remove_smallN], method = 'pearson')
-  
-  factorClassificationPlot <- sort(median.cor.tfs, decreasing = TRUE)
-  diffDensityMat_Plot = diffDensityMat[match(names(factorClassificationPlot), rownames(diffDensityMat)), ]
-  diffDensityMat_Plot = diffDensityMat_Plot[!is.na(rownames(diffDensityMat_Plot)),]
-  annotation_rowDF = data.frame(median_diff = 
-                                  factorClassificationPlot[match(rownames(diffDensityMat_Plot), names(factorClassificationPlot))])
-  colBreaks = unique(c((-1),round(quantile(median.cor.tfs.non, probs = c(.05, .95) )[1], digits = 3), round(quantile(median.cor.tfs.non, probs = c(.05, .95) )[2], digits=3),1))
-  anno_rowDF = data.frame(
-    threshold = cut(annotation_rowDF$median_diff, 
-                    breaks = colBreaks))
-  rownames(anno_rowDF) = rownames(diffDensityMat_Plot)
-  colors = c(par.l$colorCategories["repressor"],par.l$colorCategories["not-expressed"], par.l$colorCategories["activator"])
-  names(colors) = levels(anno_rowDF$threshold)
-  
-  
-  pheatmap(diffDensityMat_Plot, cluster_rows = FALSE, cluster_cols = FALSE,
-           fontsize_row = 1.25, scale = 'row' , fontsize_col = 10, fontsize=8, labels_col=c(-1, -0.5, 0, 0.5, 1),
-           annotation_row = anno_rowDF,annotation_legend=F,
-           annotation_colors = list(threshold = colors), legend = T, annotation_names_row = FALSE)
-  
-} # end function
-
+################
+# COLLECT DATA #
+################
 
 conditionComparison = readRDS(par.l$file_input_condCompDeSeq)
 assertVector(conditionComparison, len = 2)
 
 # Assemble the final table and collect permutation information from all TFs
 output.global.TFs.orig = NULL
-
 
 nTF = length(par.l$files_input_permResults)
 for (fileCur in par.l$files_input_permResults) {
@@ -266,12 +156,11 @@ for (fileCur in par.l$files_input_permResults) {
 }
 
 # Convert columns to numeric if they are not already
-output.global.TFs.orig$weighted_meanDifference = as.numeric(output.global.TFs.orig$weighted_meanDifference)
-output.global.TFs.orig$variance = as.numeric(output.global.TFs.orig$variance)
-output.global.TFs.orig$weighted_CD = as.numeric(output.global.TFs.orig$weighted_CD)
-output.global.TFs.orig$weighted_Tstat = as.numeric(output.global.TFs.orig$weighted_Tstat)
-
-
+output.global.TFs.orig = mutate(output.global.TFs.orig,
+                                weighted_meanDifference = as.numeric(weighted_meanDifference),
+                                variance                = as.numeric(variance),
+                                weighted_CD             = as.numeric(weighted_CD),
+                                weighted_Tstat          = as.numeric(weighted_Tstat))
 
 # Remove rows with NA
 TF_NA = which(is.na(output.global.TFs.orig$weighted_meanDifference))
@@ -285,19 +174,19 @@ if (length(TF_NA) > 0) {
 }
 
 
-######################################
+########################################################
 # FILTER BY PERMUTATIONS AND COMPARE, DIAGNOSTIC PLOTS #
-######################################
+########################################################
 # Compare the distributions from the real and random permutations
 diagPlots.l = list()
 
-
 pdf(par.l$files_plotDiagnostic[1])
-output.global.TFs.orig$pvalue = 0
+output.global.TFs.orig$pvalue = NA
 if (par.l$nPermutations > 0) {
 
-    dataReal.df = filter(output.global.TFs.orig, permutation == 0)
-    dataPerm.df = filter(output.global.TFs.orig, permutation > 0)
+    dataReal.df = dplyr::filter(output.global.TFs.orig, permutation == 0)
+    dataPerm.df = dplyr::filter(output.global.TFs.orig, permutation > 0)
+  
 
     # ( (#perm >TH)/#perm ) / ( (#perm >TH)/#perm + (#real > TH)/n_real )
     
@@ -305,29 +194,29 @@ if (par.l$nPermutations > 0) {
     
     plot(density(dataPerm.df$weighted_meanDifference, na.rm = TRUE), col = "black", main = "Weighted mean difference values (black = permuted)", xlim = xrange)
     lines(density(dataReal.df$weighted_meanDifference, na.rm = TRUE), col = "red")
-    
 
-  
-    
     for (TFCur in unique(output.global.TFs.orig$TF)) {
         
-        dataCur.df = filter(output.global.TFs.orig, TF == TFCur)
-        dataReal.df = filter(dataCur.df, permutation == 0)
-        dataPerm.df = filter(dataCur.df, permutation > 0)
+        dataCur.df = dplyr::filter(output.global.TFs.orig, TF == TFCur)
+        dataReal.df = dplyr::filter(dataCur.df, permutation == 0)
+        dataPerm.df = dplyr::filter(dataCur.df, permutation > 0)
+        
+        
+        if (nrow(dataPerm.df) == 0) {
+            message = paste0("For TF : ", TFCur, ", no permutation data could be found. This is not supposed to happen. Rerun the binning step for this TF.")
+            checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+            next
+        }
         
         rangeX = range(dataCur.df$weighted_meanDifference)
-        
         rowCur = which(output.global.TFs.orig$TF == TFCur)
         
         g = ggplot(dataPerm.df, aes(weighted_meanDifference)) + geom_density() + geom_vline(xintercept = dataReal.df$weighted_meanDifference[1], color = "red") + ggtitle(TFCur) + xlim(c(rangeX * 1.5)) # + scale_x_continuous(limits = c(min(dataCur.df$weighted_meanDifference) - 0.5, max(dataCur.df$weighted_meanDifference) + 0.5))
         
         diagPlots.l[[TFCur]] = g
-        
         plot(g)
 
-       
         nPermThreshold = length(which(abs(dataPerm.df$weighted_meanDifference) > abs(dataReal.df$weighted_meanDifference[1])))
-        
         pvalueCur = nPermThreshold / par.l$nPermutations
         output.global.TFs.orig$pvalue[rowCur] = pvalueCur 
 
@@ -335,12 +224,9 @@ if (par.l$nPermutations > 0) {
     
     # TODO: Diagnostic plot for pvalue
     plot(ggplot(output.global.TFs.orig, aes(pvalue)) + geom_density() + ggtitle("Local fdr density across all TF"))
-    
-    
 
 } else {
-  
-  
+
   # # Calculate adjusted p values out of variance 
   # estimates = tryCatch( {
   #   
@@ -369,12 +255,9 @@ if (par.l$nPermutations > 0) {
   # # Which one to take? Depends, see page 101 in Bradley Efron-Large-Scale Inference_ Empirical Bayes Methods for Estimation, Testing, and Prediction
   # # The default option in locfdr is the MLE method, not central matching. Slight irregularities in the central histogram,
   # # as seen in Figure 6.1a, can derail central matching. The MLE method is more stable, but pays the price of possibly increased bias.
-  # 
-  # 
+
   # output.global.TFs.orig$weighted_Tstat_centralized = output.global.TFs.orig$weighted_Tstat - MLE.delta
-  # 
-  
-  
+
   populationMean = 0
   zScore = (output.global.TFs.orig$weighted_Tstat - populationMean) / sqrt(output.global.TFs.orig$variance)
   
@@ -386,35 +269,36 @@ if (par.l$nPermutations > 0) {
   if (length(index0) > 0) {
     output.global.TFs.orig$pvalue[index0] = .Machine$double.xmin
   }
-  
 }
 
-
-output.global.TFs.permutations = filter(output.global.TFs.orig, permutation > 0)
-output.global.TFs              = filter(output.global.TFs.orig, permutation == 0)
-
-output.global.TFs$Cohend_factor = ifelse(output.global.TFs$weighted_CD < par.l$thresholds_CohensD[1], par.l$classes_CohensD[1], 
-                                         ifelse(output.global.TFs$weighted_CD < par.l$thresholds_CohensD[2] , par.l$classes_CohensD[2], 
-                                                ifelse(output.global.TFs$weighted_CD < par.l$thresholds_CohensD[3], par.l$classes_CohensD[3], par.l$classes_CohensD[4])))
-
-output.global.TFs$Cohend_factor = factor(output.global.TFs$Cohend_factor, levels = par.l$classes_CohensD, labels = seq_len(length(par.l$classes_CohensD)))
+output.global.TFs.permutations = dplyr::filter(output.global.TFs.orig, permutation > 0)
+output.global.TFs              = dplyr::filter(output.global.TFs.orig, permutation == 0)
 
 
-output.global.TFs$pvalueAdj = p.adjust(output.global.TFs$pvalue, method = "BH")
+
+output.global.TFs = mutate(output.global.TFs, 
+                           Cohend_factor = ifelse(weighted_CD < par.l$thresholds_CohensD[1], par.l$classes_CohensD[1], 
+                                                  ifelse(weighted_CD < par.l$thresholds_CohensD[2] , par.l$classes_CohensD[2], 
+                                                         ifelse(weighted_CD < par.l$thresholds_CohensD[3], par.l$classes_CohensD[3], par.l$classes_CohensD[4]))),
+                           Cohend_factor = factor(Cohend_factor, levels = par.l$classes_CohensD, labels = seq_len(length(par.l$classes_CohensD))),
+                           pvalueAdj     = p.adjust(pvalue, method = "BH"))
 
 
 colnamesToPlot = c("weighted_meanDifference", "weighted_CD", "TFBS", "weighted_Tstat", "variance", "pvalue", "pvalueAdj")
 
-
 for (pValueCur in c(par.l$significanceThresholds , 1)) {
   
-  filtered.df = filter(output.global.TFs, pvalueAdj <= pValueCur)
+  filtered.df = dplyr::filter(output.global.TFs, pvalueAdj <= pValueCur)
   
   title = paste0("p-value: ", pValueCur, " (retaining ", nrow(filtered.df), " TF)")
   
   for (measureCur in colnamesToPlot) {
       
       if (all(!is.finite(unlist(filtered.df[,measureCur])))) {
+          next
+      }
+      
+      if (! measureCur %in% colnames(output.global.TFs)) {
           next
       }
     
@@ -428,11 +312,26 @@ for (pValueCur in c(par.l$significanceThresholds , 1)) {
   }
 }
 
-
 stats.df = group_by(output.global.TFs.orig, permutation) %>% summarise(max = max(weighted_meanDifference), min = min(weighted_meanDifference))
 ggplot(stats.df, aes(min)) + geom_density()
 ggplot(stats.df, aes(max)) + geom_density()
 dev.off()
+
+#################################
+# mode of change quantification #
+#################################
+
+sampleData.l = readRDS(par.l$file_input_metadata)
+sampleData.df = sampleData.l[["permutation0"]]
+designComponents.l = checkDesignIntegrity(snakemake, par.l, sampleData.df, useRNA = TRUE)
+
+components3types   = designComponents.l$types
+
+# Which of the two modes should be done, pairwise or quantitative?
+comparisonMode = "quantitative"
+if (components3types["conditionSummary"] == "logical" | components3types["conditionSummary"] == "factor") {
+    comparisonMode = "pairwise"
+}
 
 
 ##########################
@@ -440,6 +339,10 @@ dev.off()
 ##########################
 if (par.l$plotRNASeqClassification) {
   
+    # Require some more packages here
+    checkAndLoadPackages(c( "lsr", "DESeq2",  "matrixStats",  "pheatmap", "preprocessCore"), verbose = FALSE)
+    
+    
     classesList.l = list(c("activator","undetermined","repressor","not-expressed"),
                        c("activator","undetermined","repressor"),
                        c("activator","repressor")
@@ -458,93 +361,138 @@ if (par.l$plotRNASeqClassification) {
     comparisonType = paste0(comparisonType, ".")
     }
     
-    file_sampleSummary = snakemake@config$samples$summaryFile
-    assertFileExists(file_sampleSummary)
-
-    
-    sampleSummary.df = read_tsv(file_sampleSummary, col_types = cols())
-    
-    
-    # Loading TF data
-    HOCOMOCO_mapping.df = read.table(file = par.l$file_input_HOCOMOCO_mapping, header = TRUE)
-    assertSubset(c("ENSEMBL", "HOCOID"), colnames(HOCOMOCO_mapping.df))
-    
     # Read RNAseq counts
-    # par.l$file_input_geneCountsPerSample = "/g/scb2/zaugg/berest/Projects/CLL/PREPARE/Armando.AR/52samplesAR/RNA/rawCounts_8samples.tsv"
-    
     TF.counts.df.all = read_tsv(par.l$file_input_geneCountsPerSample, col_names = TRUE)
     if (nrow(problems(TF.counts.df.all)) > 0) {
-      flog.fatal(paste0("Parsing errors: "), problems(TF.counts.df.all), capture = TRUE)
-      stop("Error when parsing the file ", par.l$file_input_geneCountsPerSample, ", see errors above")
+        flog.fatal(paste0("Parsing errors: "), problems(TF.counts.df.all), capture = TRUE)
+        stop("Error when parsing the file ", par.l$file_input_geneCountsPerSample, ", see errors above")
     }
     
     # Add row names
     TF.counts.df.all = as.data.frame(TF.counts.df.all)
     rownames(TF.counts.df.all) = TF.counts.df.all$ENSEMBL
     TF.counts.df.all = TF.counts.df.all[,-1]
+    
+    # Clean ENSEMBL IDs
+    rownames(TF.counts.df.all) = gsub("\\..+", "", rownames(TF.counts.df.all), perl = TRUE)
 
     
-    sampleData.l = readRDS(par.l$file_input_metadata)
-    sampleData.df = sampleData.l[["permutation0"]]
-    sampleData.df = filter(sampleData.df, SampleID %in% colnames(TF.counts.df.all))
+    sampleData.df = dplyr::filter(sampleData.df, SampleID %in% colnames(TF.counts.df.all))
     
     nFiltRows = nrow(sampleData.l[["permutation0"]]) - nrow(sampleData.df)
     if (nFiltRows > 0) {
-      flog.info(paste0("Filtered ", nFiltRows, " sample IDs after comparising sample names with RNA-Seq table. Remaining: ", nrow(sampleData.df)))
+        flog.warn(paste0("Filtered ", nFiltRows, " sample IDs after comparising sample names with RNA-Seq table"))
     }
     
-    par.l$designFormula = snakemake@config$par_general$designContrast
-    designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
-    formulaVariables = attr(terms(designFormula), "term.labels")
+    # The design formula for RNA-Seq is different from the one we used before for ATAC-Seq
+    # Either take the one that the user provided or, if he did not, use a general one with only the condition
+    par.l$designFormulaRNA = snakemake@config$par_general$designContrastRNA
+    if (is.null(par.l$designFormulaRNA)) {
+        par.l$designFormulaRNA = "~conditionSummary"
+        flog.warn(paste0("Could not find the parameter designContrastRNA in the configuration file. The default of \"~conditionSummary\" will be taken as formula. If you know about confounding variables, rerun this step and add the parameter (see the Documentation for details)"))
+    }
+    designFormulaRNA = convertToFormula(par.l$designFormulaRNA, colnames(sampleData.df))
     
-    # Extract the variable that defines the contrast. Always the last element in the formula
-    variableToPermute = formulaVariables[length(formulaVariables)]
- 
+    file_sampleSummary = snakemake@config$samples$summaryFile
+    assertFileExists(file_sampleSummary)
+
+    sampleSummary.df = read_tsv(file_sampleSummary, col_types = cols())
+    
+    # Loading TF data
+    HOCOMOCO_mapping.df = read.table(file = par.l$file_input_HOCOMOCO_mapping, header = TRUE)
+    assertSubset(c("ENSEMBL", "HOCOID"), colnames(HOCOMOCO_mapping.df))
+    
+    # Clean ENSEMBL IDs
+    HOCOMOCO_mapping.df$ENSEMBL = gsub("\\..+", "", HOCOMOCO_mapping.df$ENSEMBL, perl = TRUE)
+    
+
     ####################################
     # Run DeSeq2 on raw RNA-Seq counts #
     ####################################
-    
-    # Enforce the correct order and rownames
-    sampleData.df.orig = sampleData.df
-    sampleData.df = as.data.frame(sampleData.df)
-    rownames(sampleData.df) = sampleData.df$SampleID
     dd <- DESeqDataSetFromMatrix(countData = TF.counts.df.all[,sampleData.df$SampleID],
                                  colData = sampleData.df,
-                                 design = designFormula)
+                                 design = designFormulaRNA)
     
     dd = estimateSizeFactors(dd)
-    dd = DESeq(dd)
+    # dd = DESeq(dd)
     dd_counts =  counts(dd, normalized=TRUE)
-    TF.counts.df.all = dd_counts %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
+
+    ######################################
+    # Filtering of lowly expressed genes #
+    ######################################
+    nMin = par.l$filter_minCountsPerCondition
+    if (comparisonMode == "pairwise") {
+        
+        # If in either of the two conditions counts are below a minimum OR the median is 0, we discard the gene and mark them as non-expressed
+        samples_cond1 = colData(dd)$SampleID[which(colData(dd)$conditionSummary == levels(colData(dd)$conditionSummary)[1])]
+        samples_cond2 = colData(dd)$SampleID[which(colData(dd)$conditionSummary == levels(colData(dd)$conditionSummary)[2])]
+        
+        idx <- (rowMeans(dd_counts[,samples_cond1]) > nMin | rowMeans(dd_counts[,samples_cond2]) > nMin) & rowMedians(dd_counts) > 0
+        
+    } else {
+        
+        # Here, we have to employ a different approach for when to filter genes given that we may have more than two conditions
+        idx <- rowMedians(dd_counts) > 0
+        idx <- rowMeans(dd_counts) > 0
+    }
+
+    nFiltered = length(which(idx == FALSE))
+    
+    if (nFiltered > 0) {
+        flog.info(paste0("Filtered ", nFiltered, " genes from RNA-Seq table because of low counts."))
+        dd.filt = dd[idx,]
+    } else {
+        dd.filt = dd
+    }
+
+    dd.filt <- DESeq(dd.filt)
+    dd_counts.filt =  counts(dd.filt, normalized=TRUE)
+    RNA.counts.filt.df = dd_counts.filt %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
+    
+    # Raw counts, used for other types of normalization thereafter
+    dd_counts.raw.filt =  counts(dd.filt, normalized=FALSE)
+   
+    dd_counts.filt.quantile = normalize.quantiles(as.matrix(dd_counts.raw.filt))
+    RNA.counts.quantile.df.all = dd_counts.filt.quantile %>% as.data.frame()  %>% as.tibble()
+    
+    # Fix row and column names
+    colnames(RNA.counts.quantile.df.all) = colnames(dd_counts.raw.filt)
+    RNA.counts.quantile.df.all = RNA.counts.quantile.df.all %>%
+        mutate(ENSEMBL = RNA.counts.filt.df$ENSEMBL) %>%
+        dplyr::select(ENSEMBL, colnames(dd_counts.raw.filt))
+    
+    # TODO: Change and make permanent
+    RNA.counts.filt.df = RNA.counts.quantile.df.all
     
     # Check sample names and set column names
     # Match the column names and do the intersections
-    
-    sharedColumns = intersect(colnames(TF.counts.df.all)[-1], sampleSummary.df$SampleID)
+    sharedColumns = intersect(colnames(RNA.counts.filt.df)[-1], sampleSummary.df$SampleID)
     
     if (length(sharedColumns) == 0) {
       message = paste0("No shared samples with RNA-Seq samples between sample table ", file_sampleSummary, " and RNA-Seq table ", par.l$file_input_geneCountsPerSample, ".")
       checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+    } 
+    
+    if (length(sharedColumns) < nrow(sampleSummary.df)) {
+        message = paste0("Only ", length(sharedColumns), " out of ", ncol(RNA.counts.filt.df) - 1, " columns are shared between RNA-Seq counts and the sample table. Make sure the columns names in the RNA-seq counts file are identical to the names in the sample table.")
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
     } else {
-      flog.info(paste0(length(sharedColumns), " out of ", ncol(TF.counts.df.all) - 1, " columns are shared between RNA-Seq counts and the sample table"))
+      flog.info(paste0(length(sharedColumns), " out of ", ncol(RNA.counts.filt.df) - 1, " columns are shared between RNA-Seq counts and the sample table"))
     }
     
-    colnames(TF.counts.df.all)[1] = "ENSEMBL"
-    
-    # Clean ENSEMBL IDs
-    TF.counts.df.all$ENSEMBL = gsub("\\..+", "", TF.counts.df.all$ENSEMBL, perl = TRUE)
+    colnames(RNA.counts.filt.df)[1] = "ENSEMBL"
+
 
     # Filter them by the IDs that correspond to the TFs
-    TF.counts.df = filter(TF.counts.df.all, ENSEMBL %in% HOCOMOCO_mapping.df$ENSEMBL)
+    TF.counts.filt.df = dplyr::filter(RNA.counts.filt.df, ENSEMBL %in% HOCOMOCO_mapping.df$ENSEMBL)
     
-    if (nrow(TF.counts.df) == 0) {
+    if (nrow(TF.counts.filt.df) == 0) {
       message = "No rows remaining after filtering against ENSEMBL IDs in HOCOMOCO. Check your ENSEMBL IDs for overlap with the HOCOMOCO translation table."
       checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
     }
     
     
-    # Read counts per TFBS, coming from DESeqPeaks.R
-    # TODO: Provide counts matrix
+    # Read counts per TFBS, coming from previous steps
     peak.counts = read_tsv(par.l$file_input_countsNorm, col_types = cols())
     if (nrow(problems(peak.counts)) > 0) {
         flog.fatal(paste0("Parsing errors: "), problems(peak.counts), capture = TRUE)
@@ -552,7 +500,7 @@ if (par.l$plotRNASeqClassification) {
     }
     
     # Match the column names and do the intersections
-    sharedColumns = intersect(colnames(peak.counts), colnames(TF.counts.df))
+    sharedColumns = intersect(colnames(peak.counts), colnames(TF.counts.filt.df))
     
     if (length(sharedColumns) == 0) {
       message = "No shared samples with RNA-Seq samples."
@@ -563,16 +511,21 @@ if (par.l$plotRNASeqClassification) {
     
     #peak.counts.orig = peak.counts
     peak.counts  = dplyr::select(peak.counts, one_of("peakID", sharedColumns)) 
-    TF.counts.df = TF.counts.df[, which(colnames(TF.counts.df) %in% c(sharedColumns, "ENSEMBL"))]
+    TF.counts.filt.df = TF.counts.filt.df[, which(colnames(TF.counts.filt.df) %in% c(sharedColumns, "ENSEMBL"))]
     
     
-    HOCOMOCO_mapping.df.exp <- filter(HOCOMOCO_mapping.df, ENSEMBL %in%  TF.counts.df$ENSEMBL, HOCOID %in% output.global.TFs$TF)
+    HOCOMOCO_mapping.df.exp <- dplyr::filter(HOCOMOCO_mapping.df, ENSEMBL %in%  TF.counts.filt.df$ENSEMBL, HOCOID %in% output.global.TFs$TF)
+    
+    # Filter genes that might not be in the output.global.TFs$TF list 
+    # Dont include, cuases errors downstream. Fitler this in the heatmap function
+    # TF.counts.filt.df = filter(TF.counts.filt.df, ENSEMBL %in% HOCOMOCO_mapping.df.exp$ENSEMBL)
     
     if (nrow(HOCOMOCO_mapping.df.exp) == 0) {
       message = paste0("Number of rows of HOCOMOCO_mapping.df.exp is 0. Something is wrong with the mapping table or the filtering")
       checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
     }
     
+    # Loop through all TFs and determine whether or not a peak has a binding site for this TF, resulting in a binary matrix
     TF.peakMatrix.l = list()
     for (TFCur in HOCOMOCO_mapping.df.exp$HOCOID) {
       
@@ -587,7 +540,9 @@ if (par.l$plotRNASeqClassification) {
       TF.output.df = read.table(file = paste0(rootOutdir, "/TF-SPECIFIC/",TFCur,"/extension", extensionSize, "/", comparisonType, TFCur,  ".output.tsv.gz"), header = TRUE)
       TF.peakMatrix.l[[TFCur]] = peak.counts$peakID %in% TF.output.df$peakID
     }
-
+    
+    # cor.m = peaks names separated with # 
+    
     # This is the peak (rows) and TF binding sites (columns)
     TF.peakMatrix.df = as.data.frame(TF.peakMatrix.l)
     
@@ -596,14 +551,14 @@ if (par.l$plotRNASeqClassification) {
       message = paste0("All counts are 0, something is wrong.")
       checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
     }
-    
-    
+
     # Expressed TFs only 
+    # TODO: Filter for expressed TFs, how is this done and WHY
     HOCOMOCO_mapping.subset.df = subset(HOCOMOCO_mapping.df.exp, HOCOID %in% colnames(TF.peakMatrix.df))
     
     # Remove first column, retain only counts
-    expressed.TF.counts.df = t(TF.counts.df[,-c(1)])
-    colnames(expressed.TF.counts.df) = TF.counts.df$ENSEMBL
+    expressed.TF.counts.df = t(TF.counts.filt.df[,-c(1)])
+    colnames(expressed.TF.counts.df) = TF.counts.filt.df$ENSEMBL
     expressed.TF.counts.df = t(expressed.TF.counts.df)
     
     assertSubset(colnames(expressed.TF.counts.df), colnames(peak.counts))
@@ -619,16 +574,7 @@ if (par.l$plotRNASeqClassification) {
       message = "Colnames of expressed.TF.counts.df and peak.counts must be identical"
       checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
     }
-    
-    # Filter by rowMeans to eliminate rows with an sd of 0
-    rowMeans1 = rowMeans(expressed.TF.counts.df)
-    rowsToDelete = which(rowMeans1 == 0)
-    rowsToDelete = which(rowMeans1 < 1)
-    if (length(rowsToDelete) > 0) {
-      flog.info(paste0("Removed ", length(rowsToDelete), " TFs out of ", nrow(expressed.TF.counts.df), " because they had a row mean of 0."))
-       expressed.TF.counts.df = expressed.TF.counts.df[-rowsToDelete,]
-    }
-    
+
     rowMeans2 = rowMeans(peak.counts[,-index_lastColumn])
     rowsToDelete = which(rowMeans2 < 1)
     if (length(rowsToDelete) > 0) {
@@ -642,6 +588,7 @@ if (par.l$plotRNASeqClassification) {
     
     peak.counts = dplyr::select(peak.counts, -one_of("peakID"))
     
+    # Same dimensions as sel.TF.peakMatrix.df:  peaks as rows and TFs as columns. Stores correlations of peak counts vs RNA-Seq counts for each TF-Gene / peak
     cor.m = t(cor(t(expressed.TF.counts.df), t(peak.counts), method = par.l$corMethod))
     
     # Mapping TFBS to TF 
@@ -652,41 +599,154 @@ if (par.l$plotRNASeqClassification) {
     # Some entries in the HOCOMOCO mapping can be repeated (i.e., the same ID for two different TFs, such as ZBTB4.S and ZBTB4.D)
     # Originally, we deleted these rows from the mapping and took the first entry only
     # However, since TFs with the same ENSEMBL ID can still be different with respect to their TFBS, we now duplicate such genes also in the correlation table
-
+    #HOCOMOCO_mapping.df.exp = HOCOMOCO_mapping.df.exp[!duplicated(HOCOMOCO_mapping.df.exp[, c("ENSEMBL")]),]
+    #assertSubset(as.character(HOCOMOCO_mapping.df.exp$ENSEMBL), colnames(sort.cor.m))
+    
     
     # Change the column names from ENSEMBL ID to TF names. Reorder the columns first to make sure the order is the same. Due to the duplication ID issue, the number of columns may increase after the column selection below
     sort.cor.m = sort.cor.m[,as.character(HOCOMOCO_mapping.df.exp$ENSEMBL)] 
     colnames(sort.cor.m) = as.character(HOCOMOCO_mapping.df.exp$HOCOID)
+    
+    # This binary matrix has peaks as rows and TFs as columns of whether or not a particular peak has a TFBS from this TF or not
     sel.TF.peakMatrix.df = TF.peakMatrix.df[,colnames(sort.cor.m)]
+
     
+    # 1. Focus on peaks with TFBS overlaps
     t.cor.sel.matrix = sort.cor.m
+    # Transform 0 values into NA for the matrix to speed up subsequent analysis
     t.cor.sel.matrix[(sel.TF.peakMatrix.df == 0)] = NA
+    # Goal: Eliminate all correlation values for cases in which a peak has no TFBS for the particular TF
+    # Same dimensions as the two matrices used for input.
+    # Matrix multiplication here essentially means we only multiply each individual entry with either 1 or NA
+    # The result is a matrix full of NAs and the remaining entries are the correlation values for peaks that have a TFBS for the particular TF
     t.cor.sel.matrix = sel.TF.peakMatrix.df * t.cor.sel.matrix
-    
-    my.median = function(x) median(x, na.rm = TRUE)
-    my.mean   = function(x) mean(x, na.rm = TRUE)
+    # Gives one value per TF, designating the median correlation per TF across all peaks
     median.cor.tfs = sort(apply(t.cor.sel.matrix, MARGIN = 2, FUN = my.median))
+    
+    # 2. Background
+    # Start with the same correlation matrix
     t.cor.sel.matrix.non = sort.cor.m
+    # Transform 1 values into NA for the matrix to speed up subsequent analysis
     t.cor.sel.matrix.non[(sel.TF.peakMatrix.df == 1)] = NA
     t.cor.sel.matrix.non = sel.TF.peakMatrix.df + t.cor.sel.matrix.non
+    # Gives one value per TF, designating the median correlation per TF
     median.cor.tfs.non <- sort(apply(t.cor.sel.matrix.non, MARGIN=2, FUN = my.median))
-    
-    
+    # Not used thereafter
     median.cor.tfs.rest <- sort(median.cor.tfs - median.cor.tfs.non[names(median.cor.tfs)])
     
-    act.rep.thres = quantile(sort(apply(t.cor.sel.matrix.non, MARGIN = 2, FUN = my.median)), probs = c(.05, .95))
+    # 3. Final classification: Calculate thresholds by calculating the quantiles of the background anhd compare the real values to the background
+    act.rep.thres.l = list()
+    for (thresholdCur in c(0.1, 0.05, 0.01, 0.001)) {
+        
+        act.rep.cur = quantile(sort(apply(t.cor.sel.matrix.non, MARGIN = 2, FUN = my.median)), probs = c(thresholdCur, 1-thresholdCur))
+        # Enforce the thresholds to be at least 0, so we never have an activator despite a negative median correlation 
+        # and a repressor despite a positive one
+        act.rep.thres.l[[as.character(thresholdCur)]][1] = min(0, act.rep.cur[1])
+        act.rep.thres.l[[as.character(thresholdCur)]][2] = max(0, act.rep.cur[2])
 
+        flog.info(paste0("Thresholds for repressor/activator for threshold ", thresholdCur, ": ", act.rep.thres.l[[as.character(thresholdCur)]][1], " and ", act.rep.thres.l[[as.character(thresholdCur)]][2]))
+        
+    }
+   
+    # AR.data = as.data.frame(median.cor.tfs)
+    # AR.data$TF = rownames(AR.data)
+    # 
+    # output.global.TFs = merge(output.global.TFs, AR.data, by = "TF",all.x = TRUE)
+    # 
+    # output.global.TFs$classification = ifelse(is.na(output.global.TFs$median.cor.tfs), "not-expressed",
+    #                                         ifelse(output.global.TFs$median.cor.tfs <= act.rep.thres[1], "repressor",
+    #                                                ifelse(output.global.TFs$median.cor.tfs > act.rep.thres[2], "activator", "undetermined")))
+    # 
+    # output.global.TFs$classification = factor(output.global.TFs$classification, levels = names(par.l$colorCategories))
+    # 
+    # 
+    # 
+    # 
+    
+    # TODO: for each TFBS, a p-value and a correlation value
+    colnameClassification    = paste0("classification")
+    colnameMedianCor         = paste0("median.cor.tfs")
+    colnameClassificationPVal= paste0("classification_distr_rawP")
     
     AR.data = as.data.frame(median.cor.tfs)
     AR.data$TF = rownames(AR.data)
+    colnames(AR.data)[1] = colnameMedianCor
     
+    output.global.TFs[,colnameMedianCor] = NULL
     output.global.TFs = merge(output.global.TFs, AR.data, by = "TF",all.x = TRUE)
     
-    output.global.TFs$classification = ifelse(is.na(output.global.TFs$median.cor.tfs), "not-expressed",
-                                            ifelse(output.global.TFs$median.cor.tfs <= act.rep.thres[1], "repressor",
-                                                   ifelse(output.global.TFs$median.cor.tfs > act.rep.thres[2], "activator", "undetermined")))
     
-    output.global.TFs$classification = factor(output.global.TFs$classification, levels = names(par.l$colorCategories))
+    # Merge new ones into old
+    for (thresCur in names(act.rep.thres.l)) {
+        thresCur.v = act.rep.thres.l[[thresCur]]
+        colnameClassificationCur = paste0(colnameClassification, "_q", thresCur)
+        output.global.TFs[, colnameClassificationCur] = ifelse(is.na(output.global.TFs[,colnameMedianCor]), "not-expressed",
+                                                               ifelse(output.global.TFs[,colnameMedianCor] <= thresCur.v[1], "repressor",
+                                                                      ifelse(output.global.TFs[,colnameMedianCor] >= thresCur.v[2], "activator", "undetermined")))
+        output.global.TFs[, colnameClassificationCur] = factor(output.global.TFs[, colnameClassificationCur], levels = names(par.l$colorCategories))
+        
+    }
+    
+    
+    output.global.TFs[,colnameClassificationPVal] = NULL
+    # Do a Wilcoxon test for each TF as a 2nd filtering criterion
+    for (TFCur in colnames(t.cor.sel.matrix)) {
+        
+        rowNo = which(output.global.TFs$TF == TFCur)
+        
+        # Removing NAs actually makes a difference, as these are "artifical" anyway here due to the two matrices let's remove them
+        dataMotif      = na.omit(t.cor.sel.matrix[,TFCur])
+        dataBackground = na.omit(t.cor.sel.matrix.non[,TFCur])
+        
+        # Test the distributions
+        if (output.global.TFs[rowNo, colnameMedianCor] > 0) {
+            alternativeTest = "greater"
+        } else {
+            alternativeTest = "less"
+        }
+        
+        testResults = wilcox.test(dataMotif, dataBackground, alternative = alternativeTest)
+        
+        stopifnot(length(rowNo) == 1)
+        output.global.TFs[rowNo,colnameClassificationPVal] = testResults$p.value
+        
+    }
+    
+    ################################################
+    # POST-FILTER: CHANGE SOME TFs TO UNDETERMINED #
+    ################################################
+    
+    par.l$thresholds_pvalue_Wilcoxon = 0.05
+    # Change the classification with the p-value from the distribution test
+    
+    colnameClassificationPVal = paste0("classification_distr_rawP")
+    
+    for (thresholdCur in c(0.1, 0.05, 0.01, 0.001)) {
+        
+        flog.info(paste0("Post filter: Doing Wilcoxon test for threshold ", thresholdCur))
+        
+        colnameClassification      = paste0("classification_q", thresholdCur)
+        colnameClassificationFinal = paste0("classification_q", thresholdCur, "_final")
+        
+        output.global.TFs[,colnameClassificationFinal] = output.global.TFs[,colnameClassification]
+        
+        TFs_to_change = dplyr::filter(output.global.TFs, (!!as.name(colnameClassification) == "activator" | !!as.name(colnameClassification) == "repressor") & 
+                                   !!as.name( colnameClassificationPVal) > !!par.l$thresholds_pvalue_Wilcoxon)$TF
+        
+        # Filter some TFs to be undetermined
+        if (length(TFs_to_change) > 0) {
+            flog.info(paste0(" Changing the following TFs to 'undetermined' because they were classified as either activator or repressor before but the Wilcoxon test was not significant: ", paste0(TFs_to_change, collapse = ",")))
+
+            output.global.TFs[which(output.global.TFs$TF  %in% TFs_to_change), colnameClassificationFinal] = "undetermined"
+        }
+
+        
+    }
+        
+    
+    
+    
+    
     
     ####################
     ####################
@@ -697,105 +757,101 @@ if (par.l$plotRNASeqClassification) {
     pdf(file = par.l$files_plotDiagnostic[2], width = 3, height = 8)
     xlab="median pearson correlation (r)"
     ylab=""
-    xlim= c(-0.2,0.2)
+    xlim= c(-max(abs(range(median.cor.tfs))) - 0.05, max(abs(range(median.cor.tfs))) + 0.05)
     ylim=c(1,length(median.cor.tfs.non))
     
     par(mfrow=c(1,1))
     
-    plot(median.cor.tfs.non[names(median.cor.tfs)], 1:length(median.cor.tfs.non),
-         xlim=xlim,
-         ylim=ylim,
-         main="",
-         xlab=xlab,
-         ylab=ylab,
-         col=adjustcolor("darkgrey",alpha=1),
-         pch=16,
-         cex=0.5,
-         axes = FALSE)
-    points(median.cor.tfs, 1:length(median.cor.tfs),
-           pch=16,
-           col=ifelse(median.cor.tfs>act.rep.thres[2], par.l$colorCategories["activator"] ,ifelse(median.cor.tfs<act.rep.thres[1], par.l$colorCategories["repressor"], par.l$colorCategories["undetermined"])), 
-           cex=0.5
-    ) 
-    text(x =c((act.rep.thres[1]-0.01),(act.rep.thres[2]+0.01)),
-         y=c((length(median.cor.tfs.non)+5),(length(median.cor.tfs.non)+5)), pos=c(2,4),
-         labels =c("5th\nPercentile","95th\nPercentile"),cex=0.7, col=c("black","black"))
-    abline(v=act.rep.thres[1], col=par.l$colorCategories["repressor"])
-    abline(v=act.rep.thres[2], col=par.l$colorCategories["activator"])
-    axis(side = 1, lwd = 1, line = 0, at = c(-0.2,0,0.2), cex=1)
+    for (thresCur in names(act.rep.thres.l)) {
+        thresCur.v = act.rep.thres.l[[thresCur]]
+        
+        thresCur_upper = (1 - as.numeric(thresCur)) * 100
+        thresCur_lower = as.numeric(thresCur) * 100
+        
+        
+        plot(median.cor.tfs.non[names(median.cor.tfs)], 1:length(median.cor.tfs.non),
+             xlim=xlim, ylim=ylim, main="", xlab=xlab, ylab=ylab,
+             col=adjustcolor("darkgrey",alpha=1), pch = 16, cex = 0.5,axes = FALSE)
+        points(median.cor.tfs, 1:length(median.cor.tfs),
+               pch=16,  cex=0.5, 
+               col=ifelse(median.cor.tfs>thresCur.v[2], par.l$colorCategories["activator"] ,ifelse(median.cor.tfs<thresCur.v[1], par.l$colorCategories["repressor"], par.l$colorCategories["undetermined"]))
+        ) 
+        text(x =c((thresCur.v[1]-0.01),(thresCur.v[2]+0.01)),
+             y=c((length(median.cor.tfs.non)+5),(length(median.cor.tfs.non)+5)), pos=c(2,4),
+             labels =c(paste0(thresCur_lower, "\npercentile"), paste0(thresCur_upper, "\npercentile")),cex=0.7, col=c("black","black"))
+        abline(v=thresCur.v[1], col=par.l$colorCategories["repressor"])
+        abline(v=thresCur.v[2], col=par.l$colorCategories["activator"])
+        axis(side = 1, lwd = 1, line = 0, at = c(-0.2,0,0.2), cex=1)
+        
+    }
     
+    
+    
+    heatmap.act.rep(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, cor.m, par.l, median.cor.tfs, median.cor.tfs.non, act.rep.thres.l)
 
-    heatmap.act.rep(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp)
     dev.off()
-    
 
-    # Filter genes
-    samples_cond1 = colData(dd)$SampleID[which(colData(dd)$conditionSummary == levels(colData(dd)$conditionSummary)[1])]
-    samples_cond2 = colData(dd)$SampleID[which(colData(dd)$conditionSummary == levels(colData(dd)$conditionSummary)[2])]
-    
-    nMin = par.l$filter_minCountsPerCondition
-    idx <- (rowMeans(dd_counts[,samples_cond1]) > nMin | rowMeans(dd_counts[,samples_cond2]) > nMin) & rowMedians(dd_counts) > 0
-    dd.filt = dd[idx,]
-    dd.filt <- DESeq(dd.filt)
-    
-    # The variable conditionComparison already has the reversed order as compared to the config file
-    # Process results and enforce the same comparison as was done before
-    res.peaks.filt = dd.filt %>%
-                        results(contrast = c(variableToPermute, conditionComparison[1], conditionComparison[2])) %>% 
-                        as.data.frame() %>% 
-                        rownames_to_column("ENSEMBL") %>% 
-                        as.tibble()
 
-    expression.df.filt = counts(dd.filt , normalized=TRUE) %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
-    expresssion.df.all = full_join(expression.df.filt, res.peaks.filt, by = 'ENSEMBL')
+    # Process results
+    res.peaks.filt  = results(dd.filt) %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
+
+  
+    # TODO
+    # In ivans version, he used a non-filtered HOCOMOCO table. I however filter it before, so that some ENSEMBL IDs might already be filtered
     
-    # NOTE: In Ivans original version, he used a non-filtered HOCOMOCO table. I however filter it before, so that some ENSEMBL IDs might already be filtered
+    TF.specific = left_join(HOCOMOCO_mapping.subset.df, res.peaks.filt, by = "ENSEMBL") %>% dplyr::filter(!is.na(baseMean))
     
-    TF.specific = left_join(HOCOMOCO_mapping.subset.df, res.peaks.filt, by = "ENSEMBL") %>% filter(!is.na(baseMean))
-    
-    # Some genes might have NA for adjp, that is expected and explained here: https://support.bioconductor.org/p/76144/
-    # As we do not use the adjusted p-value anyway, we can ignore this
+    if (nrow(TF.specific) == 0) {
+        message = "The Ensembl IDs from the translation table do not match with the IDs from the RNA-seq counts table."
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+    }
+
+    # TODO:_ deal with NAs, where do they come from?
 
     output.global.TFs$weighted_meanDifference = as.numeric(output.global.TFs$weighted_meanDifference)
     
-    output.global.TFs.merged = output.global.TFs %>%
-      filter(classification != "not-expressed")  %>%
-      full_join(TF.specific, by = c( "TF" = "HOCOID"))  %>%
-      # Transform the base mean and normalize them to represent them as a dot with a particular (minimum) size.
-      mutate(baseMeanNorm = (baseMean - min(baseMean, na.rm = TRUE)) / (max(baseMean, na.rm = TRUE) - min(baseMean, na.rm = TRUE)) + par.l$minPointSize)  %>%
-      filter(!is.na(classification)) 
+    pdf(par.l$files_plotDiagnostic[3])
+    thresholds  = c(0.1, 0.05, 0.01, 0.001)
     
-
     #######################################
     # Correlation plots for the 3 classes #
     #######################################
-    
-    pdf(par.l$files_plotDiagnostic[3])
-    for (classificationCur in unique(output.global.TFs.merged$classification)) {
-      
-      output.global.TFs.cur = filter(output.global.TFs.merged, classification == classificationCur)
-      
-      cor.res.l = list()
-      for (corMethodCur in c("pearson", "spearman")) {
-        cor.res.l[[corMethodCur]] = cor.test(output.global.TFs.cur$weighted_meanDifference, output.global.TFs.cur$log2FoldChange, method = corMethodCur)
-      }
-      
-      titleCur = paste0(classificationCur, ": R=", 
-                        signif(cor.res.l[["pearson"]]$estimate, 2), "/", 
-                        signif(cor.res.l[["spearman"]]$estimate, 2), ", p-value ", 
-                        signif(cor.res.l[["pearson"]]$p.value,2),  "/", 
-                        signif(cor.res.l[["spearman"]]$p.value,2), "\n(Pearson/Spearman)")
-      
-      g = ggplot(output.global.TFs.cur, aes(weighted_meanDifference, log2FoldChange)) + geom_point(aes(size = baseMeanNorm)) + 
-        geom_smooth(method = par.l$regressionMethod, color = par.l$colorCategories[classificationCur]) + 
-        ggtitle(titleCur) + 
-        ylab("log2 fold-change RNA-seq") + 
-        theme_bw() + theme(plot.title = element_text(hjust = 0.5))
-      plot(g)
-      
+    for (thresholdCur in thresholds) {
+        
+        colnameClassificationCur = paste0("classification_q", thresholdCur, "_final")
+        
+        output.global.TFs.merged = output.global.TFs %>%
+          dplyr::filter(!!as.name(colnameClassificationCur) != "not-expressed")  %>%
+          full_join(TF.specific, by = c( "TF" = "HOCOID"))  %>%
+          mutate(baseMeanNorm = (baseMean - min(baseMean, na.rm = TRUE)) / (max(baseMean, na.rm = TRUE) - min(baseMean, na.rm = TRUE)) + par.l$minPointSize)   %>%
+          dplyr::filter(!is.na(!!as.name(colnameClassificationCur))) 
+
+       
+        for (classificationCur in unique(output.global.TFs.merged[,colnameClassificationCur])) {
+          
+          output.global.TFs.cur = dplyr::filter(output.global.TFs.merged, !!as.name(colnameClassificationCur) == classificationCur)
+          
+          cor.res.l = list()
+          for (corMethodCur in c("pearson", "spearman")) {
+            cor.res.l[[corMethodCur]] = cor.test(output.global.TFs.cur$weighted_meanDifference, output.global.TFs.cur$log2FoldChange, method = corMethodCur)
+          }
+          
+          titleCur = paste0(classificationCur, ": R=", 
+                            signif(cor.res.l[["pearson"]]$estimate, 2), "/", 
+                            signif(cor.res.l[["spearman"]]$estimate, 2), ", p-value ", 
+                            signif(cor.res.l[["pearson"]]$p.value,2),  "/", 
+                            signif(cor.res.l[["spearman"]]$p.value,2), "\n(Pearson/Spearman, stringency: ", thresholdCur, ")")
+          
+          g = ggplot(output.global.TFs.cur, aes(weighted_meanDifference, log2FoldChange)) + geom_point(aes(size = baseMeanNorm)) + 
+            geom_smooth(method = par.l$regressionMethod, color = par.l$colorCategories[classificationCur]) + 
+            ggtitle(titleCur) + 
+            ylab("log2 fold-change RNA-seq") + 
+            theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+          plot(g)
+          
+        }
     }
 
-    
     #############################
     # Density plots for each TF #
     #############################
@@ -812,23 +868,19 @@ if (par.l$plotRNASeqClassification) {
       plot(density(dataMotif, bw=0.1, na.rm=TRUE), xlim=c(-1,1), ylim=c(0,2),
            main=, mainLabel, lwd=2.5, col="red", axes = FALSE, xlab = "Pearson correlation")
       abline(v=0, col="black", lty=2)
-      legend("topleft",box.col = adjustcolor("white",alpha.f = 0),
-             legend = c("Motif","Non-motif"),
-             lwd=c(2,2),cex = 0.8,
-             col=c("red","darkgrey"), lty=c(1,1) )
+      legend("topleft",box.col = adjustcolor("white",alpha.f = 0), legend = c("Motif","Non-motif"), lwd=c(2,2),cex = 0.8, col=c("red","darkgrey"), lty=c(1,1) )
       axis(side = 1, lwd = 1, line = 0)
       axis(side = 2, lwd = 1, line = 0, las = 1)
-      
       lines(density(dataBackground, bw=0.1, na.rm=T), lwd=2.5, col="darkgrey")
       
     } 
     dev.off()
-    
+
 } else {
   classesList.l = list(c())
 }
 
-output.global.TFs$yValue = transform_yValues(output.global.TFs$pvalueAdj)
+output.global.TFs$yValue = transform_yValues(output.global.TFs$pvalueAdj, addPseudoCount = TRUE, nPermutations = par.l$nPermutations)
 output.global.TFs.origReal = output.global.TFs
 
 #########################################
@@ -836,9 +888,9 @@ output.global.TFs.origReal = output.global.TFs
 #########################################
 
 # Set the page dimensions to the maximum across all plotted variants
-output.global.TFs.filteredSummary = filter(output.global.TFs, pvalue <= max(par.l$significanceThresholds))
+output.global.TFs.filteredSummary = dplyr::filter(output.global.TFs, pvalue <= max(par.l$significanceThresholds))
 
-nTF_label = min(par.l$maxTFsToDraw, nrow(output.global.TFs.filteredSummary))
+nTF_label = min(par.l$maxTFsToLabel, nrow(output.global.TFs.filteredSummary))
 
 TFLabelSize = ifelse(nTF_label < 20, 8,
                      ifelse(nTF_label < 40, 7,
@@ -847,183 +899,215 @@ TFLabelSize = ifelse(nTF_label < 20, 8,
                           ifelse(nTF_label < 60, 4, 3)))))
 
 
-################
-# VOLCANO PLOT #
-################
-allPlots.l = list("volcano" = list())
+
 variableXAxis = "weighted_meanDifference"
 
-for (significanceThresholdCur in par.l$significanceThresholds) {
-  
-  pValThrStr = as.character(significanceThresholdCur)
+thresholds = "NA" # not applicable here
+if (par.l$plotRNASeqClassification) {
+    thresholds  = c(0.1, 0.05, 0.01, 0.001)
+}
 
-  for (showClasses in classesList.l) {
+allPlots.l = list()
 
-    output.global.TFs = output.global.TFs.origReal %>%
-        mutate( pValueAdj_log10 = transform_yValues(pvalueAdj),
-                pValue_log10 = transform_yValues(pvalue),
-                pValueAdj_sig = pvalueAdj <= significanceThresholdCur,
-                pValue_sig = pvalue <= significanceThresholdCur) 
-       
-    if (par.l$plotRNASeqClassification) {
-        output.global.TFs = filter(output.global.TFs, classification %in% showClasses)
-    }
+for (thresholdCur in thresholds) {
     
-    for (pValueStrCur in c("pvalue", "pvalueAdj")) {
-        
-        
-        if (pValueStrCur == "pvalue") {
-            
-            pValueScoreCur = "pValue_log10"
-            pValueSigCur = "pValue_sig"
-            pValueStrLabel = "raw p-value"
-            
-            ggrepel_df = filter(output.global.TFs, pValue_sig == TRUE)
-            maxPValue = max(output.global.TFs$pValue_log10, na.rm = TRUE)
-            
-        } else {
-            
-            pValueScoreCur = "pValueAdj_log10"
-            pValueSigCur = "pValueAdj_sig"
-            pValueStrLabel = "adj. p-value"
-            
-            ggrepel_df = filter(output.global.TFs, pValueAdj_sig == TRUE)
-            maxPValue = max(output.global.TFs$pValueAdj_log10, na.rm = TRUE)
-        }
+    flog.info(paste0("Stringency threshold for classification: ", thresholdCur))
     
-        
-        # Increase the ymax a bit more
-        ymax = max(transform_yValues(significanceThresholdCur), maxPValue, na.rm = TRUE) * 1.1
-        alphaValueNonSign = 0.3
-        
-            
-        # Reverse here because negative values at left mean that the condition that has been specified in the beginning is higher. 
-        # Reverse the rev() that was done before for this plot therefore to restore the original order
-        labelsConditionsNew = rev(conditionComparison)
-    
-        g = ggplot()
-        
-        if (par.l$plotRNASeqClassification) {
-          g = g + geom_point(data = output.global.TFs, aes_string("weighted_meanDifference", pValueScoreCur, alpha = pValueSigCur, size = "TFBS", fill = "classification"), shape=21, stroke = 0.5, color = "black") +  scale_fill_manual("TF class", values = par.l$colorCategories)
-          
-          g = g +
-              geom_rect(aes(xmin = -Inf,xmax = 0,ymin = -Inf, ymax = Inf, color = par.l$colorConditions[2]),
-                        alpha = .3, fill = par.l$colorConditions[2], size = 0) +
-              geom_rect(aes(xmin = 0, xmax = Inf, ymin = -Inf,ymax = Inf, color = par.l$colorConditions[1]),                                                                                   alpha = .3, fill = par.l$colorConditions[1], size = 0) + 
-              scale_color_manual(name = 'TF activity higher in', values = par.l$colorConditions, labels = conditionComparison)
-          
-        } else {
-            
-          g = g + geom_point(data = output.global.TFs, aes_string("weighted_meanDifference", pValueScoreCur, alpha = pValueSigCur, size = "TFBS"), shape=21, stroke = 0.5, color = "black")
-          g = g + geom_rect(aes(xmin = -Inf,
-                                xmax = 0,
-                                ymin = -Inf, 
-                                ymax = Inf, fill = par.l$colorConditions[2]),
-                            alpha = .3) + 
-              geom_rect(aes(xmin = 0,
-                            xmax = Inf,
-                            ymin = -Inf, 
-                            ymax = Inf, fill = par.l$colorConditions[1]),
-                        alpha = .3)
-          g = g + scale_fill_manual(name = 'TF activity higher in', values = rev(par.l$colorConditions), labels = labelsConditionsNew)
-        }
-     
-        g = g + ylim(-0.1,ymax) + 
-            ylab(paste0(transform_yValues_caption(), " (", pValueStrLabel, ")")) + 
-            xlab("weighted mean difference") + 
-            scale_alpha_manual(paste0(pValueStrLabel, " < ", significanceThresholdCur), values = c(alphaValueNonSign, 1), labels = c("no", "yes")) + 
-            geom_hline(yintercept = transform_yValues(significanceThresholdCur), linetype = "dotted") 
-        
-        if (nrow(ggrepel_df) <= par.l$maxTFsToDraw) {
-            
-            if (par.l$plotRNASeqClassification) {
-                g = g +  geom_label_repel(data = ggrepel_df, aes_string("weighted_meanDifference", pValueScoreCur, label = "TF", fill = "classification"),
-                                          size = TFLabelSize, fontface = 'bold', color = 'white',
-                                          segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
-                                          label.padding = unit(0.2, "lines"), # how thick is connectin line
-                                          nudge_y = 0.05, nudge_x = 0,  # how far from center points
-                                          segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
-            } else {
-                g = g +  geom_label_repel(data = ggrepel_df, aes_string("weighted_meanDifference", pValueScoreCur, label = "TF"),
-                                          size = TFLabelSize, fontface = 'bold', color = 'black',
-                                          segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
-                                          label.padding = unit(0.2, "lines"), # how thick is connectin line
-                                          nudge_y = 0.05, nudge_x = 0,  # how far from center points
-                                          segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
-            }
-        } else {
-            
-            flog.warn(paste0("Not labeling significant TFs, maximum of ", par.l$maxTFsToDraw, " exceeded for ", pValThrStr, " and ", pValueStrCur))
-            
-            
-            if (nrow(ggrepel_df) > par.l$maxTFsToDraw) {
-                
-                labelPlot = paste0("*TF labeling skipped because number of significant TFs\nexceeds the maximum of ", par.l$maxTFsToDraw, " (", nrow(ggrepel_df), ")")
-                flog.warn(labelPlot)
-                
-                g = g + annotate("text", label = labelPlot, x = 0, y = ymax, size = 3)
-                
-            }
-        }
+    allPlots.l[[as.character(thresholdCur)]] = list()
+    colnameClassificationFinal = paste0("classification_q", thresholdCur, "_final")
 
-          g = g + theme_bw() + 
-              theme(axis.text.x = element_text(size=rel(1.5)),
-                    axis.text.y = element_text(size=rel(1.5)), 
-                    axis.title.x = element_text(size=rel(1.5)),
-                    axis.title.y = element_text(size=rel(1.5)),
-                    legend.title=element_text(size=rel(1.5)), 
-                    legend.text=element_text(size=rel(1.5))) 
-          
-          if (par.l$plotRNASeqClassification) {
-            g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
-                           fill = guide_legend(override.aes = list(size=5), order = 3),
-                           color = guide_legend(override.aes = list(size=5), order = 1))
-            
-            allPlots.l[["volcano"]] [[pValThrStr]] [[paste0(showClasses,collapse = "-")]] [[pValueStrCur]] = g
-          } else {
-            g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
-                           fill = guide_legend(override.aes = list(size=5), order = 3))
-     
-            
-            allPlots.l[["volcano"]] [[pValThrStr]] [[pValueStrCur]] = g
-          }
-          
-      } # end separately for raw and adjusted p-values
-        
-    } # end for all showClasses
-
-} # end for different significance thresholds
-
-
-####################
-# VOLCANO PLOT PDF #
-####################
-height = width = max(nTF_label / 15 , par.l$volcanoPlot_minDimensions)
-pdf(file = par.l$file_plotVolcano, height = height, width = width, useDingbats = FALSE)
-
-
-for (pValueStrCur in c("pvalueAdj", "pvalue")) {
-    
     for (significanceThresholdCur in par.l$significanceThresholds) {
       
+      pValThrStr = as.character(significanceThresholdCur)
+    
       for (showClasses in classesList.l) {
-
+    
+        output.global.TFs = output.global.TFs.origReal %>%
+            mutate( pValueAdj_log10 = transform_yValues(pvalueAdj, addPseudoCount = TRUE, nPermutations = par.l$nPermutations),
+                    pValue_log10 = transform_yValues(pvalue, addPseudoCount = TRUE, nPermutations = par.l$nPermutations),
+                    pValueAdj_sig = pvalueAdj <= significanceThresholdCur,
+                    pValue_sig = pvalue <= significanceThresholdCur) 
+           
+        if (par.l$plotRNASeqClassification) {
+            #output.global.TFs = filter(output.global.TFs, classification %in% showClasses)
+             output.global.TFs = dplyr::filter(output.global.TFs, !!as.name(colnameClassificationFinal) %in% showClasses)
+    
+        }
+        
+        for (pValueStrCur in c("pvalue", "pvalueAdj")) {
+            
+            if (pValueStrCur == "pvalue") {
+                
+                pValueScoreCur = "pValue_log10"
+                pValueSigCur = "pValue_sig"
+                pValueStrLabel = "raw p-value"
+                
+                ggrepel_df = dplyr::filter(output.global.TFs, pValue_sig == TRUE)
+                maxPValue = max(output.global.TFs$pValue_log10, na.rm = TRUE)
+                
+            } else {
+                
+                pValueScoreCur = "pValueAdj_log10"
+                pValueSigCur = "pValueAdj_sig"
+                pValueStrLabel = "adj. p-value"
+                
+                ggrepel_df = dplyr::filter(output.global.TFs, pValueAdj_sig == TRUE)
+                maxPValue = max(output.global.TFs$pValueAdj_log10, na.rm = TRUE)
+            }
+        
+            # Increase the ymax a bit more
+            ymax = max(transform_yValues(significanceThresholdCur, addPseudoCount = TRUE, nPermutations = par.l$nPermutations), maxPValue, na.rm = TRUE) * 1.1
+            alphaValueNonSign = 0.3
+            
+            # Reverse here because negative values at left mean that the condition that has been specified in the beginning is higher. 
+            # Reverse the rev() that was done before for this plot therefore to restore the original order
+            labelsConditionsNew = rev(conditionComparison)
+        
+            g = ggplot()
+            
+            label_nameChange = 'TF activity higher in'
+            if (comparisonMode != "pairwise") {
+                label_nameChange = 'Change with increasing\nvalues of conditionSummary'
+            }
+            
+            if (par.l$plotRNASeqClassification) {
+            # TODO: finalize
+              # g = g + geom_point(data = output.global.TFs, aes_string("weighted_meanDifference", pValueScoreCur, 
+              #        alpha = pValueSigCur, size = "TFBS", fill = "classification"),  shape=21, stroke = 0.5, color = "black") +  
+              #     scale_fill_manual("TF class", values = par.l$colorCategories)
+             labelLegendCur = paste0("TF class (stringency: ", thresholdCur, ")")
+              g = g + geom_point(data = output.global.TFs, aes_string("weighted_meanDifference", pValueScoreCur, 
+                     alpha = pValueSigCur, size = "TFBS", fill = colnameClassificationFinal),  shape=21, stroke = 0.5, color = "black") +  
+                  scale_fill_manual(labelLegendCur, values = par.l$colorCategories)
+              
+              g = g + geom_rect(aes(xmin = -Inf,xmax = 0,ymin = -Inf, ymax = Inf, color = par.l$colorConditions[2]),
+                            alpha = .3, fill = par.l$colorConditions[2], size = 0) +
+                      geom_rect(aes(xmin = 0, xmax = Inf, ymin = -Inf,ymax = Inf, color = par.l$colorConditions[1]), alpha = .3, fill = par.l$colorConditions[1], size = 0) + 
+                      scale_color_manual(name = label_nameChange, values = par.l$colorConditions, labels = conditionComparison)
+              
+            } else {
+                
+              g = g + geom_point(data = output.global.TFs, aes_string("weighted_meanDifference", pValueScoreCur, alpha = pValueSigCur, size = "TFBS"), shape=21, stroke = 0.5, color = "black")
+              g = g + geom_rect(aes(xmin = -Inf, xmax = 0,   ymin = -Inf, ymax = Inf, fill = par.l$colorConditions[2]), alpha = .3) + 
+                      geom_rect(aes(xmin = 0,    xmax = Inf, ymin = -Inf, ymax = Inf, fill = par.l$colorConditions[1]), alpha = .3)
+              g = g + scale_fill_manual(name = 'TF activity higher in', values = rev(par.l$colorConditions), labels = labelsConditionsNew)
+            }
+         
+            g = g + ylim(-0.1,ymax) + 
+                ylab(paste0(transform_yValues_caption(), " (", pValueStrLabel, ")")) + 
+                xlab("weighted mean difference") + 
+                scale_alpha_manual(paste0(pValueStrLabel, " < ", significanceThresholdCur), values = c(alphaValueNonSign, 1), labels = c("no", "yes")) + 
+                geom_hline(yintercept = transform_yValues(significanceThresholdCur, addPseudoCount = TRUE, nPermutations = par.l$nPermutations), linetype = "dotted") 
+            
+            if (nrow(ggrepel_df) <= par.l$maxTFsToLabel) {
+                
+                if (par.l$plotRNASeqClassification) {
+                    # TODO: Originally "classification" 
+                    g = g +  geom_label_repel(data = ggrepel_df, aes_string("weighted_meanDifference", pValueScoreCur, label = "TF", fill = colnameClassificationFinal),
+                                              size = TFLabelSize, fontface = 'bold', color = 'white',
+                                              segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
+                                              label.padding = unit(0.2, "lines"), # how thick is connectin line
+                                              nudge_y = 0.05, nudge_x = 0,  # how far from center points
+                                              segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
+                } else {
+                    g = g +  geom_label_repel(data = ggrepel_df, aes_string("weighted_meanDifference", pValueScoreCur, label = "TF"),
+                                              size = TFLabelSize, fontface = 'bold', color = 'black',
+                                              segment.size = 0.3, box.padding = unit(0.2, "lines"), max.iter = 5000,
+                                              label.padding = unit(0.2, "lines"), # how thick is connectin line
+                                              nudge_y = 0.05, nudge_x = 0,  # how far from center points
+                                              segment.alpha = .8, segment.color = par.l$plot_grayColor, show.legend = FALSE)
+                }
+            } else {
+                
+                flog.warn(paste0(" Not labeling significant TFs, maximum of ", par.l$maxTFsToLabel, " exceeded for ", pValThrStr, " and ", pValueStrCur))
+                
+                labelPlot = paste0("*TF labeling skipped because number of significant TFs\nexceeds the maximum of ", par.l$maxTFsToLabel, " (", nrow(ggrepel_df), ")")
+    
+                g = g + annotate("text", label = labelPlot, x = 0, y = ymax, size = 3)
+                
+            } # end else
+    
+              g = g + theme_bw() + 
+                  theme(axis.text.x = element_text(size=rel(1.5)), axis.text.y = element_text(size=rel(1.5)), 
+                        axis.title.x = element_text(size=rel(1.5)), axis.title.y = element_text(size=rel(1.5)),
+                        legend.title=element_text(size=rel(1.5)), legend.text=element_text(size=rel(1.5))) 
+              
               if (par.l$plotRNASeqClassification) {
-                  plot(allPlots.l[["volcano"]] [[as.character(significanceThresholdCur)]] [[paste0(showClasses,collapse = "-")]] [[pValueStrCur]])
-              } else {
-                  plot(allPlots.l[["volcano"]] [[as.character(significanceThresholdCur)]] [[pValueStrCur]])
+                g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
+                               fill = guide_legend(override.aes = list(size=5), order = 3),
+                               color = guide_legend(override.aes = list(size=5), order = 1))
+                
+                allPlots.l[[as.character(thresholdCur)]] [[pValThrStr]] [[paste0(showClasses,collapse = "-")]] [[pValueStrCur]] = g
+              
+                } else {
+                g = g + guides(alpha = guide_legend(override.aes = list(size=5), order = 2),
+                               fill = guide_legend(override.aes = list(size=5), order = 3))
+         
+                allPlots.l[[as.character(thresholdCur)]] [[pValThrStr]] [[pValueStrCur]] = g
               }
-      }
+              
+          } # end separately for raw and adjusted p-values
+            
+        } # end for all showClasses
+    
+    } # end for different significance thresholds
+    
+    
+    ####################
+    # VOLCANO PLOT PDF #
+    ####################
+    height = width = max(nTF_label / 15 , par.l$volcanoPlot_minDimensions)
+    
+    if (par.l$plotRNASeqClassification) {
+        
+        pdf(file = par.l$file_plotVolcano, height = height, width = width, useDingbats = FALSE)
+        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+        message = paste0("This file is intentionally empty.\n",
+                         "\nSee the other similarly named files with additional \".q\" for results.\n",
+                        "\nIncreasing q-values indicate higher stringency\n and therefore more TFs are classified as undetermined.\n")
+        text(x = 0.5, y = 0.5, message, cex = 0.9, col = "black")
+        dev.off()
+        
+
+        fileCur = gsub(".pdf", paste0(".q", thresholdCur, ".pdf"), par.l$file_plotVolcano)
+        pdf(file = fileCur, height = height, width = width, useDingbats = FALSE)
+        
+    } else {
+        
+        # Only one variant here
+        pdf(file = par.l$file_plotVolcano, height = height, width = width, useDingbats = FALSE)
+
     }
-}
-dev.off()
+    
+    
+    
+    for (pValueStrCur in c("pvalueAdj", "pvalue")) {
+        
+        for (significanceThresholdCur in par.l$significanceThresholds) {
+          
+          for (showClasses in classesList.l) {
+    
+                  if (par.l$plotRNASeqClassification) {
+                      plot(allPlots.l[[as.character(thresholdCur)]] [[as.character(significanceThresholdCur)]] [[paste0(showClasses,collapse = "-")]] [[pValueStrCur]])
+                  } else {
+                      plot(allPlots.l[[as.character(thresholdCur)]] [[as.character(significanceThresholdCur)]] [[pValueStrCur]])
+                  }
+          } # end for each class
+        } # end for each threshold
+    } # end for both raw and adjusted p-values
+    dev.off()
 
+    
+    
+} # end for all stringency thresholds for the classification
 
+#########################
+# FINALLY, SAVE TO DISK #
+#########################
 output.global.TFs.origReal = dplyr::select(output.global.TFs.origReal, -one_of("permutation", "yValue"))
 output.global.TFs.origReal.transf = dplyr::mutate_if(output.global.TFs.origReal, is.numeric, as.character)
 write_tsv(output.global.TFs.origReal.transf, path = par.l$file_output_summary, col_names = TRUE)
 saveRDS(allPlots.l, file = par.l$file_output_plots)
 
 .printExecutionTime(start.time)
-
 flog.info("Session info: ", sessionInfo(), capture = TRUE)

@@ -22,7 +22,7 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
-checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "csaw", "checkmate", "limma", "tools"), verbose = FALSE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "DESeq2", "csaw", "checkmate", "limma", "tools", "matrixStats"), verbose = FALSE)
 
 
 
@@ -84,7 +84,7 @@ par.l$nPermutations = snakemake@config$par_general$nPermutations
 checkAndLogWarningsAndErrors(par.l$nPermutations, checkIntegerish(par.l$nPermutations, lower = 0))
 
 par.l$conditionComparison  = snakemake@config$par_general$conditionComparison
-checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$conditionComparison, len = 1, min.chars = 3))
+checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$conditionComparison, len = 1))
 
 ## PARAMS ##
 checkAndLogWarningsAndErrors(snakemake@params,checkmate::checkList(snakemake@params, min.len = 1))
@@ -123,38 +123,16 @@ sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_type
 
 checkAndLogWarningsAndErrors(colnames(sampleData.df), checkSubset(c("bamReads"), colnames(sampleData.df)))
 
-conditionsVec = strsplit(par.l$conditionComparison, ",")[[1]]
-if (!testSubset(sampleData.df$conditionSummary, conditionsVec)) {
-  message = paste0("The specified elements for the parameter conditionComparison (", par.l$conditionComparison,   ") do not correspond to what is specified in the sample summary table (", paste0(unique(sampleData.df$conditionSummary), collapse = ","), "). All elements of conditionComparison must be present in the column conditionSummary.")
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+designComponents.l = checkDesignIntegrity(snakemake, par.l, sampleData.df)
+
+components3types   = designComponents.l$types
+variableToPermute  = designComponents.l$variableToPermute
+
+# Which of the two modes should be done, pairwise or quantitative?
+comparisonMode = "quantitative"
+if (components3types["conditionSummary"] == "logical" | components3types["conditionSummary"] == "factor") {
+    comparisonMode = "pairwise"
 }
-
-designFormula = as.formula(par.l$designFormula)
-formulaVariables = attr(terms(designFormula), "term.labels")
-
-# Extract the variable that defines the contrast. Always the last element in the formula
-variableToPermute = formulaVariables[length(formulaVariables)]
-
-par.l$designFormulaVariableTypes = gsub(" ", "", par.l$designFormulaVariableTypes)
-components = strsplit(par.l$designFormulaVariableTypes, ",")[[1]]
-checkAndLogWarningsAndErrors(components, checkVector(components, len = length(formulaVariables)))
-# Split further
-components2 = strsplit(components, ":")
-
-if (!all(sapply(components2,length) == 2)) {
-  
-  message = "The parameter \"designVariableTypes\" has not been specified correctly. It must contain all the variables that appear in the parameter \"designContrast\". See the documentation for details"
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-
-}
-
-components3 = unlist(lapply(components2, "[[", 1))
-components3types = tolower(unlist(lapply(components2, "[[", 2)))
-names(components3types) = components3
-checkAndLogWarningsAndErrors(sort(formulaVariables), checkSetEqual(sort(formulaVariables), sort(components3)))
-checkAndLogWarningsAndErrors(components3types, checkSubset(components3types, c("factor", "integer", "numeric", "logical")))
-
-datatypeVariableToPermute = components3types[variableToPermute]
 
 # Read and modify samples metadata
 sampleData.df = mutate(sampleData.df, name = file_path_sans_ext(basename(sampleData.df$bamReads)))
@@ -179,17 +157,11 @@ for (colnameCur in names(components3types)) {
   
 }
 
-# Change the conditionSummary specifically and enforce the direction as specified in the config file
-sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary, levels = conditionsVec)
-
-
-# If variable to permute is a factor, check that is has 2 levels 
-nLevels = length(unique(unlist(sampleData.df[,variableToPermute])))
-if (datatypeVariableToPermute == "factor" & nLevels != 2) {
-  message = paste0("The variable ", variableToPermute, " was specified as a factor, but it does not have two different levels but instead ", nLevels, ".")
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-}
-
+if (comparisonMode == "pairwise") {
+    
+    # Change the conditionSummary specifically and enforce the direction as specified in the config file
+    sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary, levels = strsplit(par.l$conditionComparison, ",")[[1]])
+} 
 
 
 ##############################
@@ -252,46 +224,81 @@ sampleData.l[["permutation0"]] = sampleData.df
 
 conditionCounter = table(sampleData.df[,variableToPermute])
 
-# Record the frequency of the conditions to determine how many permutations are possibler
-nSamplesRareCondition     = min(conditionCounter)
-nSamplesFrequentCondition = max(conditionCounter)
-nameRareCondition         = names(conditionCounter)[conditionCounter == min(conditionCounter)][1]
-nameFrequentCondition     = names(conditionCounter)[which(names(conditionCounter) != nameRareCondition)]
-nPermutationsTotal        = choose(nSamples, nSamplesFrequentCondition) # same as choose(nSamples, nSamplesRareCondition)
 
-if (nPermutationsTotal < par.l$nPermutations) {
+
+if (comparisonMode == "pairwise") {
+    
+    # Record the frequency of the conditions to determine how many permutations are possible
+    nSamplesRareCondition     = min(conditionCounter)
+    nSamplesFrequentCondition = max(conditionCounter)
+    nameRareCondition         = names(conditionCounter)[conditionCounter == min(conditionCounter)][1]
+    nameFrequentCondition     = names(conditionCounter)[which(names(conditionCounter) != nameRareCondition)]
+    nPermutationsTotal        = choose(nSamples, nSamplesFrequentCondition) # same as choose(nSamples, nSamplesRareCondition)
   
-  message = paste0("The total number of possible permutations is only ", nPermutationsTotal, ", but more have been requested. The value for the parameter nPermutations will be adjusted.")
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-  par.l$nPermutations = nPermutationsTotal
+} else {
+    
+    # The total number of permutations is calculated using "Permutations of multisets"
+    # nPermutationsTotal = factorial(nSamples)/product(factorial(conditionCounter))
+    # Alternatively, calculate as choose(nSamples, groupSize1)*choose(nSamples-groupSize1, groupSize2)* ... * choose(nSamples - groupSize1 -groupSize2 - ... - groupSize(n-2), groupSize(n-1))
+    # Generate a vector of the first components of the choose argument
+    productVec = nSamples - sapply(1:(length(conditionCounter)-1), function(x) {sum(conditionCounter[1:x])})
+    nPermutationsTotal = matrixStats::product(choose(c(nSamples, productVec),conditionCounter[-length(conditionCounter)])) # might be better because it does not calculate nSamples in the first place
+    
 }
 
-
+if (nPermutationsTotal < par.l$nPermutations) {
+    
+    message = paste0("The total number of possible permutations is only ", nPermutationsTotal, ", but more have been requested. The value for the parameter nPermutations will be adjusted.")
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    par.l$nPermutations = nPermutationsTotal
+}
+    
 # Permute samples beforehand here so that each call to a permutation is unique
 permutationsList.l = list()
 nPermutationsDone = 0
 failsafeCounter   = 0
 while (nPermutationsDone < par.l$nPermutations) {
+    
+    # TODO: Do not include the original, non-shuffled variant here
+    sampleCur = sample.int(nSamples)
+    
+    # Check whether this is a "new" permutation 
+    if (comparisonMode == "pairwise") {
+        
+        samplesRareCondShuffled  = sampleData.df$SampleID[which(sampleData.df$conditionSummary[sampleCur] == nameRareCondition)]
+        indexNameCur = paste0(sort(samplesRareCondShuffled), collapse = ",")
+        
+    } else {
+        
+        # Slighlty more complicated here because we may have more than two groups, do it per group then
+        
+        indexNameCur = ""
+        for (groupCur in 1:length(conditionCounter)) {
+            samplesRareCondShuffled  = sampleData.df$SampleID[which(sampleData.df$conditionSummary[sampleCur] == as.numeric(names(conditionCounter)[groupCur]))]
+            indexNameCurGroup = paste0(sort(samplesRareCondShuffled), collapse = ",")
+            indexNameCur = paste0(indexNameCur, indexNameCurGroup, "+")
+        }
+        
+    }
+    
+    
+    # Check if this permutation has already been used. If yes, produce a different one
+    
+    if (!indexNameCur %in% names(permutationsList.l)) {
+        failsafeCounter   = 0
+        permutationsList.l[[indexNameCur]] = sampleCur
+        nPermutationsDone = nPermutationsDone + 1
+    } else {
 
-  sampleCur = sample.int(nSamples)
-  samplesRareCondShuffled  = sampleData.df$SampleID[which(sampleData.df$conditionSummary[sampleCur] == nameRareCondition)]
-  indexNameCur = paste0(sort(samplesRareCondShuffled), collapse = ",")
-  
-  # Check if this permutation has already been used. If yes, produce a different one
+        failsafeCounter   =  failsafeCounter + 1
+        if (failsafeCounter > 5000) {
+            message = "Could not generate more permutations. This looks like a bug."
+            checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+        } 
+    }
+    
+} 
 
-  if (!indexNameCur %in% names(permutationsList.l)) {
-    failsafeCounter   = 0
-    permutationsList.l[[indexNameCur]] = sampleCur
-    nPermutationsDone = nPermutationsDone + 1
-  } else {
-    failsafeCounter   =  failsafeCounter + 1
-    if (failsafeCounter > 5000) {
-      message = "Could not generate more permutations. This looks like a bug."
-      checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-    } 
-  }
-  
-}
 
 ##############################################
 # RUN DESEQ TO OBTAIN NORMALIZED COUNTS ONLY #
@@ -365,8 +372,16 @@ cds.peaks.filt   = cds.peaks[rowMeans(counts(cds.peaks)) > 0, ]
 # DESeq log2fc are not used at all afterwards, as we currently only take the normalization factors to normalize the TFBS subsequently
 
 
-# The levels have to be reversed because the first element is the one appearing at the right of the plot, with positive values as. compared to the reference
-comparisonDESeq = rev(levels(sampleData.df$conditionSummary))
+if (comparisonMode == "pairwise") {
+    
+    # The levels have to be reversed because the first element is the one appearing at the right of the plot, with positive values as. compared to the reference
+    comparisonDESeq = rev(levels(sampleData.df$conditionSummary))
+    
+} else {
+    
+    comparisonDESeq = c("positive change", "negative change")
+}
+
 
 ##############
 # GET LOG2FC #
@@ -426,7 +441,16 @@ if (par.l$nPermutations == 0) {
   )
   
   #Enforce the correct order of the comparison
-  cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt, contrast = c(variableToPermute, comparisonDESeq[1], comparisonDESeq[2])))
+  if (comparisonMode == "pairwise") { 
+      
+      cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt, contrast = c(variableToPermute, comparisonDESeq[1], comparisonDESeq[2])))
+  
+  } else {
+      
+      # Same as without specifying contrast at all
+      cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt, contrast = list(variableToPermute)))    
+  }
+  
   
   final.peaks.df = data_frame( 
     "permutation" = 0,
@@ -460,7 +484,7 @@ if (par.l$nPermutations > 0) {
   
   for (permutationCur in names(permutationsList.l)) {
     
-    flog.info(paste0("Running for permutation ", permutationCur))
+    # flog.info(paste0("Running for permutation ", permutationCur))
     
     sampleData.df = sampleDataOrig.df
     sampleData.df[,variableToPermute] = unlist(sampleData.df[,variableToPermute]) [permutationsList.l[[permutationCur]]]

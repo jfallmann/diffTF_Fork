@@ -47,7 +47,8 @@ onstart:
 def read_samplesTable(samplesSummaryFile, consensusPeaks):
     """text"""
 
-    data = pandas.read_table(samplesSummaryFile)
+    # Deprecated: data = pandas.read_table(samplesSummaryFile)
+    data = pandas.read_csv(samplesSummaryFile, sep = "\t")
 
     # Expect a particular number of columns, do a sanity check here
 
@@ -625,7 +626,7 @@ rule calcNucleotideContent:
 rule binningTF:
     input:
         nucContent  = rules.calcNucleotideContent.output.bed,
-        sampleDataR        = rules.DiffPeaks.output.sampleDataR,
+        sampleDataR = rules.DiffPeaks.output.sampleDataR,
         motifes     = expand("{dir}/{compType}allMotifs_log2FC_perm{perm}.tsv.gz", dir = TEMP_EXTENSION_DIR, compType = compType, perm = list(range(0, nPermutationsAdjusted + 1)))
     output:
         permResults  = expand('{dir}/{{TF}}/{extension}/{compType}{{TF}}.permutationResults.rds', dir = TF_DIR, extension = extDir, compType = compType),

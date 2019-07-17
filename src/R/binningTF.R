@@ -215,6 +215,8 @@ CGBins = seq(0,1, 1/par.l$nBins)
 # PERMUTATIONS #
 ################
 
+nPermutationsSkipped = 0
+
 for (fileCur in par.l$files_input_TF_allMotives) {
     
   # Log 2 fold-changes from the particular permutation
@@ -282,6 +284,9 @@ for (fileCur in par.l$files_input_TF_allMotives) {
 
   uniqueBins = unique(TF.motifs.all$CG.bins)
   nBins      = length(uniqueBins)
+  
+  # Sometimes, a bin is missing in the TF.motifs.all data, therefore decreasing the apparent number of bins
+  nBinsAll   = length(levels(TF.motifs.all$CG.bins))
   nCol       = ncol(perm.l[[TFCur]])
   
   # TODO: TFBSID needed?
@@ -381,12 +386,14 @@ for (fileCur in par.l$files_input_TF_allMotives) {
  
   if (nBinsWithData == 0) {
     
-    message = paste0(" Not enough data for any of the ", nBins, " bins, this TF will be skipped in subsequent steps")
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    nPermutationsSkipped = nPermutationsSkipped + 1
+    flog.info(paste0(" Not enough (non-NA) data for any of the ", nBinsAll, " bins. This may happen for individual permutations, see warning at the end."))
     calculateVariance  = FALSE
+    
   } else {
     flog.info(paste0(" Finished calculation across bins successfully for ", nBinsWithData, " out of ", nBins, " bins"))
   }
+
   
   ###################################################################
   # Summarize bootstrap results and estimate covariance across bins #
@@ -513,6 +520,19 @@ for (fileCur in par.l$files_input_TF_allMotives) {
  
   
 } # end for each permutation 
+
+
+if (nPermutationsSkipped > 0) {
+    message = paste0("Could not calculate results for ", nPermutationsSkipped, " out of ", par.l$nPermutations , " permutations. If this happens only for a small fraction of permutations, this warning can be ignored. If this happens for a large fraction, however, the statistical significance as given by diffTF may have to be treated with caution. For individual permutations, this may happen if in none of the bins, there are at least ", par.l$minNoDatapoints, " TFBS per bin for which a log2 fold-change could be calculated beforehand.")
+    checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+          
+    if (nPermutationsSkipped >= par.l$nPermutations ) {
+        message = paste0("This TF will be skipped in subsequent steps due to missing values across all permutations. It will not appear in the final output plots.")
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    }           
+
+    
+}
 
 
 # Save objects

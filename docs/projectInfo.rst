@@ -44,7 +44,7 @@ Citation
 
 If you use this software, please cite the following reference:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Kristian Helin & Judith B. Zaugg. *Quantification of differential transcription factor activity and multiomics-based classification into activators and repressors: diffTF*. 2018. in review.
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Holly Giles, Peter-Martin Bruch, Sascha Dietrich, Wolfgang Huber, Kristian Helin & Judith B. Zaugg. *Quantification of differential transcription factor activity and multiomics-based classification into activators and repressors: diffTF*. 2019. in review.
 
 We also put the paper on *bioRxiv*, please read all methodological details here:
 `Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/12/01/368498>`_.
@@ -53,6 +53,10 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 
 Change log
 ============================
+Version 1.3 (2019-07-17)
+  - Various minor changes and small bug fixes as reported by users
+  - improved the RNA-Seq classification, further information will follow soon.
+
 Version 1.2.5 (2019-03-13)
   - Updated the TFBS_hg38_FIMO_HOCOMOCOv11 archive one more time to exclude non-assembled contigs such as HLA*. To make the pipeline more stable for such edge cases, the parameter ``dir_TFBS_sorted`` has been removed, and sorting and filtering of chromosomes is now always performed. Only chromosomes are kept in both the consensus peak files and the TFBS bed files that start with ``chr`` and are neither sex chromosomes (``chrX`` or ``chrY``) nor ``chrM``. If you want to keep sex chromosomes in your analysis (although we think this is not recommended), simply edit the Snakefile and remove the "chrX" and "chrY" occurences in the two filtering rules.
 

@@ -99,6 +99,9 @@ checkAndLogWarningsAndErrors(par.l$designFormulaVariableTypes, checkCharacter(pa
 par.l$nPermutations = snakemake@config$par_general$nPermutations
 assertIntegerish(par.l$nPermutations, lower = 0)
 
+par.l$conditionComparison  = snakemake@config$par_general$conditionComparison
+checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$conditionComparison, len = 1))
+
 ## PARAMS ##
 assertList(snakemake@params, min.len = 1)
 assertSubset(names(snakemake@params), c("", "doCyclicLoess", "allBAMS"))
@@ -135,7 +138,6 @@ printParametersLog(par.l)
 # READ METADATA #
 #################
 
-
 sampleData.l = readRDS(par.l$file_input_metadata)
 
 if (length(sampleData.l) == 0) {
@@ -162,6 +164,19 @@ if (length(colnamesNew) != nrow(sampleData.df)) {
     message = "Could not grep sampleIDs from filenames."
     checkAndLogWarningsAndErrors(NULL,  message, isWarning = FALSE)
 }
+
+
+designComponents.l = checkDesignIntegrity(snakemake, par.l, sampleData.df)
+
+components3types   = designComponents.l$types
+variableToPermute  = designComponents.l$variableToPermute
+
+# Which of the two modes should be done, pairwise or quantitative?
+comparisonMode = "quantitative"
+if (components3types["conditionSummary"] == "logical" | components3types["conditionSummary"] == "factor") {
+    comparisonMode = "pairwise"
+}
+
 
 # Initiate data structures that are populated hereafter
 TF_output.df  = tribble(~permutation, ~TF, ~chr, ~MSS, ~MES, ~TFBSID, ~strand, ~peakID, ~limma_avgExpr, ~l2FC, ~limma_B, ~limma_t_stat, ~DESeq_ldcSE, ~DESeq_stat, ~DESeq_baseMean, ~pval, ~pval_adj)
@@ -393,6 +408,8 @@ if (skipTF) {
           }
           )
           
+          res_DESeq
+          
         }
         )
         
@@ -405,8 +422,18 @@ if (skipTF) {
         
         if (!skipTF) {
             
-            # Enforce the correct order
-            res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq, contrast = c(variableToPermute, conditionComparison[1], conditionComparison[2])))
+            #Enforce the correct order of the comparison
+            if (comparisonMode == "pairwise") { 
+                
+                res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq, contrast = c(variableToPermute, conditionComparison[1], conditionComparison[2])))
+                
+            } else {
+                
+                # Same as without specifying contrast at all
+                res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq, contrast = list(variableToPermute)))
+
+            }
+           
             
             final.TF.df = data_frame("TFBSID"    = rownames(res_DESeq.df), 
                                      "DESeq_baseMean" = res_DESeq.df$baseMean,

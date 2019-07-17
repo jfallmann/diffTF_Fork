@@ -412,7 +412,7 @@ myMAPlot <- function(M, idx, main, minMean = 0) {
   main <- paste(main, ", Number of genes:", dim(M)[1]) 
   
   pl <- (qplot(mean, difference, main = main, ylim = c(-5,5), asp = 2, geom = "point", alpha = I(.5), color = I("grey30"), shape = I(16))  #  
-         + geom_hline(aes(yintercept=0), col = "#9850C3", show.legend = FALSE)
+         + geom_hline(aes(yintercept = 0), col = "#9850C3", show.legend = FALSE)
          + geom_smooth(method = "loess", se = FALSE, col = "#5D84C5", span = .4)
          + theme_bw()
   )
@@ -664,3 +664,182 @@ checkAndLogWarningsAndErrors <- function(object, checkResult, isWarning = FALSE)
   }
 }
 
+
+
+#############
+# FUNCTIONS #
+#############
+
+# Code from Armando Reyes
+heatmap.act.rep <- function(df.tf.peak.matrix, HOCOMOCO_mapping.df.exp, cor.m, par.l, median.cor.tfs, median.cor.tfs.non, act.rep.thres.l){
+    
+    missingGenes = which(!HOCOMOCO_mapping.df.exp$ENSEMBL %in% colnames(cor.m))
+    if (length(missingGenes) > 0) {
+        HOCOMOCO_mapping.df.exp = filter(HOCOMOCO_mapping.df.exp, ENSEMBL %in% colnames(cor.m))
+    }
+    
+    cor.r.pearson.m <- cor.m[,as.character(HOCOMOCO_mapping.df.exp$ENSEMBL)]
+    
+    stopifnot(identical(colnames(df.tf.peak.matrix), as.character(HOCOMOCO_mapping.df.exp$HOCOID)))
+    stopifnot(identical(colnames(cor.r.pearson.m), as.character(HOCOMOCO_mapping.df.exp$ENSEMBL)))
+    colnames(cor.r.pearson.m) <- HOCOMOCO_mapping.df.exp$HOCOID
+    BREAKS = seq(-1,1,0.05)
+    diffDensityMat = matrix(NA, nrow = ncol(cor.r.pearson.m), ncol = length(BREAKS) - 1)
+    rownames(diffDensityMat) = HOCOMOCO_mapping.df.exp$HOCOID
+    
+    TF_Peak_all.m <- df.tf.peak.matrix
+    TF_Peak.m <- TF_Peak_all.m
+    
+    for (i in 1:ncol(cor.r.pearson.m)) {
+        TF = colnames(cor.r.pearson.m)[i]
+        TF_name = TF #as.character(HOCOMOCO_mapping.df.exp$HOCOID[HOCOMOCO_mapping.df.exp$HOCOID==TF])
+        ## for the background, use all peaks
+        h_noMotif = hist(cor.r.pearson.m[,TF][TF_Peak_all.m[,TF] == 0], breaks = BREAKS, plot = FALSE)
+        ## for the foreground use only peaks with less than min_mot_n different TF motifs
+        h_Motif = hist(cor.r.pearson.m[,TF][TF_Peak.m[,TF] != 0], breaks = BREAKS, plot = FALSE)
+        diff_density = h_Motif$density - h_noMotif$density
+        diffDensityMat[rownames(diffDensityMat) == TF_name[1], ] <- diff_density
+    }
+    diffDensityMat = diffDensityMat[!is.na(diffDensityMat[,1]),]
+    colnames(diffDensityMat) = signif(h_Motif$mids,1)
+    quantile(diffDensityMat)
+    
+    ## check to what extent the number of TF motifs affects the density values
+    n_min = ifelse(colSums(TF_Peak.m) < nrow(TF_Peak.m),colSums(TF_Peak.m), nrow(TF_Peak.m)-colSums(TF_Peak.m))
+    names(n_min) = HOCOMOCO_mapping.df.exp$HOCOID#[match(names(n_min), as.character(tf2ensg$ENSEMBL))]
+    n_min <- sapply(split(n_min,names(n_min)),sum)
+    quantile(n_min)
+    remove_smallN = which(n_min < 100)
+    cor(n_min[-remove_smallN],rowMax(diffDensityMat)[-remove_smallN], method = 'pearson')
+    
+    factorClassificationPlot <- sort(median.cor.tfs, decreasing = TRUE)
+    diffDensityMat_Plot = diffDensityMat[match(names(factorClassificationPlot), rownames(diffDensityMat)), ]
+    diffDensityMat_Plot = diffDensityMat_Plot[!is.na(rownames(diffDensityMat_Plot)),]
+    annotation_rowDF = data.frame(median_diff = factorClassificationPlot[match(rownames(diffDensityMat_Plot), names(factorClassificationPlot))])
+    
+
+    for (thresCur in names(act.rep.thres.l)) {
+        thresCur.v = act.rep.thres.l[[thresCur]]
+        
+        labelMain = paste0(as.numeric(thresCur)*100, " / ", (1 - as.numeric(thresCur))*100, " % quantiles")
+        
+        colBreaks = unique(c((-1),
+                             thresCur.v[1], 
+                             thresCur.v[2],
+                             1))
+        
+
+        anno_rowDF = data.frame(threshold = cut(annotation_rowDF$median_diff, breaks = colBreaks))
+        rownames(anno_rowDF) = rownames(diffDensityMat_Plot)
+        colors = c(par.l$colorCategories["repressor"],par.l$colorCategories["not-expressed"], par.l$colorCategories["activator"])
+        names(colors) = levels(anno_rowDF$threshold)
+        
+        pheatmap(diffDensityMat_Plot, cluster_rows = FALSE, cluster_cols = FALSE,
+                 fontsize_row = 1.25, scale = 'row' , fontsize_col = 10, fontsize = 8, labels_col = c(-1, -0.5, 0, 0.5, 1),
+                 annotation_row = anno_rowDF,annotation_legend = FALSE,
+                 annotation_colors = list(threshold = colors), legend = TRUE, annotation_names_row = FALSE, main = labelMain)
+    }
+    
+    
+} # end function
+
+
+# Which transformation of the y values to do?
+transform_yValues <- function(values, addPseudoCount = TRUE, nPermutations, onlyForZero = TRUE) {
+    
+    # Should only happen with the permutation-based approach
+    zeros = which(values == 0)
+    if (length(zeros) > 0 & addPseudoCount) {
+        values[zeros] = 1 / nPermutations
+    }
+    
+    -log10(values)
+}
+
+transform_yValues_caption <- function() {
+    "-log10"
+}
+
+my.median = function(x) median(x, na.rm = TRUE)
+my.mean   = function(x) mean(x, na.rm = TRUE)
+
+
+checkDesignIntegrity <- function(snakemake, par.l, sampleData.df, useRNA = FALSE) {
+    
+    
+    par.l$designFormulaVariableTypes = snakemake@config$par_general$designVariableTypes
+    checkAndLogWarningsAndErrors(par.l$designFormulaVariableTypes, checkCharacter(par.l$designFormulaVariableTypes, len = 1, min.chars = 3))
+    par.l$designFormulaVariableTypes = gsub(" ", "", par.l$designFormulaVariableTypes)
+    components = strsplit(par.l$designFormulaVariableTypes, ",")[[1]]
+    
+    par.l$conditionComparison  = snakemake@config$par_general$conditionComparison
+    checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$conditionComparison, len = 1))
+    
+    if (useRNA) {
+        
+        # The design formula for RNA-Seq is different from the one we used before for ATAC-Seq
+        # Either take the one that the user provided or, if he did not, use a general one with only the condition
+        par.l$designFormulaRNA = snakemake@config$par_general$designContrastRNA
+        if (is.null(par.l$designFormulaRNA)) {
+            par.l$designFormulaRNA = "~conditionSummary"
+            flog.warn(paste0("Could not find the parameter designContrastRNA in the configuration file. The default of \"~conditionSummary\" will be taken as formula. If you know about confounding variables, rerun this step and add the parameter (see the Documentation for details)"))
+        }
+        
+        designFormula = as.formula(par.l$designFormulaRNA)
+    } else {
+        
+        par.l$designFormula= snakemake@config$par_general$designContrast
+        designFormula = as.formula(par.l$designFormula)
+    }
+    
+    formulaVariables = attr(terms(designFormula), "term.labels")
+    checkAndLogWarningsAndErrors(components, checkVector(components, min.len = length(formulaVariables)))
+    
+    # Extract the variable that defines the contrast. Always the last element in the formula
+    variableToPermute = formulaVariables[length(formulaVariables)]
+    
+    # Split further
+    components2 = strsplit(components, ":")
+    
+    if (!all(sapply(components2,length) == 2)) {
+        
+        message = "The parameter \"designVariableTypes\" has not been specified correctly. It must contain all the variables that appear in the parameter \"designContrast\". See the documentation for details"
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+        
+    }
+    
+    components3 = unlist(lapply(components2, "[[", 1))
+    components3types = tolower(unlist(lapply(components2, "[[", 2)))
+    names(components3types) = components3
+    checkAndLogWarningsAndErrors(formulaVariables, checkSubset(formulaVariables, components3))
+    checkAndLogWarningsAndErrors(components3types, checkSubset(components3types, c("factor", "integer", "numeric", "logical")))
+    
+    # Check the sample table. Distinguish between the two modes: Factor and integer for conditionSummary
+    if (components3types["conditionSummary"] == "logical" | components3types["conditionSummary"] == "factor") {
+        
+        nDistValues = length(unique(sampleData.df$conditionSummary))
+        if (nDistValues != 2) {
+            message = paste0("The column 'conditionSummary' must contain exactly 2 different values, but ", nDistValues, " were found.") 
+            checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+        }
+        
+        conditionsVec = strsplit(par.l$conditionComparison, ",")[[1]]
+        if (!testSubset(as.character(unique(sampleData.df$conditionSummary)), conditionsVec)) {
+            message = paste0("The specified elements for the parameter conditionComparison (", par.l$conditionComparison,   ") do not correspond to what is specified in the sample summary table (", paste0(unique(sampleData.df$conditionSummary), collapse = ","), "). All elements of conditionComparison must be present in the column conditionSummary.")
+            checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+        }
+        
+    } else {
+        
+        # Test whether at least two distinct values are present
+        nDistinct = length(unique(sampleData.df$conditionSummary))
+        if (nDistinct < 2) {
+            message = paste0("At least 2 distinct values for the column 'conditionSummary' must be present in the sample file in the quantitative mode.") 
+            checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+        }
+    }
+
+
+    list(types = components3types, variableToPermute = variableToPermute)
+    
+}
