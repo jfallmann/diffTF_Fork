@@ -12,4 +12,4 @@ echo "####################################################################"
 echo "\nThis wrapper script calls Snakemake in dryrun mode to start diffTF. Nothing will actually be executed.\n"
 
 # Dryrun, using 2 cores
-snakemake --snakefile ../../src/Snakefile --dryrun --quiet --cores 2 --configfile config.json
+snakemake --snakefile ../../../src/Snakefile --dryrun --quiet --cores 2 --configfile config.json

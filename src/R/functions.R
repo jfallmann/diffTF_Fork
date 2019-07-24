@@ -110,10 +110,26 @@ printParametersLog <- function(par.l, verbose = FALSE) {
     if (verbose) cat("Could not find the following packages: ", paste( packagesToInstall , collapse = ", "), "\n")
     install.packages(packagesToInstall, repos = "http://cran.rstudio.com/")  
     
-    source("http://bioconductor.org/biocLite.R")
-    for (packageCur in packagesToInstall) {
-     biocLite(packageCur, suppressUpdates = TRUE)
+    if (getRversion() < "3.5.0") { 
+        
+        source("http://bioconductor.org/biocLite.R")
+        for (packageCur in packagesToInstall) {
+            biocLite(packageCur, suppressUpdates = TRUE)
+        }
+    } else {
+        
+        if (!requireNamespace("BiocManager", quietly = TRUE))
+            install.packages("BiocManager")
+        
+        for (packageCur in packagesToInstall) {
+            BiocManager::install(packageCur)
+        }
     }
+    
+   
+    
+    
+    
   } else {
     if (verbose) cat("All packages are already installed\n")
   }
@@ -460,21 +476,21 @@ plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, fi
    
   if (nSamples < 10) {
 
-    multidensity(log(counts(dd, normalized = FALSE) + 0.5), xlab = xlabCur, main = "Non-normalized log counts", col = colors)
-    multidensity(log(counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts", col = colors) 
+    multidensity(log(DESeq2::counts(dd, normalized = FALSE) + 0.5), xlab = xlabCur, main = "Non-normalized log counts", col = colors)
+    multidensity(log(DESeq2::counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts", col = colors) 
     
-    multiecdf(log(counts(dd, normalized = FALSE) + 0.5), xlab = xlabCur, main = "Non-normalized log counts", col = colors)
-    multiecdf(log(counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts", col = colors) 
+    multiecdf(log(DESeq2::counts(dd, normalized = FALSE) + 0.5), xlab = xlabCur, main = "Non-normalized log counts", col = colors)
+    multiecdf(log(DESeq2::counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts", col = colors) 
     
   } else {
     
     warning("Omitting legend due to large number of samples (threshold is 10 at the moment)")
     
-    multidensity(log(counts(dd, normalized = FALSE) + 0.5), xlab = xlabCur, main = "Non-normalized log counts", legend = NULL, col = colors)
-    multidensity(log(counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts",     legend = NULL, col = colors)
+    multidensity(log(DESeq2::counts(dd, normalized = FALSE) + 0.5), xlab = xlabCur, main = "Non-normalized log counts", legend = NULL, col = colors)
+    multidensity(log(DESeq2::counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts",     legend = NULL, col = colors)
     
-    multiecdf(log(counts(dd, normalized = FALSE) + 0.5), xlab = xlabCur, main = "Non-normalized log counts", legend = NULL, col = colors)
-    multiecdf(log(counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts",     legend = NULL, col = colors)
+    multiecdf(log(DESeq2::counts(dd, normalized = FALSE) + 0.5), xlab = xlabCur, main = "Non-normalized log counts", legend = NULL, col = colors)
+    multiecdf(log(DESeq2::counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts",     legend = NULL, col = colors)
   }
   
   
@@ -496,7 +512,7 @@ plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, fi
     
     flog.info(paste0(" Plotting pairwise comparison ", i, " out of ", nrow(MA.idx.filt)))
     label = paste0(colnames(dd)[MA.idx.filt[i,1]], " vs ", colnames(dd)[MA.idx.filt[i,2]])
-    suppressWarnings(print(myMAPlot(counts(dd, normalized = TRUE), c(MA.idx[i,1], MA.idx.filt[i,2]), main =  label)))
+    suppressWarnings(print(myMAPlot(DESeq2::counts(dd, normalized = TRUE), c(MA.idx[i,1], MA.idx.filt[i,2]), main =  label)))
   }
   
   # Show an empty page with a warning if plots have been omitted
@@ -510,7 +526,7 @@ plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, fi
   
   
   # 4. Mean SD plot: Plot row standard deviations versus row means
-  notAllZeroPeaks <- (rowSums(counts(dd)) > 0)
+  notAllZeroPeaks <- (rowSums(DESeq2::counts(dd)) > 0)
   
   suppressWarnings(meanSdPlot(assay(dd[notAllZeroPeaks,])))
   

@@ -415,7 +415,7 @@ if (par.l$plotRNASeqClassification) {
     
     dd = estimateSizeFactors(dd)
     # dd = DESeq(dd)
-    dd_counts =  counts(dd, normalized=TRUE)
+    dd_counts =  DESeq2::counts(dd, normalized=TRUE)
 
     ######################################
     # Filtering of lowly expressed genes #
@@ -446,11 +446,11 @@ if (par.l$plotRNASeqClassification) {
     }
 
     dd.filt <- DESeq(dd.filt)
-    dd_counts.filt =  counts(dd.filt, normalized=TRUE)
+    dd_counts.filt =  DESeq2::counts(dd.filt, normalized=TRUE)
     RNA.counts.filt.df = dd_counts.filt %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
     
     # Raw counts, used for other types of normalization thereafter
-    dd_counts.raw.filt =  counts(dd.filt, normalized=FALSE)
+    dd_counts.raw.filt =  DESeq2::counts(dd.filt, normalized=FALSE)
    
     dd_counts.filt.quantile = normalize.quantiles(as.matrix(dd_counts.raw.filt))
     RNA.counts.quantile.df.all = dd_counts.filt.quantile %>% as.data.frame()  %>% as.tibble()

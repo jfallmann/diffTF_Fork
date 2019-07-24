@@ -319,7 +319,7 @@ if (skipTF) {
   }
   
   # low RC, check by rowMean
-  TF.cds.filt = TF.cds[rowMeans(counts(TF.cds)) > 0, ]
+  TF.cds.filt = TF.cds[rowMeans(DESeq2::counts(TF.cds)) > 0, ]
   
   nPeaks = nrow(TF.cds.filt)
   
@@ -344,7 +344,7 @@ if (skipTF) {
     if (par.l$nPermutations > 0) {
       
       # Generate normalized counts for limma analysis
-      countsNorm        = counts(TF.cds.filt, norm = TRUE)
+      countsNorm        = DESeq2::counts(TF.cds.filt, norm = TRUE)
       countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
       rownames(countsNorm.transf) = rownames(TF.cds.filt)
       
@@ -373,7 +373,7 @@ if (skipTF) {
         fit <- eBayes(lmFit(countsNorm.transf, design = model.matrix(designFormula, data = sampleData.df)))
         results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
         
-        final.TF.df = data_frame("TFBSID"      = rownames(results.df), 
+        final.TF.df = tibble("TFBSID"      = rownames(results.df), 
                                  "limma_avgExpr"     = results.df$AveExpr,
                                  "l2FC"        = results.df$logFC,
                                  "limma_B"           = results.df$B,
@@ -435,7 +435,7 @@ if (skipTF) {
             }
            
             
-            final.TF.df = data_frame("TFBSID"    = rownames(res_DESeq.df), 
+            final.TF.df = tibble("TFBSID"    = rownames(res_DESeq.df), 
                                      "DESeq_baseMean" = res_DESeq.df$baseMean,
                                      "l2FC"     = res_DESeq.df$log2FoldChange,
                                      "DESeq_ldcSE"    = res_DESeq.df$lfcSE,

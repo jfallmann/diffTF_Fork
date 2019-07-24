@@ -348,9 +348,14 @@ if (!par.l$doCyclicLoess) {
     # since counts returns,by default, non-normalized counts, the following code should be fine and there is no need to
     # also run estimateSizeFactors beforehand
     
-    normFacs <- exp(normOffsets(counts(cds.peaks),
-                                lib.sizes = colSums(counts(cds.peaks)),
-                                type = "loess"))
+    if (packageVersion("csaw") <= "1.14.1") {
+        normFacs = exp(normOffsets(DESeq2::counts(cds.peaks), lib.sizes = colSums(DESeq2::counts(cds.peaks)), type = "loess"))
+    } else {
+        object = SummarizedExperiment(list(counts=DESeq2::counts(cds.peaks)))
+        object$totals = colSums(DESeq2::counts(cds.peaks))
+        normFacs  = exp(normOffsets(object, se.out = FALSE))
+    }
+
     
     # sanity check: is the geometric mean across samples equal to one?
     #library("psych")
@@ -366,7 +371,7 @@ if (!par.l$doCyclicLoess) {
 
 
 # Filter peaks with zero counts
-cds.peaks.filt   = cds.peaks[rowMeans(counts(cds.peaks)) > 0, ]
+cds.peaks.filt   = cds.peaks[rowMeans(DESeq2::counts(cds.peaks)) > 0, ]
 
 
 # DESeq log2fc are not used at all afterwards, as we currently only take the normalization factors to normalize the TFBS subsequently
@@ -387,7 +392,7 @@ if (comparisonMode == "pairwise") {
 # GET LOG2FC #
 ##############
 
-countsNorm        = counts(cds.peaks.filt, norm = TRUE)
+countsNorm        = DESeq2::counts(cds.peaks.filt, norm = TRUE)
 countsNorm.df     = as.data.frame(countsNorm) %>%
   dplyr::mutate(peakID = rownames(cds.peaks.filt))  %>%
   dplyr::select(one_of("peakID", colnames(countsNorm)))
@@ -412,7 +417,7 @@ if (par.l$nPermutations == 0) {
   fit        <- eBayes(lmFit(countsNorm.transf, design = designMatrix))
   results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
   
-  final.peaks.df = data_frame(  
+  final.peaks.df = tibble(  
     "permutation" = 0,
     "peakID"      = rownames(results.df), 
     "limma_avgExpr"     = results.df$AveExpr,
@@ -452,7 +457,7 @@ if (par.l$nPermutations == 0) {
   }
   
   
-  final.peaks.df = data_frame( 
+  final.peaks.df = tibble( 
     "permutation" = 0,
     "peakID"    = rownames(cds.peaks.df), 
     "DESeq_baseMean" = cds.peaks.df$baseMean,
