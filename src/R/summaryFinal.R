@@ -164,15 +164,30 @@ output.global.TFs.orig = mutate(output.global.TFs.orig,
 
 # Remove rows with NA
 TF_NA = which(is.na(output.global.TFs.orig$weighted_meanDifference))
+permNACount = table(output.global.TFs.orig$permutation[TF_NA])
 
 if (length(TF_NA) > 0) {
+    
+    permWithNA = names(permNACount)
+    nPermOnlyNA = length(which(permNACount == nTF))
+    if (nPermOnlyNA > 0) {
+        message = paste0("Data from ",  nPermOnlyNA, " permutations had to be removed due to NA values in weighted_meanDifference (insufficient data in previous steps). This frequently happens for small datasets and only affects the calculation of p-values. ")
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    }
+    
+    if ("0" %in% permWithNA) {
+        message = paste0("Data from ",  permNACount["0"], " TF had to be removed due to NA values in weighted_meanDifference (insufficient data in previous steps).")
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+    }
+    
     output.global.TFs.orig = output.global.TFs.orig[-TF_NA,]
   
-  TFs_NA = output.global.TFs.orig$TF[TF_NA]
-  message = paste0("The following TF have been removed from the data due to NA values in weighted_meanDifference (insufficient data in previous steps): ", paste0(unique(TFs_NA), collapse = ", "))
-  checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+
 }
 
+
+# Make sure to only use as many permutations as actually could be done, independent of what the user specified before
+par.l$nPermutations = max(output.global.TFs.orig$permutation)
 
 ########################################################
 # FILTER BY PERMUTATIONS AND COMPARE, DIAGNOSTIC PLOTS #

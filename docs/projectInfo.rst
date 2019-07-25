@@ -53,6 +53,9 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 
 Change log
 ============================
+Version 1.3.3 (2019-07-25)
+  - Fixed a bug that caused inflated p-values for the permutation-based approach in cases when the number of permutations that was actually possible was smaller than what was specified in the configuration file. For example, if 1000 permutations have been specified in the configuration file, but only 70 were actually done (for a typical 4 vs 4 analysis), raw and adjusted p-values were too small. This is now corrected, and the last step of the pipeline (*summaryFinal*) should be rerun to correct for it. Although this happened in only very specific cases (small number of samples and yet the permutation-based approach), we apologize for this oversight. Thanks to Frauke Huth for noticing!
+
 Version 1.3.2 (2019-07-24)
   - Fixed the error "unable to find an inherited method for function ‘assay’ for signature ‘"matrix", "character"’" that arises due to a new implementation of the *normOffsets* function from the *csaw* package in versions above 1.14.1. The Singularity image that comes with *diffTF* still uses csaw version 1.14.1, for which the original implementation works fine, but for newer R installations (that is, *csaw* >= 1.16) the above error is thrown. In the code, the function call is now dependent on the version of the *csaw* package. This was the most common error that was thrown when running *diffTF* without Singularity, and should therefore increase compatibility.
   - Minor changes to make the *diffTF* code more compatible for future releases of R (e.g., replacing the deprecated *data_frame* by *tibble*, specifying the package for functions that are defined in different packages)
