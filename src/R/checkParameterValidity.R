@@ -113,10 +113,9 @@ checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "tools", "meth
 # Step 6: summaryFinal
 checkAndLoadPackages(c("tidyverse", "futile.logger","ggrepel", "checkmate", "tools", "methods", "grDevices", "pheatmap"), verbose = FALSE)
 
-
+# Only needed if RNA-Seq integration is activated
 if (par.l$plotRNASeqClassification) {
-    # Require some more packages here
-    checkAndLoadPackages(c( "lsr", "DESeq2",  "matrixStats",  "pheatmap", "preprocessCore"), verbose = FALSE)
+    checkAndLoadPackages(c( "lsr", "DESeq2",  "matrixStats",  "pheatmap", "preprocessCore", "apeglm"), verbose = FALSE)
 }
 
 # Check the version of readr, at least 1.1.0 is required to properly write gz files
@@ -207,10 +206,16 @@ for (bamCur in sampleData.df$bamReads) {
   chrBAM.df$seqnames = rownames(chrBAM.df)
   colnames(chrBAM.df) = c("width", "seqnames")
   
+  # Check whether BAM file contains chromosomes with the "chr" notation
+  if (length(which(grepl("^chr", chrBAM.df$seqnames))) == 0) {
+      message = paste0("File ", bamCur, " does not have the correct chromosome names. The \"chr\" prefix is required for proper chromosome names, but they were not found. Check your BAM files and use samtools and sed to add \"chr\" to each chromosome name") 
+      checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+  }
+  
   merged.df = full_join(chrBAM.df, indexes.df, by = "seqnames")
   
   # Filter chromosomes and retain only those we keep in the pipeline
-  discardMatches = grepl("^chrX|^chrY|^chrM|^chrUn|random|hap|_gl", merged.df$seqnames, perl = TRUE)
+  discardMatches = grepl("^chrX|^chrY|^chrM|^chrUn|random|hap|_gl|^GL", merged.df$seqnames, perl = TRUE)
   
   if (length(discardMatches) > 0) {
     chrNamesDiscarded = paste0(merged.df$seqnames[discardMatches], collapse = " ", sep = "\n")

@@ -19,7 +19,7 @@ source(paste0(snakemake@config$par_general$dir_scripts, "/functions.R"))
 createDebugFile(snakemake)
 
 initFunctionsScript(packagesReq = NULL, minRVersion = "3.1.0", warningsLevel = 1, disableScientificNotation = TRUE)
-checkAndLoadPackages(c("tidyverse", "futile.logger", "ggrepel", "checkmate", "tools", "grDevices", "locfdr"), verbose = FALSE)
+checkAndLoadPackages(c("tidyverse", "futile.logger", "ggrepel", "checkmate", "tools", "grDevices", "locfdr", "apeglm"), verbose = FALSE)
 
 
 ###################
@@ -42,6 +42,7 @@ par.l$thresholds_CohensD = c(0.1, 0.5, 0.8)
 par.l$corMethod = "pearson" # Expression-peak count correlation method. As we quantile normalize now, should be pearson
 par.l$regressionMethod = "glm" # for correlating RNA-Seq classification with TF activity
 par.l$filter_minCountsPerCondition = 5 # For filtering RNA-seq genes, see Documentation
+par.l$thresholds_pvalue_Wilcoxon = 0.05
 
 # 4. Volcano plot settings
 par.l$maxTFsToLabel = 150 # Maximum Tfs to label in the Volcano plot
@@ -207,7 +208,10 @@ if (par.l$nPermutations > 0) {
     
     xrange = range(output.global.TFs.orig$weighted_meanDifference, na.rm = TRUE)
     
-    plot(density(dataPerm.df$weighted_meanDifference, na.rm = TRUE), col = "black", main = "Weighted mean difference values (black = permuted)", xlim = xrange)
+    maxY = max(density(dataPerm.df$weighted_meanDifference, na.rm = TRUE)$y, density(dataReal.df$weighted_meanDifference, na.rm = TRUE)$y)
+    
+    plot(density(dataPerm.df$weighted_meanDifference, na.rm = TRUE), col = "black", main = "Weighted mean difference values (black = permuted)", 
+         xlim = xrange, ylim = c(0,maxY))
     lines(density(dataReal.df$weighted_meanDifference, na.rm = TRUE), col = "red")
 
     for (TFCur in unique(output.global.TFs.orig$TF)) {
@@ -226,7 +230,9 @@ if (par.l$nPermutations > 0) {
         rangeX = range(dataCur.df$weighted_meanDifference)
         rowCur = which(output.global.TFs.orig$TF == TFCur)
         
-        g = ggplot(dataPerm.df, aes(weighted_meanDifference)) + geom_density() + geom_vline(xintercept = dataReal.df$weighted_meanDifference[1], color = "red") + ggtitle(TFCur) + xlim(c(rangeX * 1.5)) # + scale_x_continuous(limits = c(min(dataCur.df$weighted_meanDifference) - 0.5, max(dataCur.df$weighted_meanDifference) + 0.5))
+        g = ggplot(dataPerm.df, aes(weighted_meanDifference)) + geom_density() + 
+            geom_vline(xintercept = dataReal.df$weighted_meanDifference[1], color = "red") + ggtitle(TFCur) + xlim(c(rangeX * c(0.5,1.5))) 
+            # + scale_x_continuous(limits = c(min(dataCur.df$weighted_meanDifference) - 0.5, max(dataCur.df$weighted_meanDifference) + 0.5))
         
         diagPlots.l[[TFCur]] = g
         plot(g)
@@ -330,7 +336,9 @@ for (pValueCur in c(par.l$significanceThresholds , 1)) {
 stats.df = group_by(output.global.TFs.orig, permutation) %>% summarise(max = max(weighted_meanDifference), min = min(weighted_meanDifference))
 ggplot(stats.df, aes(min)) + geom_density()
 ggplot(stats.df, aes(max)) + geom_density()
+
 dev.off()
+
 
 #################################
 # mode of change quantification #
@@ -396,7 +404,7 @@ if (par.l$plotRNASeqClassification) {
     
     nFiltRows = nrow(sampleData.l[["permutation0"]]) - nrow(sampleData.df)
     if (nFiltRows > 0) {
-        flog.warn(paste0("Filtered ", nFiltRows, " sample IDs after comparising sample names with RNA-Seq table"))
+        flog.warn(paste0("Filtered ", nFiltRows, " sample IDs after comparising sample names with RNA-Seq table. Remaining: ", nrow(sampleData.df)))
     }
     
     # The design formula for RNA-Seq is different from the one we used before for ATAC-Seq
@@ -431,6 +439,7 @@ if (par.l$plotRNASeqClassification) {
     dd = estimateSizeFactors(dd)
     # dd = DESeq(dd)
     dd_counts =  DESeq2::counts(dd, normalized=TRUE)
+    
 
     ######################################
     # Filtering of lowly expressed genes #
@@ -454,21 +463,22 @@ if (par.l$plotRNASeqClassification) {
     nFiltered = length(which(idx == FALSE))
     
     if (nFiltered > 0) {
-        flog.info(paste0("Filtered ", nFiltered, " genes from RNA-Seq table because of low counts."))
+        flog.info(paste0("Filtered ", nFiltered, " genes from RNA-Seq table because of low counts. Remaining: ", length(idx)))
         dd.filt = dd[idx,]
     } else {
         dd.filt = dd
     }
 
     dd.filt <- DESeq(dd.filt)
+
     dd_counts.filt =  DESeq2::counts(dd.filt, normalized=TRUE)
-    RNA.counts.filt.df = dd_counts.filt %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
+    RNA.counts.filt.df = dd_counts.filt %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as_tibble()
     
     # Raw counts, used for other types of normalization thereafter
     dd_counts.raw.filt =  DESeq2::counts(dd.filt, normalized=FALSE)
    
     dd_counts.filt.quantile = normalize.quantiles(as.matrix(dd_counts.raw.filt))
-    RNA.counts.quantile.df.all = dd_counts.filt.quantile %>% as.data.frame()  %>% as.tibble()
+    RNA.counts.quantile.df.all = dd_counts.filt.quantile %>% as.data.frame()  %>% as_tibble()
     
     # Fix row and column names
     colnames(RNA.counts.quantile.df.all) = colnames(dd_counts.raw.filt)
@@ -663,20 +673,6 @@ if (par.l$plotRNASeqClassification) {
         
     }
    
-    # AR.data = as.data.frame(median.cor.tfs)
-    # AR.data$TF = rownames(AR.data)
-    # 
-    # output.global.TFs = merge(output.global.TFs, AR.data, by = "TF",all.x = TRUE)
-    # 
-    # output.global.TFs$classification = ifelse(is.na(output.global.TFs$median.cor.tfs), "not-expressed",
-    #                                         ifelse(output.global.TFs$median.cor.tfs <= act.rep.thres[1], "repressor",
-    #                                                ifelse(output.global.TFs$median.cor.tfs > act.rep.thres[2], "activator", "undetermined")))
-    # 
-    # output.global.TFs$classification = factor(output.global.TFs$classification, levels = names(par.l$colorCategories))
-    # 
-    # 
-    # 
-    # 
     
     # TODO: for each TFBS, a p-value and a correlation value
     colnameClassification    = paste0("classification")
@@ -731,7 +727,7 @@ if (par.l$plotRNASeqClassification) {
     # POST-FILTER: CHANGE SOME TFs TO UNDETERMINED #
     ################################################
     
-    par.l$thresholds_pvalue_Wilcoxon = 0.05
+    
     # Change the classification with the p-value from the distribution test
     
     colnameClassificationPVal = paste0("classification_distr_rawP")
@@ -759,17 +755,13 @@ if (par.l$plotRNASeqClassification) {
     }
         
     
-    
-    
-    
-    
     ####################
     ####################
     # DIAGNOSTIC PLOTS #
     ####################
     ####################
 
-    pdf(file = par.l$files_plotDiagnostic[2], width = 3, height = 8)
+    pdf(file = par.l$files_plotDiagnostic[2], width = 4, height = 8)
     xlab="median pearson correlation (r)"
     ylab=""
     xlim= c(-max(abs(range(median.cor.tfs))) - 0.05, max(abs(range(median.cor.tfs))) + 0.05)
@@ -783,23 +775,32 @@ if (par.l$plotRNASeqClassification) {
         thresCur_upper = (1 - as.numeric(thresCur)) * 100
         thresCur_lower = as.numeric(thresCur) * 100
         
-        
+        mainCur = paste0("Stringency: ", thresCur)
+ 
         plot(median.cor.tfs.non[names(median.cor.tfs)], 1:length(median.cor.tfs.non),
-             xlim=xlim, ylim=ylim, main="", xlab=xlab, ylab=ylab,
+             xlim=xlim, ylim=ylim, main=mainCur, xlab=xlab, ylab=ylab,
              col=adjustcolor("darkgrey",alpha=1), pch = 16, cex = 0.5,axes = FALSE)
         points(median.cor.tfs, 1:length(median.cor.tfs),
                pch=16,  cex=0.5, 
                col=ifelse(median.cor.tfs>thresCur.v[2], par.l$colorCategories["activator"] ,ifelse(median.cor.tfs<thresCur.v[1], par.l$colorCategories["repressor"], par.l$colorCategories["undetermined"]))
         ) 
-        text(x =c((thresCur.v[1]-0.01),(thresCur.v[2]+0.01)),
-             y=c((length(median.cor.tfs.non)+5),(length(median.cor.tfs.non)+5)), pos=c(2,4),
-             labels =c(paste0(thresCur_lower, "\npercentile"), paste0(thresCur_upper, "\npercentile")),cex=0.7, col=c("black","black"))
+        text(x =c((thresCur.v[1]),(thresCur.v[2])),
+             y=c((length(median.cor.tfs.non)),(length(median.cor.tfs.non))), pos=c(2,4),
+             labels =c(paste0(thresCur_lower, " percentile\n", "(", round(thresCur.v[1],5), ")"), 
+                       paste0(thresCur_upper, " percentile\n", "(", round(thresCur.v[2],5), ")")),
+             cex=0.7, col=c("black","black"))
         abline(v=thresCur.v[1], col=par.l$colorCategories["repressor"])
         abline(v=thresCur.v[2], col=par.l$colorCategories["activator"])
-        axis(side = 1, lwd = 1, line = 0, at = c(-0.2,0,0.2), cex=1)
+        
+        dataPoints = c(median.cor.tfs.non[names(median.cor.tfs)], median.cor.tfs)
+        yAxisLimits = c(min(dataPoints) * 1.1, max(dataPoints) * 1.1)
+        
+        # Set the limits dynmaically
+        defaultLimits = seq(-1,1,0.2)
+        defaultLimits = defaultLimits[-c(which(defaultLimits < 0 & defaultLimits < yAxisLimits[1]-0.2), which(defaultLimits > 0 & defaultLimits < yAxisLimits[1]+0.2))]
+        axis(side = 1, at = defaultLimits, lwd = 1, line = 0, cex=1)
         
     }
-    
     
     
     heatmap.act.rep(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, cor.m, par.l, median.cor.tfs, median.cor.tfs.non, act.rep.thres.l)
@@ -808,7 +809,7 @@ if (par.l$plotRNASeqClassification) {
 
 
     # Process results
-    res.peaks.filt  = results(dd.filt) %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as.tibble()
+    res.peaks.filt  = results(dd.filt) %>% as.data.frame() %>% rownames_to_column("ENSEMBL") %>% as_tibble()
 
   
     # TODO
@@ -826,6 +827,13 @@ if (par.l$plotRNASeqClassification) {
     output.global.TFs$weighted_meanDifference = as.numeric(output.global.TFs$weighted_meanDifference)
     
     pdf(par.l$files_plotDiagnostic[3])
+    
+    
+    # Diagnostic plots for DeSEQ2
+    plotDiagnosticPlots(dd.filt, dd.filt, conditionComparison, filename = NULL, maxPairwiseComparisons = 0, alpha = 0.05,  plotMA = TRUE)
+    #dev.off()
+    
+    
     thresholds  = c(0.1, 0.05, 0.01, 0.001)
     
     #######################################

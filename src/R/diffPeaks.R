@@ -135,7 +135,8 @@ if (components3types["conditionSummary"] == "logical" | components3types["condit
 }
 
 # Read and modify samples metadata
-sampleData.df = mutate(sampleData.df, name = file_path_sans_ext(basename(sampleData.df$bamReads)))
+sampleData.df = mutate(sampleData.df, name = file_path_sans_ext(basename(sampleData.df$bamReads)),
+                       SampleID = as.character(SampleID))
   
 
 # Check and change column types as specified in the design formula
@@ -429,7 +430,7 @@ if (par.l$nPermutations == 0) {
   )
   
   
-  plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
+  plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 0, plotMA = TRUE)
   
   
 } else {
@@ -510,7 +511,13 @@ if (par.l$nPermutations > 0) {
 
 saveRDS(sampleData.l, par.l$file_output_metadata)
 
-final.peaks.df = mutate_if(final.peaks.df, is.numeric, as.character)
+# Do it separately for each column because different rounding schemes might be needed
+final.peaks.df = final.peaks.df %>% 
+    mutate(permutation = as.integer(permutation)) %>%
+    mutate_at(c("DESeq_baseMean", "l2FC", "DESeq_ldcSE", "DESeq_stat"), signif, 3) %>%
+    mutate_at(c("pval", "pval_adj"), formatC, format = "g", digits = 3)
+
+
 write_tsv(final.peaks.df, path = par.l$file_output_peaksTSV)
 
 #final.peaks.perm.df = mutate_if(final.peaks.perm.df, is.numeric, as.character)

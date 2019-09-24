@@ -168,11 +168,15 @@ summary.df = summary.df %>%
                   adj_pvalue  = p.adjust(pvalue_raw, method = "fdr"),
                   Diff_mean   = Mean_l2FC    -   mean(peaks.df$l2FC, na.rm = TRUE), 
                   Diff_median = Median_l2FC  - median(peaks.df$l2FC, na.rm = TRUE),
-                  Diff_mode   = Mode_l2FC    - l2fc_mode,    
-                  Diff_skew   = skewness_l2FC - l2fc_skewness)  %>%
-              na.omit(summary.df)
+                  Diff_mode   = Mode_l2FC    -  l2fc_mode,    
+                  Diff_skew   = skewness_l2FC -  l2fc_skewness)  %>%
+              na.omit(summary.df) %>%
+             mutate_at(c("Diff_mean", "Diff_median", "Diff_mode", "Diff_skew", "Mean_l2FC", 
+                        "Median_l2FC", "Mode_l2FC", "skewness_l2FC"), signif, 3) %>%
+             mutate_at(c("pvalue_raw", "adj_pvalue"), formatC, format = "g", digits = 3)
 
-summary.df = mutate_if(summary.df, is.numeric, as.character)
+
+# summary.df = mutate_if(summary.df, is.numeric, as.character)
 write_tsv(summary.df, par.l$file_output_table) # TODO: check the dec = "." parameter
 
 .printExecutionTime(start.time)

@@ -44,7 +44,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
     .. code-block:: Bash
 
-      git clone https://git.embl.de/grp-zaugg/diffTF
+      git clone https://git.embl.de/grp-zaugg/diffTF.git
 
     If you receive an error, *Git* may not be installed on your system. If you run Ubuntu, try the following command:
 

@@ -53,6 +53,14 @@ We also put the paper on *bioRxiv*, please read all methodological details here:
 
 Change log
 ============================
+Version 1.4 (2019-09-24)
+  - Various small improvements for increasing user experience
+    - For the peaks and TF-specific diagnostic plots, the pairwise mean-average plots between pairs of samples has been disabled by default. It was set to a maximum of 5 previously, but due to its time consuming nature and limited usage, we feel this is not needed for most users. We might add a parameter in the future to adjust this more flexibly, contact us if you want to have them back.
+    - various small improvements for the various diagnostic plots from the last step (summaryFinal), most of which concern classification-related plots and plots for the permutation-based approach
+  - For all output tables, diffTF now outputs only 2-3 significant digits, which reduces the size of some output tables significantly. THe memory footprint is thus overall decreased. More digits are not needed in our opinion.
+  - added diagnostic plots for the RNA-Seq data that is used for the classification. These include MA plots (based on original and shrunken log2 fold changes, (non)normalized log count density plots across all samples, and a mean-sd plot),
+  - added preliminary support for interaction terms in the design formula. This was not possible before but should now work without diffTF failing. if you continue having issues, please let us know.
+
 Version 1.3.3 (2019-07-25)
   - Fixed a bug that caused erroneously small p-values for the permutation-based approach in cases when the number of permutations that was actually done was smaller than what was specified in the configuration file (e.g., if 1000 permutations have been specified in the configuration file, but only 70 were actually done such as for a typical 4 vs 4 analysis). This is now corrected, and the last step of the pipeline (*summaryFinal*) should be rerun to correct for it. Although this happened in the special circumstances as described above (small number of samples and yet using the permutation-based approach), we apologize for this oversight. Thanks to Frauke Huth for noticing!
 

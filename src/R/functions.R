@@ -404,6 +404,26 @@ convertToFormula <- function(userFormula, validColnames = NULL) {
   # Check colmn names
   if (!is.null(colnames)) {
     formulaVariables = attr(terms(designFormula), "term.labels")
+    
+    indexInteractionTerms = which(grepl(":", formulaVariables))
+    if (length(indexInteractionTerms) > 0) {
+        
+        interactionTerms = formulaVariables[indexInteractionTerms]
+        # Check whether all individual items have been specified
+        for (interactionTermCur in interactionTerms) {
+            componentsCur = strsplit(interactionTermCur, ":")[[1]]
+            if (!all(componentsCur %in% formulaVariables)) {
+                message = paste0("Design formula is incorrect, not all terms from the interactions (", paste0(componentsCur, collapse = ","), ") have been specified individually.")
+                checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+                
+            }
+            
+        }
+        formulaVariables = formulaVariables[-indexInteractionTerms]
+        
+        
+    }
+    
     assertSubset(formulaVariables, validColnames)
   }
 
@@ -437,10 +457,10 @@ myMAPlot <- function(M, idx, main, minMean = 0) {
 }
 
 
-plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, filename = NULL, maxPairwiseComparisons = 5, alpha = 0.05) {
+plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, filename = NULL, maxPairwiseComparisons = 5, plotMA = FALSE, alpha = 0.05) {
   
   checkAndLoadPackages(c("tidyverse", "checkmate", "geneplotter", "DESeq2", "vsn", "RColorBrewer", "limma"), verbose = FALSE)
-  
+    flog.info(paste0("Plotting various diagnostic plots"))
   
   assertClass(dd, "DESeqDataSet")
   
@@ -452,17 +472,38 @@ plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, fi
     pdf(filename)
   }
   
-  if (testClass(differentialResults, "MArrayLM")) {
-    title = paste0("limma results\n", conditionComparison[1], " vs. ", conditionComparison[2])
-    isSign = ifelse(p.adjust(differentialResults$p.value[,ncol(differentialResults$p.value)], method = "BH") < alpha, paste0("sign. (BH, ", alpha, ")"), "not-significant")
-    
-    limma::plotMA(differentialResults, main = title, status = isSign)
-  
-    } else {
+  if (plotMA) {
       
-    # TODO: DeSEQ diagnostic plots
-    
+      
+      
+      if (testClass(differentialResults, "MArrayLM")) {
+          title = paste0("limma results\n", conditionComparison[1], " vs. ", conditionComparison[2])
+          isSign = ifelse(p.adjust(differentialResults$p.value[,ncol(differentialResults$p.value)], method = "BH") < alpha, paste0("sign. (BH, ", alpha, ")"), "not-significant")
+          
+          flog.info(paste0(" Plotting MA plots from limma..."))
+          
+          limma::plotMA(differentialResults, main = title, status = isSign)
+          
+      } else {
+          
+          # DESeq2 specific MA plots
+          flog.info(paste0(" Plotting MA plot from DESeq (1)..."))
+          # 1. Regular MA plot:
+          # shows the log2 fold changes attributable to a given variable over the mean of normalized counts for all the samples in the DESeqDataSet
+          DESeq2::plotMA(dd, main = "Regular MA plot")
+          
+          # 2. MA plot based on shrunken log2 fold changes
+          # Shrinkage of effect size (LFC estimates) is useful for visualization and ranking of genes. To shrink the LFC, we pass the dds object to the function  lfcShrink. Below we specify to use the apeglm method for effect size shrinkage (Zhu, Ibrahim, and Love 2018), which improves on the previous estimator.
+          
+          # It is more useful visualize the MA-plot for the shrunken log2 fold changes, which remove the noise associated with log2 fold changes from low count genes without requiring arbitrary filtering thresholds.
+          flog.info(paste0(" Plotting MA plot from DESeq (2)..."))
+          dd_LFC <- lfcShrink(dd, coef=resultsNames(dd)[length(resultsNames(dd))], type="apeglm")
+          
+          DESeq2::plotMA(dd_LFC, main = "MA plot based on shrunken log2 fold changes")
+          
+      }
   }
+  
  
 
   
@@ -473,6 +514,7 @@ plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, fi
   colors = colorRampPalette(brewer.pal(9, "Set1"))(nSamples)
   
   xlabCur = "Mean log counts"
+  flog.info(paste0(" Plotting multidensity plot..."))
    
   if (nSamples < 10) {
 
@@ -493,37 +535,39 @@ plotDiagnosticPlots <- function(dd, differentialResults, conditionComparison, fi
     multiecdf(log(DESeq2::counts(dd, normalized = TRUE) + 0.5) , xlab = xlabCur, main = "Normalized log counts",     legend = NULL, col = colors)
   }
   
-  
-  # 3. Pairwise sample comparisons.
-  # To further assess systematic differences between the samples, we can also plot pairwise mean–average plots: We plot the average of the log–transformed counts vs the fold change per gene for each of the sample pairs.
-  MA.idx = t(combn(seq_len(dim(colData(dd))[1]), 2))
-  
-
-  if (nrow(MA.idx) > maxPairwiseComparisons) {
+  if (maxPairwiseComparisons > 0) {
+      
+      flog.info(paste0(" Plotting pairwise sample comparisons. This amy take a while."))
+      
+      # 3. Pairwise sample comparisons.
+      # To further assess systematic differences between the samples, we can also plot pairwise mean–average plots: We plot the average of the log–transformed counts vs the fold change per gene for each of the sample pairs.
+      MA.idx = t(combn(seq_len(dim(colData(dd))[1]), 2))
+      
+      if (nrow(MA.idx) > maxPairwiseComparisons) {
+        
+        flog.info(paste0("The number of pairwise comparisons to plot exceeds the current maximum of ", maxPairwiseComparisons, ". Only ", maxPairwiseComparisons, " pairwise comparisons will be shown in the PDF."))
+        MA.idx.filt = MA.idx[1:maxPairwiseComparisons,, drop = FALSE]
     
-    flog.info(paste0("The number of pairwise comparisons to plot exceeds the current maximum of ", maxPairwiseComparisons, ". Only ", maxPairwiseComparisons, " pairwise comparisons will be shown in the PDF."))
-    MA.idx.filt = MA.idx[1:maxPairwiseComparisons,, drop = FALSE]
-
-  } else {
-    MA.idx.filt = MA.idx
+      } else {
+        MA.idx.filt = MA.idx
+      }
+      
+      for (i in seq_along(MA.idx.filt[,1])) { 
+        
+        flog.info(paste0(" Plotting pairwise comparison ", i, " out of ", nrow(MA.idx.filt)))
+        label = paste0(colnames(dd)[MA.idx.filt[i,1]], " vs ", colnames(dd)[MA.idx.filt[i,2]])
+        suppressWarnings(print(myMAPlot(DESeq2::counts(dd, normalized = TRUE), c(MA.idx[i,1], MA.idx.filt[i,2]), main =  label)))
+      }
+      
+      # Show an empty page with a warning if plots have been omitted
+      if (nrow(MA.idx) > nrow(MA.idx.filt)) {
+        
+        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+        message = paste0("All remaining pairwise comparisons plots\nbetween samples have been omitted\nfor time and memory reasons.\nThe current maximum is set to ", maxPairwiseComparisons, ".")
+        text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
+      }
+  
   }
-  
-  for (i in seq_along(MA.idx.filt[,1])) { 
-    
-    flog.info(paste0(" Plotting pairwise comparison ", i, " out of ", nrow(MA.idx.filt)))
-    label = paste0(colnames(dd)[MA.idx.filt[i,1]], " vs ", colnames(dd)[MA.idx.filt[i,2]])
-    suppressWarnings(print(myMAPlot(DESeq2::counts(dd, normalized = TRUE), c(MA.idx[i,1], MA.idx.filt[i,2]), main =  label)))
-  }
-  
-  # Show an empty page with a warning if plots have been omitted
-  if (nrow(MA.idx) > nrow(MA.idx.filt)) {
-    
-    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-    message = paste0("All remaining pairwise comparisons plots\nbetween samples have been omitted\nfor time and memory reasons.\nThe current maximum is set to ", maxPairwiseComparisons, ".")
-    text(x = 0.5, y = 0.5, message, cex = 1.6, col = "red")
-  }
-  
-  
   
   # 4. Mean SD plot: Plot row standard deviations versus row means
   notAllZeroPeaks <- (rowSums(DESeq2::counts(dd)) > 0)
@@ -691,7 +735,7 @@ heatmap.act.rep <- function(df.tf.peak.matrix, HOCOMOCO_mapping.df.exp, cor.m, p
     
     missingGenes = which(!HOCOMOCO_mapping.df.exp$ENSEMBL %in% colnames(cor.m))
     if (length(missingGenes) > 0) {
-        HOCOMOCO_mapping.df.exp = filter(HOCOMOCO_mapping.df.exp, ENSEMBL %in% colnames(cor.m))
+        HOCOMOCO_mapping.df.exp = dplyr::filter(HOCOMOCO_mapping.df.exp, ENSEMBL %in% colnames(cor.m))
     }
     
     cor.r.pearson.m <- cor.m[,as.character(HOCOMOCO_mapping.df.exp$ENSEMBL)]
@@ -809,6 +853,26 @@ checkDesignIntegrity <- function(snakemake, par.l, sampleData.df, useRNA = FALSE
     }
     
     formulaVariables = attr(terms(designFormula), "term.labels")
+    
+    indexInteractionTerms = which(grepl(":", formulaVariables))
+    if (length(indexInteractionTerms) > 0) {
+        
+        interactionTerms = formulaVariables[indexInteractionTerms]
+        # Check whether all individual items have been specified
+        for (interactionTermCur in interactionTerms) {
+            componentsCur = strsplit(interactionTermCur, ":")[[1]]
+            if (!all(componentsCur %in% formulaVariables)) {
+                message = paste0("Design formula is incorrect, not all terms from the interactions (", paste0(componentsCur, collapse = ","), ") have been specified individually.")
+                checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+                
+            }
+            
+        }
+        formulaVariables = formulaVariables[-indexInteractionTerms]
+        
+        
+    }
+    
     checkAndLogWarningsAndErrors(components, checkVector(components, min.len = length(formulaVariables)))
     
     # Extract the variable that defines the contrast. Always the last element in the formula

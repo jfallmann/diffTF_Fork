@@ -475,9 +475,9 @@ if (skipTF) {
   
             pdf(par.l$file_output_plot_diagnostic)
             if (par.l$nPermutations == 0) {
-              plotDiagnosticPlots(TF.cds.filt, res_DESeq, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 
+              plotDiagnosticPlots(TF.cds.filt, res_DESeq, conditionComparison, filename = NULL, maxPairwiseComparisons = 0,  plotMA = FALSE) 
             } else {
-              plotDiagnosticPlots(TF.cds.filt, fit, conditionComparison, filename = NULL, maxPairwiseComparisons = 5) 
+              plotDiagnosticPlots(TF.cds.filt, fit, conditionComparison, filename = NULL, maxPairwiseComparisons = 0, plotMA = FALSE) 
             }
             
             
@@ -525,18 +525,30 @@ if (skipTF) {
           
           # Check the version of modeest, because version 2.3.2 introduced an implementation change that breaks things
           
-          if (packageVersion("modeest") < "2.3.2") {
+          if (nrow(dplyr::filter(final.TF.df, !is.na(l2FC))) > 0) {
               
-              modeNum     = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)
+              if (packageVersion("modeest") < "2.3.2") {
+                  
+                  modeNum     = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)
+                  
+                  stopifnot(is.list(modeNum))
+                  l2fc_mode = ifelse(is.null(modeNum$M), NA, modeNum$M)
+                  l2fc_skewness = ifelse(is.null(modeNum$skewness), NA, modeNum$skewness)
+              } else {
+                  
+                  l2fc_mode = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)[1]
+                  l2fc_skewness = skewness(final.TF.df$l2FC, na.rm = TRUE)[1]
+              }
               
-              stopifnot(is.list(modeNum))
-              l2fc_mode = ifelse(is.null(modeNum$M), NA, modeNum$M)
-              l2fc_skewness = ifelse(is.null(modeNum$skewness), NA, modeNum$skewness)
           } else {
               
-              l2fc_mode = mlv(final.TF.df$l2FC, method = "mfv", na.rm = TRUE)[1]
-              l2fc_skewness = skewness(final.TF.df$l2FC, na.rm = TRUE)[1]
+              message = paste0("l2fc values could not calculated for any TFBS, this may happen for complex design formulas in combination with particular permutations. For permutation ", permutationCur, ", all values are NA.")
+              checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+              # For rare occassions, if only NA data are available, set l2fc_mode and l2fc_skewness to NA also
+              l2fc_mode = l2fc_skewness = NA
           }
+          
+         
           
           
           # We have to filter now by NAs because for some permutations, limma might have been unable to calculate the coefficients
@@ -592,7 +604,7 @@ if (skipTF) {
     }  # end for each permutation
   
   if (!skipTF) {
-      TF_outputInclPerm.df = as.tibble(log2fc.m) %>%
+      TF_outputInclPerm.df = as_tibble(log2fc.m) %>%
           add_column(TF = TFCur , TFBSID = TF_outputCur.df$TFBSID, .before = 1)
       
       colnames(TF_outputInclPerm.df)[3:ncol(TF_outputInclPerm.df)] = paste0("log2fc_perm", 0:par.l$nPermutations)
@@ -600,11 +612,18 @@ if (skipTF) {
  
 
 } # end if !skipTF
-    
 
-TF_output.df = mutate_if(TF_output.df, is.numeric, as.character)
+# Do it separately for each column because different rounding schemes might be needed
+TF_output.df = TF_output.df %>% 
+    mutate_at(c("l2FC", "limma_avgExpr", "limma_B", "limma_t_stat", "DESeq_ldcSE", "DESeq_stat", "DESeq_baseMean"), signif, 3) %>%
+    mutate_at(c("pval", "pval_adj"), formatC, format = "g", digits = 3)
+
+
+# TF_output.df = mutate_if(TF_output.df, is.numeric, as.character)
 write_tsv(TF_output.df,     path = par.l$file_output_summaryAll)
-TF_outputInclPerm.df = mutate_if(TF_outputInclPerm.df, is.numeric, as.character)
+
+# All numeric columns can be treated the same way
+TF_outputInclPerm.df = mutate_if(TF_outputInclPerm.df, is.numeric, signif, 2)
 write_tsv(TF_outputInclPerm.df, path = par.l$file_outputPerm_summaryAll, col_names = FALSE)
 saveRDS(outputSummary.df,   file = par.l$file_output_summaryStats)
 
