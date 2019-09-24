@@ -259,7 +259,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   #Filter permutations in the original files that the user does not want anymore
   TF.motifs.ori = TF.motifs.ori %>% 
     dplyr::filter(permutation <= par.l$nPermutations) %>%
-    mutate(CG.identifier = paste0(TF,":",TFBSID)) %>%
+    dplyr::mutate(CG.identifier = paste0(TF,":",TFBSID)) %>%
     dplyr::select(-one_of("TF"))
   
 
@@ -270,7 +270,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   
   TF.motifs.all =  TF.motifs.ori %>% 
     full_join(TF.motifs.CG, by = c("CG.identifier"))  %>% 
-    mutate(CG.bins = cut(CG, breaks = CGBins, labels = paste0(round(CGBins[-1] * 100,0),"%"), include.lowest = TRUE))  %>%  
+    dplyr::mutate(CG.bins = cut(CG, breaks = CGBins, labels = paste0(round(CGBins[-1] * 100,0),"%"), include.lowest = TRUE))  %>%  
     dplyr::select(-one_of("CG.identifier", "CG")) %>%
     dplyr::filter(!is.na(CG.bins)) # for rare cases of NA for CG:bins (which can happen if the number of samples is changed)
   
@@ -539,8 +539,15 @@ if (nPermutationsSkipped > 0) {
 
 saveRDS(list( binSummary =  perm.l, covarianceSummary = summaryCov.df), file = par.l$file_output_permResults)
 
+output.global.TFs = output.global.TFs %>% 
+    dplyr::mutate_at(c("weighted_meanDifference", "weighted_CD"), signif, 3)
+    
+if (calculateVariance) {
+    output.global.TFs = dplyr::mutate_at(output.global.TFs, c("weighted_Tstat", "variance"), formatC, format = "g", digits = 3)
+}
+   
+
 # Convert all numeric data types to character in order to prevent any scientific notation
-output.global.TFs = mutate_if(output.global.TFs, is.numeric, as.character)
 write_tsv(output.global.TFs, path = par.l$file_output_summary, col_names = TRUE)
 
 .printExecutionTime(start.time)
