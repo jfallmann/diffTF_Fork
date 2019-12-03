@@ -6,6 +6,14 @@ Transcription factors (TFs) regulate many cellular processes and can therefore s
 
 For a graphical summary of the idea, see the section :ref:`workflow`
 
+This is the graphical abstract:
+
+.. figure:: Figures/diffTF_graphicalAbstract.jpg
+      :scale: 40 %
+      :alt: Graphical abstract
+      :align: center
+
+
 The paper is open access and available online, please see the section :ref:`citation` for details.
 
 
