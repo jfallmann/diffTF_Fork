@@ -1,18 +1,17 @@
-![logo|small](/docs/logo.png "diffTF logo")
+![logo|small](/docs/Figures/diffTF_graphicalAbstract.jpg "diffTF graphical abstract")
 
 
-Genome-wide quantification of differential transcription factor activity: diffTF         
-=====================================================================================================
+Quantification of Differential Transcription Factor Activity and Multiomics-Based Classification into Activators and Repressors: diffTF       
+=========================================================================================================================================
 
 Thank you for the interest in diffTF! If you have questions or comments, feel free to contact us. We will be happy to answer any questions related to this project as well as questions related to the software implementation.
 
 Summary
 -------------
-Transcription factor (TF) activity constitutes an important readout of cellular signalling pathways and thus for assessing regulatory differences across conditions. However, current technologies lack the ability to simultaneously assessing activity changes for multiple TFs and surprisingly little is known about whether a TF acts as repressor or activator. To this end, we introduce the widely applicable genome-wide method diffTF to assess differential TF binding activity and classifying TFs as activator or repressor by integrating any type of genome-wide chromatin with RNA-Seq data and in-silico predicted TF binding sites.
+Transcription factors (TFs) regulate many cellular processes and can therefore serve as readouts of the signaling and regulatory state. Yet for many TFs, the mode of action—repressing or activating transcription of target genes—is unclear. Here, we present diffTF ([https://git.embl.de/grp-zaugg/diffTF](https://git.embl.de/grp-zaugg/diffTF) to calculate differential TF activity (basic mode) and classify TFs into putative transcriptional activators or repressors (classification mode). In basic mode, it combines genome-wide chromatin accessibility/activity with putative TF binding sites that, in classification mode, are integrated with RNA-seq. We apply diffTF to compare (1) mutated and unmutated chronic lymphocytic leukemia patients and (2) two hematopoietic progenitor cell types. In both datasets, diffTF recovers most known biology and finds many previously unreported TFs. It classifies almost 40% of TFs based on their mode of action, which we validate experimentally. Overall, we demonstrate that diffTF recovers known biology, identifies less well-characterized TFs, and classifies TFs into transcriptional activators or repressors.
 
-For more information, please check our paper on bioRxiv:
+For more information, please see the link for the paper in the Citation section below.
 
-[Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF](https://www.biorxiv.org/content/early/2018/12/01/368498).
 
 Documentation
 -------------
@@ -33,4 +32,7 @@ Citation
 --------
 *Please cite the following article if you use diffTF in your research*:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Holly Giles, Peter-Martin Bruch, Sascha Dietrich, Wolfgang Huber, Kristian Helin & Judith B. Zaugg. Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF. 2019. in review.
+
+Ivan Berest\*, Christian Arnold\*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rasmussen, Holly Giles, Peter-Martin Bruch, Wolfgang Huber, Sascha Dietrich, Kristian Helin, Judith B. Zaugg. *Quantification of Differential Transcription Factor Activity and Multiomics-Based Classification into Activators and Repressors: diffTF*. 2019. Cell Reports 29(10), P3147-3159.E12.
+
+Open Access. DOI:[https://doi.org/10.1016/j.celrep.2019.10.106](https://doi.org/10.1016/j.celrep.2019.10.106)
