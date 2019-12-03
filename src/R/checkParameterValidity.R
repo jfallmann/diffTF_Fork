@@ -134,8 +134,7 @@ if (par.l$nPermutations == 0 && par.l$nBootstraps < 1000) {
 # CHECK FASTA AND BAM FILES #
 #############################
 
-sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_types = cols())
-
+sampleData.df = read_tidyverse_wrapper(par.l$file_input_sampleData, type = "tsv", col_names = TRUE, col_types = cols())
 
 components3types = checkDesignIntegrity(snakemake, par.l, sampleData.df)$types
 
@@ -244,12 +243,8 @@ flog.info(paste0("Check peak files..."))
 if (file_peaks != "") {
   
   assertFileExists(snakemake@config$peaks$consensusPeaks)
-  peaks.df = read_tsv(snakemake@config$peaks$consensusPeaks, col_names = FALSE)
-  if (nrow(problems(peaks.df)) > 0) {
-    flog.fatal(paste0("Parsing errors: "), problems(peaks.df), capture = TRUE)
-    stop("Parsing errors with file ", snakemake@config$peaks$consensusPeaks, ". See the log file for more information")
-  }
-  
+  peaks.df = read_tidyverse_wrapper(snakemake@config$peaks$consensusPeaks, type = "tsv", col_names = FALSE)
+
   flog.info(paste0("Peak file contains ", nrow(peaks.df), " peaks."))
   
   if (nrow(peaks.df) > 100000) {
@@ -343,20 +338,8 @@ for (TFCur in allTFs) {
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
   }
   
-  tableCur.df = read_tsv(fileCur, col_names = FALSE, 
-                         col_types = "ciicnc")
-  
-  if (nrow(problems(tableCur.df)) > 0) {
-    flog.fatal(paste0("Parsing errors: "), problems(tableCur.df), capture = TRUE)
-    stop("Parsing errors for file ", TFCur, ". See the log file for more information")
-  }
-  
-  ncols = ncol(tableCur.df)
-  if (ncols != 6) {
-    message = paste0("Number of columns must be 6, but file ", TFCur, " has ", ncols, " instead")
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-  }
-  
+  tableCur.df = read_tidyverse_wrapper(fileCur, type = "tsv", ncolExpected = 6, col_names = FALSE, col_types = "ciicnc")
+
   assertIntegerish(tableCur.df$X2, lower = 0)
   assertIntegerish(tableCur.df$X3, lower = 0)
   

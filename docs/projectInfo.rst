@@ -2,12 +2,11 @@
 
 Biological motivation
 ============================
-Transcription factor (TF) activity constitutes an important readout of cellular signalling pathways and thus for assessing regulatory differences across conditions. However, current technologies lack the ability to simultaneously assessing activity changes for multiple TFs and surprisingly little is known about whether a TF acts as repressor or activator. To this end, we introduce the widely applicable genome-wide method diffTF to assess differential TF binding activity and classifying TFs as activator or repressor by integrating any type of genome-wide chromatin with RNA-Seq data and in-silico predicted TF binding sites.
+Transcription factors (TFs) regulate many cellular processes and can therefore serve as readouts of the signaling and regulatory state. Yet for many TFs, the mode of action—repressing or activating transcription of target genes—is unclear. Here, we present diffTF (`https://git.embl.de/grp-zaugg/diffTF <https://git.embl.de/grp-zaugg/diffTF>`_) to calculate differential TF activity (basic mode) and classify TFs into putative transcriptional activators or repressors (classification mode). In basic mode, it combines genome-wide chromatin accessibility/activity with putative TF binding sites that, in classification mode, are integrated with RNA-seq. We apply diffTF to compare (1) mutated and unmutated chronic lymphocytic leukemia patients and (2) two hematopoietic progenitor cell types. In both datasets, diffTF recovers most known biology and finds many previously unreported TFs. It classifies almost 40% of TFs based on their mode of action, which we validate experimentally. Overall, we demonstrate that diffTF recovers known biology, identifies less well-characterized TFs, and classifies TFs into transcriptional activators or repressors.
 
 For a graphical summary of the idea, see the section :ref:`workflow`
 
-We also put the paper on *bioRxiv*, please see the section :ref:`citation` for details.
-
+The paper is open access and available online, please see the section :ref:`citation` for details.
 
 
 .. _exampleDataset:
@@ -44,15 +43,25 @@ Citation
 
 If you use this software, please cite the following reference:
 
-Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rassmussen, Holly Giles, Peter-Martin Bruch, Sascha Dietrich, Wolfgang Huber, Kristian Helin & Judith B. Zaugg. *Quantification of differential transcription factor activity and multiomics-based classification into activators and repressors: diffTF*. 2019. in review.
+Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rasmussen, Holly Giles, Peter-Martin Bruch, Wolfgang Huber, Sascha Dietrich, Kristian Helin, Judith B. Zaugg. *Quantification of Differential Transcription Factor Activity and Multiomics-Based Classification into Activators and Repressors: diffTF*. 2019. Cell Reports 29(10), P3147-3159.E12.
 
-We also put the paper on *bioRxiv*, please read all methodological details here:
-`Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/12/01/368498>`_.
+Open Access. DOI:https://doi.org/10.1016/j.celrep.2019.10.106
+
+
+.. We also put the paper on *bioRxiv*, please read all methodological details here:
+.. `Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/12/01/368498>`_.
 
 .. _changelog:
 
 Change log
 ============================
+Version 1.5 (2019-12-03)
+  - *diffTF* has been published in Cell Reports! See the section :ref:`citation` for details.
+  - raw and adjusted p-values for the permutation-based approach can now not be 0 anymore. We now use the approach described `here<https://genomicsclass.github.io/book/pages/permutation_tests.html>`_. In a nutshell, the smallest p-value is now 1/(*nPermutations* + 1), with *nPermutations* denoting the number of permutations and thereby depends on the number of permutations - having more permutations makes the minimum p-value smaller.
+  - for plotting TF densities, a fixed bandwidth of 0.1 was used before. We now removed this and bandwidth is determined automatically. We noticed that in some cases, the fixed bandwidth may lead to a smoothing of the density curves while without fixing it, the densities look more rugged. As we do not want to introduce visual artifacts, we decided to remove it.
+  - various minor code improvements, particularly related to the AR classification
+  - small fixes in the Snakefile
+
 Version 1.4 (2019-09-24)
   - Various small improvements for increasing user experience
 

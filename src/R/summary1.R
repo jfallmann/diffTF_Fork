@@ -96,8 +96,7 @@ for (fileCur in par.l$files_input_TF_summary) {
 }
 
 
-
-peaks.df = read_tsv(par.l$file_input_peaks, col_types = cols())
+peaks.df = read_tidyverse_wrapper(par.l$file_input_peaks, type = "tsv", col_types = cols())
 
 summary.df = NULL
 

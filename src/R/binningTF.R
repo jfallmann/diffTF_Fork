@@ -104,7 +104,7 @@ testExistanceAndCreateDirectoriesRecursively(allDirs)
 
 
 TFCur                      = par.l$TF
-# TODO: perm.l with all TF instead of TFCur
+
 perm.l                     = list()
 calculateVariance = par.l$nPermutations == 0
 
@@ -161,31 +161,23 @@ if (par.l$nPermutations + 1 < length(sampleData.l)) {
 # READ NUC CG FILE #
 ####################
 
-flog.info(paste0("Reading and processing file ", fileCur))
-
-TF.motifs.CG  = read_tsv(par.l$file_input_nucContentGenome, col_names = TRUE, 
-                         col_types = list(
-                           col_skip(), # "chr"
-                           col_skip(), # "MSS"
-                           col_skip(), # "MES"
-                           col_character(), # "TFBSID"
-                           col_character(), # "TF",
-                           col_skip(), # "AT"
-                           col_double(), # "CG"
-                           col_skip(), # "A"
-                           col_skip(), # "C"
-                           col_skip(), # "G"
-                           col_skip(), # "T"
-                           col_skip(), # "N"
-                           col_skip(), # "other_nucl"
-                           col_skip() # "length"
-                         )
-)
-
-if (nrow(problems(TF.motifs.CG)) > 0) {
-  flog.fatal(paste0("Parsing errors: "), problems(TF.motifs.CG), capture = TRUE)
-  stop("Error when parsing the file ", fileCur, ", see errors above")
-}
+TF.motifs.CG  = read_tidyverse_wrapper(par.l$file_input_nucContentGenome, type = "tsv", col_names = TRUE, 
+                                       col_types = list(
+                                         col_skip(), # "chr"
+                                         col_skip(), # "MSS"
+                                         col_skip(), # "MES"
+                                         col_character(), # "TFBSID"
+                                         col_character(), # "TF",
+                                         col_skip(), # "AT"
+                                         col_double(), # "CG"
+                                         col_skip(), # "A"
+                                         col_skip(), # "C"
+                                         col_skip(), # "G"
+                                         col_skip(), # "T"
+                                         col_skip(), # "N"
+                                         col_skip(), # "other_nucl"
+                                         col_skip() # "length"
+                                       ))
 
 
 colnames(TF.motifs.CG) = c("TFBSID","TF","CG")
@@ -220,39 +212,23 @@ nPermutationsSkipped = 0
 for (fileCur in par.l$files_input_TF_allMotives) {
     
   # Log 2 fold-changes from the particular permutation
-  TF.motifs.ori  = read_tsv(fileCur, col_names = TRUE, 
-                            col_types = list(
-                              col_character(), # "TF",
-                              col_character(), # "TFBSID"
-                              col_double() # "log2FoldChange", important to have double here as col_number would not parse numbers in scientific notation correctly
-                            )
-  )
+  TF.motifs.ori  = read_tidyverse_wrapper(fileCur, type = "tsv", col_names = TRUE, 
+                                          col_types = list(
+                                            col_character(), # "TF",
+                                            col_character(), # "TFBSID"
+                                            col_double() # "log2FoldChange", important to have double here as col_number would not parse numbers in scientific notation correctly
+                                          ))
 
- 
-  if (nrow(problems(TF.motifs.ori)) > 0) {
-    flog.fatal(paste0("Parsing errors: "), problems(TF.motifs.ori), capture = TRUE)
-    stop("Error when parsing the file ", fileCur, ", see errors above")
-  }
-  
-  if (nrow(TF.motifs.ori) == 0) {
-    message = paste0("The file ", fileCur, " is empty. Something went wrong before. Make sure the previous steps succeeded.")
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-  }
-  
-  if (ncol(TF.motifs.ori) != 3) {
-    message = paste0("The file ", fileCur, " does not have 3 columns. Something is wrong with the number of permutations. We recommend restarting the pipeline from the DiffPeaks step.")
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-  }
  
   colnames(TF.motifs.ori) = c("TF", "TFBSID", "log2FoldChange")
   
   permutationCur = as.numeric(gsub(".*perm([0-9]+).tsv.gz", '\\1', fileCur))
   TF.motifs.ori$permutation = permutationCur
   
-  if (permutationCur > 0) {
+  if (permutationCur > 0 & (permutationCur %% 10 == 0 | permutationCur == par.l$nPermutations)) {
     flog.info(paste0("Running permutation ", permutationCur))
   } else {
-    flog.info(paste0("Running for real data ", permutationCur))
+    flog.info(paste0("Running for real data "))
   }
   
   
@@ -288,8 +264,6 @@ for (fileCur in par.l$files_input_TF_allMotives) {
   # Sometimes, a bin is missing in the TF.motifs.all data, therefore decreasing the apparent number of bins
   nBinsAll   = length(levels(TF.motifs.all$CG.bins))
   nCol       = ncol(perm.l[[TFCur]])
-  
-  # TODO: TFBSID needed?
   
   flog.info(paste0(" Found ", nrow(TF.motifs.all) - nrow(TF.motifs.all.unique), " duplicated TFBS across all TF."))
   

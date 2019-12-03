@@ -119,7 +119,8 @@ printParametersLog(par.l)
 # READ METADATA #
 #################
 
-sampleData.df = read_tsv(par.l$file_input_sampleData, col_names = TRUE, col_types = cols())
+sampleData.df = read_tidyverse_wrapper(par.l$file_input_sampleData, type = "tsv",
+                                       col_names = TRUE, col_types = cols())
 
 checkAndLogWarningsAndErrors(colnames(sampleData.df), checkSubset(c("bamReads"), colnames(sampleData.df)))
 
@@ -169,18 +170,8 @@ if (comparisonMode == "pairwise") {
 # ITERATE THROUGH PEAK FILES #
 ##############################
 
-coverageAll.df = read_tsv(par.l$file_input_peakOverlaps, col_names = TRUE, comment = "#", col_types = cols())
-
-if (nrow(problems(coverageAll.df)) > 0) {
-    flog.fatal(paste0("Parsing errors: "), problems(coverageAll.df), capture = TRUE)
-    stop("Error when parsing the file ", fileCur, ", see errors above")
-}
-
-if (nrow(coverageAll.df) == 0) {
-    
-    message = paste0("Empty file ", par.l$file_input_peaks, ".")
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-} 
+coverageAll.df = read_tidyverse_wrapper(par.l$file_input_peakOverlaps, type = "tsv",
+                                        col_names = TRUE, comment = "#", col_types = cols())
 
 ## transform as matrix data frame with counts
 coverageAll.m = as.matrix(dplyr::select(coverageAll.df, -one_of("Geneid", "Chr", "Start", "End", "Strand", "Length")))
@@ -399,66 +390,30 @@ countsNorm.df     = as.data.frame(countsNorm) %>%
   dplyr::select(one_of("peakID", colnames(countsNorm)))
 
 
-if (par.l$nPermutations == 0) {
-  
-  # Generate normalized counts for limma analysis
-  countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
-  rownames(countsNorm.transf) = rownames(cds.peaks.filt)
-  
-  sampleData.df$conditionSummary = factor(sampleData.df$conditionSummary)
-  
-  designMatrix = model.matrix(designFormula, data = sampleData.df)
-  
-  if (nrow(designMatrix) < nrow(sampleData.df)) {
-    missingRows = setdiff(1:nrow(sampleData.df), as.integer(row.names(designMatrix)))
-    message = paste0("There is a problem with the specified design formula (parameter designContrast): The corresponding design matrix has fewer rows. This usually means that there are missing values in one of the specified variables. The problem comes from the following lines in the summary file: ", paste0(missingRows, collapse = ","), ".") 
-    checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
-  }
-  
-  fit        <- eBayes(lmFit(countsNorm.transf, design = designMatrix))
-  results.df <- topTable(fit, coef = colnames(fit$design)[ncol(fit$design)], number = Inf, sort.by = "none")
-  
-  final.peaks.df = tibble(  
-    "permutation" = 0,
-    "peakID"      = rownames(results.df), 
-    "limma_avgExpr"     = results.df$AveExpr,
-    "l2FC"        = results.df$logFC,
-    "limma_B"           = results.df$B,
-    "limma_t_stat"      = results.df$t,
-    "pval"        = results.df$P.Value, 
-    "pval_adj"    = results.df$adj.P.Val
-  )
-  
-  
-  plotDiagnosticPlots(cds.peaks.filt, fit, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 0, plotMA = TRUE)
-  
-  
-} else {
-
-  # Deseq analysis
-  cds.peaks.filt = tryCatch( {
+# Deseq analysis
+cds.peaks.filt = tryCatch( {
     DESeq(cds.peaks.filt, fitType = 'local', quiet = TRUE)
-    
-  }, error = function(e) {
+
+}, error = function(e) {
     message = "Warning: Could not run DESeq with local fitting, retry with default fitting type..."
     checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
     DESeq(cds.peaks.filt, quiet = TRUE)
-  }
-  )
+}
+)
+#Enforce the correct order of the comparison
+if (comparisonMode == "pairwise") { 
   
-  #Enforce the correct order of the comparison
-  if (comparisonMode == "pairwise") { 
-      
-      cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt, contrast = c(variableToPermute, comparisonDESeq[1], comparisonDESeq[2])))
-  
-  } else {
-      
-      # Same as without specifying contrast at all
-      cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt, contrast = list(variableToPermute)))    
-  }
-  
-  
-  final.peaks.df = tibble( 
+  contrast = c(variableToPermute, comparisonDESeq[1], comparisonDESeq[2])
+
+} else {
+  # Same as without specifying contrast at all
+  contrast = list(variableToPermute)
+     
+}
+cds.peaks.df <- as.data.frame(DESeq2::results(cds.peaks.filt, contrast = contrast)) 
+
+
+final.peaks.df = tibble( 
     "permutation" = 0,
     "peakID"    = rownames(cds.peaks.df), 
     "DESeq_baseMean" = cds.peaks.df$baseMean,
@@ -467,11 +422,9 @@ if (par.l$nPermutations == 0) {
     "DESeq_stat"     = cds.peaks.df$stat,
     "pval"     =  cds.peaks.df$pvalue, 
     "pval_adj" =  cds.peaks.df$padj
-  )
-  
-  plotDiagnosticPlots(cds.peaks.filt, cds.peaks.filt, comparisonDESeq, par.l$file_output_plots, maxPairwiseComparisons = 20)
-  
-}
+)
+
+plotDiagnosticPlots(cds.peaks.filt, comparisonDESeq, file = par.l$file_output_plots, contrast = contrast, maxPairwiseComparisons = 20)
 
 
 saveRDS(cds.peaks.filt, file = par.l$file_output_DESeqObj)
@@ -501,7 +454,6 @@ if (par.l$nPermutations > 0) {
   
   }
 }
-
 
 
 

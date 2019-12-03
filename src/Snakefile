@@ -198,6 +198,8 @@ else:
 
 allBamFilesBasename = []
 for fileCur in allBamFiles:
+    if fileCur.endswith(" ") or fileCur.startswith(" "):
+        raise IOError("File \"" + fileCur + "\" starts or ends with a white space, this should be corrected in the file " + config["samples"]["summaryFile"] + ".")
     if not os.path.isfile(fileCur):
         raise IOError("File \"" + fileCur + "\" (defined in " + config["samples"]["summaryFile"] + ") not found.")
     # Index is not needed for featureCounts
@@ -258,7 +260,11 @@ if config["peaks"]["consensusPeaks"]:
         raise IOError("File \"" + filenameCur + "\" not found.")
     # Check if it contains scientific notification
     # the || true in the end ensures the exit status of grep is 0, because this would raise an error otherwise
-    nHits = int(subprocess.check_output('grep -c "e+" ' + config["peaks"]["consensusPeaks"] + " || true", shell=True))
+
+    grep_variant = "grep"
+    if filenameCur.endswith("gz"):
+        grep_variant = "zgrep"
+    nHits = int(subprocess.check_output(grep_variant + ' -c "e+" ' + config["peaks"]["consensusPeaks"] + " || true", shell=True))
     if nHits > 0:
         raise AssertionError("File " + config["peaks"]["consensusPeaks"] + " contains at least one line with the scientific notation (e+). This will cause errors in subsequent steps. Check the file and transform all \"e+\" coordinates.")
 
@@ -463,7 +469,7 @@ rule intersectPeaksAndTFBS:
         TFBSinPeaksMod_bed = expand('{dir}/{compType}allTFBS.peaks.extension.bed.gz', dir = TEMP_EXTENSION_DIR, compType = compType)
     message: "{ruleDisplayMessage} Obtain binding sites from peaks: Intersect all TFBS files and {input.consensusPeaks}..."
     threads: 1
-    #singularity: "shub://chrarnold/Singularity_images:difftf_conda"
+    singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         extension = config["par_general"]["regionExtension"],
         ulimitMax = ulimitMax

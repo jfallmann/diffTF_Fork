@@ -189,13 +189,8 @@ outputSummary.df  = tribble(~permutation, ~TF, ~Pos_l2FC, ~Mean_l2FC, ~Median_l2
 # READ OVERLAP FILE #
 #####################
 
-overlapsAll.df = read_tsv(par.l$file_input_peakTFOverlaps, col_names = TRUE, col_types = cols(), comment = "#")
-
-if (nrow(problems(overlapsAll.df)) > 0) {
-  flog.fatal(paste0("Parsing errors: "), problems(overlapsAll.df), capture = TRUE)
-  stop("Error when parsing the file ", fileCur, ", see errors above")
-}
-
+overlapsAll.df = read_tidyverse_wrapper(par.l$file_input_peakTFOverlaps, type = "tsv",
+                                        col_names = TRUE, col_types = cols(), comment = "#")
 
 if (nrow(overlapsAll.df) > 0) {
   
@@ -326,11 +321,7 @@ if (skipTF) {
   # Preallocate data frame so no expensive reallocation has to be done
   log2fc.m = matrix(NA, nrow = nPeaks , ncol = par.l$nPermutations + 1)
 
-  peaks.df = read_tsv(par.l$file_input_peak2, col_types = cols())
-  if (nrow(problems(peaks.df)) > 0) {
-    flog.fatal(paste0("Parsing errors: "), problems(peaks.df), capture = TRUE)
-    stop("Error when parsing the file ", par.l$file_input_peak2, ", see errors above")
-  }
+  peaks.df = read_tidyverse_wrapper(par.l$file_input_peak2, type = "tsv", col_types = cols())
   
   peaksFiltered.df = readRDS(par.l$file_input_peaks)
   
@@ -344,6 +335,7 @@ if (skipTF) {
     if (par.l$nPermutations > 0) {
       
       # Generate normalized counts for limma analysis
+      countsRaw         = DESeq2::counts(TF.cds.filt, norm = FALSE)
       countsNorm        = DESeq2::counts(TF.cds.filt, norm = TRUE)
       countsNorm.transf = log2(countsNorm + par.l$pseudocountAddition)
       rownames(countsNorm.transf) = rownames(TF.cds.filt)
@@ -355,11 +347,12 @@ if (skipTF) {
     
     for (permutationCur in 0:par.l$nPermutations) {
       
-      if (permutationCur == 0) {
-        flog.info(paste0("Running for real data"))
-      } else {
-        flog.info(paste0("Running for permutation ", permutationCur))
-      }
+        if (permutationCur > 0 & (permutationCur %% 10 == 0 | permutationCur == par.l$nPermutations)) {
+            flog.info(paste0("Running permutation ", permutationCur))
+        } else {
+            flog.info(paste0("Running for real data "))
+        }
+        
       sampleData.df = sampleData.l[[paste0("permutation", permutationCur)]]
       
       ##############################
@@ -392,14 +385,14 @@ if (skipTF) {
         # We already set the factors for conditionSummary explicitly. The reference level is the first level for DeSeq. 
         # Run the local fit first, if that throws an error try the default fit type
         
-        res_DESeq = tryCatch( {
+        TF.cds.filt = tryCatch( {
           suppressMessages(DESeq(TF.cds.filt,fitType = 'local'))
           
         }, error = function(e) {
           message = "Could not run DESeq with local fitting, retry with default fitting type..."
           checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
           
-          res_DESeq = tryCatch( {
+          TF.cds.filt = tryCatch( {
             suppressMessages(DESeq(TF.cds.filt))
             
           }, error = function(e) {
@@ -408,12 +401,12 @@ if (skipTF) {
           }
           )
           
-          res_DESeq
+          TF.cds.filt
           
         }
         )
         
-        if (class(res_DESeq) == "character") {
+        if (class(TF.cds.filt) == "character") {
           
           skipTF = TRUE
           TF_outputInclPerm.df = as.data.frame(matrix(nrow = 0, ncol = 2 + par.l$nPermutations + 1))
@@ -425,14 +418,18 @@ if (skipTF) {
             #Enforce the correct order of the comparison
             if (comparisonMode == "pairwise") { 
                 
-                res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq, contrast = c(variableToPermute, conditionComparison[1], conditionComparison[2])))
+                contrast = c(variableToPermute, conditionComparison[1], conditionComparison[2])
                 
             } else {
                 
                 # Same as without specifying contrast at all
-                res_DESeq.df <- as.data.frame(DESeq2::results(res_DESeq, contrast = list(variableToPermute)))
+                contrast = list(variableToPermute)
+                
 
             }
+            
+            res_DESeq = DESeq2::results(TF.cds.filt, contrast = contrast)
+            res_DESeq.df <- as.data.frame(res_DESeq)
            
             
             final.TF.df = tibble("TFBSID"    = rownames(res_DESeq.df), 
@@ -475,9 +472,10 @@ if (skipTF) {
   
             pdf(par.l$file_output_plot_diagnostic)
             if (par.l$nPermutations == 0) {
-              plotDiagnosticPlots(TF.cds.filt, res_DESeq, conditionComparison, filename = NULL, maxPairwiseComparisons = 0,  plotMA = FALSE) 
+              plotDiagnosticPlots(TF.cds.filt, conditionComparison, file = NULL, maxPairwiseComparisons = 0,  plotMA = FALSE) 
             } else {
-              plotDiagnosticPlots(TF.cds.filt, fit, conditionComparison, filename = NULL, maxPairwiseComparisons = 0, plotMA = FALSE) 
+                
+              plotDiagnosticPlots(fit, conditionComparison, file = NULL, maxPairwiseComparisons = 0, plotMA = FALSE, counts.raw = countsRaw, counts.norm = countsNorm) 
             }
             
             

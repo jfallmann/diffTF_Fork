@@ -138,7 +138,7 @@ A working ``R`` installation is needed and a number of packages from either CRAN
   if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-  BiocManager::install(c("limma", "vsn", "csaw", "DESeq2", "DiffBind", "geneplotter", "Rsamtools", "preprocessCore"))
+  BiocManager::install(c("limma", "vsn", "csaw", "DESeq2", "DiffBind", "geneplotter", "Rsamtools", "preprocessCore", "apeglm"))
 
 
 .. _docs-runOwnAnalysis:

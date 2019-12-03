@@ -90,7 +90,8 @@ printParametersLog(par.l)
 ##########################
 
 # Provide the metadata file and parse the CSV here
-sampleMetaData.df = read_tsv(file_sampleData, col_types = cols())
+sampleMetaData.df = read_tidyverse_wrapper(file_sampleData, type = "tsv",
+                                           col_types = cols())
 assertSubset(c("SampleID", "bamReads", "conditionSummary", "Peaks"), colnames(sampleMetaData.df))
 assertIntegerish(minOverlap, upper = nrow(sampleMetaData.df))
 
