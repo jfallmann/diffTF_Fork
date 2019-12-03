@@ -53,7 +53,7 @@ If you use this software, please cite the following reference:
 
 Ivan Berest*, Christian Arnold*, Armando Reyes-Palomares, Giovanni Palla, Kasper Dindler Rasmussen, Holly Giles, Peter-Martin Bruch, Wolfgang Huber, Sascha Dietrich, Kristian Helin, Judith B. Zaugg. *Quantification of Differential Transcription Factor Activity and Multiomics-Based Classification into Activators and Repressors: diffTF*. 2019. Cell Reports 29(10), P3147-3159.E12.
 
-Open Access. DOI:https://doi.org/10.1016/j.celrep.2019.10.106
+Open Access. DOI: `https://doi.org/10.1016/j.celrep.2019.10.106 <https://doi.org/10.1016/j.celrep.2019.10.106>`_
 
 
 .. We also put the paper on *bioRxiv*, please read all methodological details here:
@@ -65,7 +65,7 @@ Change log
 ============================
 Version 1.5 (2019-12-03)
   - *diffTF* has been published in Cell Reports! See the section :ref:`citation` for details.
-  - raw and adjusted p-values for the permutation-based approach can now not be 0 anymore. We now use the approach described `here<https://genomicsclass.github.io/book/pages/permutation_tests.html>`_. In a nutshell, the smallest p-value is now 1/(*nPermutations* + 1), with *nPermutations* denoting the number of permutations and thereby depends on the number of permutations - having more permutations makes the minimum p-value smaller.
+  - raw and adjusted p-values for the permutation-based approach can now not be 0 anymore. We now use the approach described `here <https://genomicsclass.github.io/book/pages/permutation_tests.html>`_. In a nutshell, the smallest p-value is now 1/(*nPermutations* + 1), with *nPermutations* denoting the number of permutations and thereby depends on the number of permutations - having more permutations makes the minimum p-value smaller.
   - for plotting TF densities, a fixed bandwidth of 0.1 was used before. We now removed this and bandwidth is determined automatically. We noticed that in some cases, the fixed bandwidth may lead to a smoothing of the density curves while without fixing it, the densities look more rugged. As we do not want to introduce visual artifacts, we decided to remove it.
   - various minor code improvements, particularly related to the AR classification
   - small fixes in the Snakefile
