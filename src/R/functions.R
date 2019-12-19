@@ -97,7 +97,7 @@ read_tidyverse_wrapper <- function(file, type = "tsv", ncolExpected = NULL,  ...
   assertSubset(type, c("csv", "csv2", "tsv", "delim"))
   
   start = Sys.time()
-  flog.info(paste0("Reading file ", file))
+  flog.info(paste0(" Reading file ", file))
   
   
   if (type == "tsv") {
@@ -1463,6 +1463,16 @@ correlateATAC_RNA <- function(countsRNA, countsATAC, HOCOMOCO_mapping, corMethod
     sort.cor.m = cor.m[,names(sort(colMeans(cor.m)))] 
     # Change the column names from ENSEMBL ID to TF names. 
     # Reorder to make sure the order is the same. Due to the duplication ID issue, the number of columns may increase after the column selection
+     
+    colnamesIntegrity = as.character(HOCOMOCO_mapping.exp$ENSEMBL) %in% colnames(sort.cor.m)
+    if (!all(colnamesIntegrity)) {
+        missing = which(!colnamesIntegrity)
+        message = paste0(length(missing), " ENSEMBL ID(s) missing in the correlation matrix (", paste0(missing, collapse = ","), "). This should not happen, please report it to the Bitbucket Issue Tracker. To avoid downstream errors, subset the TFs accordingly.")
+        checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
+        
+        # Subset to those that overlap with the columns
+        HOCOMOCO_mapping.exp = dplyr::filter(HOCOMOCO_mapping.exp, ENSEMBL %in% colnames(sort.cor.m))
+    } 
     sort.cor.m = sort.cor.m[,as.character(HOCOMOCO_mapping.exp$ENSEMBL)] 
     colnames(sort.cor.m) = as.character(HOCOMOCO_mapping.exp$HOCOID)
 
