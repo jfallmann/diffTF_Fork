@@ -2,42 +2,41 @@
 
 Workflow
 ************************************************************
+For full information, please see the latest publication (linked here: :ref:`citation`).
 
-We put the paper on *bioRxiv*, please read all methodological details here:
-`Quantification of differential transcription factor activity and multiomic-based classification into activators and repressors: diffTF <https://www.biorxiv.org/content/early/2018/07/13/368498>`_.
 
 The workflow and conceptual idea behind *diffTF* is illustrated by the following three Figures. First, we give a high-level conceptual overview and a biological motivation:
 
-   .. figure:: Figures/diffTF_Schematic.png
+   .. figure:: Figures/Fig_1.png
          :scale: 50 %
          :alt: diffTF schematics
          :align: center
 
-         Conceptual idea and workflow of *diffTF*
+         Conceptual idea and workflow of *diffTF*, the two different modes and the classification
 
 
- Next, we show a schematic of the diffTF workflow from a more technical perspective by showing the actual steps that are performed:
+ Next, we show a schematic of the *diffTF* workflow from a more technical perspective by showing the actual steps that are performed:
 
 
-   .. figure:: Figures/Workflow_transparent.png
-      :scale: 50 %
-      :alt: Schematic of the diffTF workflow
+   .. figure:: Figures/Workflow_new.png
+      :scale: 20 %
+      :alt: Schematic of the diffTF workflow and the GC binning
       :align: center
 
-      Schematic of the diffTF workflow, with input and output of the pipeline highlighted.
+      Summary workflows for data processing and methodological details for *diffTF* (for more details, see Suppl. Figure 1 in the publication).
 
 
 We now show which rules are executed by *Snakemake* for a specific example (see the caption of the image):
 
 
    .. figure:: Figures/dag.png
-         :scale: 50 %
+         :scale: 20 %
          :alt: Directed acyclic graph of an example workflow
          :align: center
 
          Exact workflow (a so-called directed acyclic graph, or DAG) that is executed when calling *Snakemake* for an easy of example with two TFs (CEBPB and CTCF) for the two samples GMP.WT1 and MPP.WT1. Each node represents a rule name as defined in the Snakefile, and each arrow a dependency.
 
-diffTF is implemented as a *Snakemake* pipeline. For a gentle introduction about *Snakemake*, see Section :ref:`workingWithPipeline`. As you can see, the workflow consists of the following steps or *rules*:
+*diffTF* is currently implemented as a *Snakemake* pipeline. For a gentle introduction about *Snakemake*, see Section :ref:`workingWithPipeline`. As you can see, the workflow consists of the following steps or *rules*:
 
 - ``checkParameterValidity``: R script that checks whether the specified peak file has the correct format, whether the provided *fasta* file and the *BAM* files are compatible, and other checks
 - ``produceConsensusPeaks``:  R script that generates the consensus peaks using the R package ``DiffBind`` if none are provided
@@ -64,7 +63,7 @@ Input
 Summary
 ==============================
 
-As input for diffTF for your own analysis, the following data are needed:
+As input for *diffTF* for your own analysis, the following data are needed:
 
 - *BAM* file with aligned reads for each sample (see :ref:`parameter_summaryFile`)
 - genome reference *fasta* that has been used to produce the *BAM* files (see :ref:`parameter_refGenome_fasta`)
@@ -76,7 +75,7 @@ In addition, the following files are need, all of which we provide already for h
 - mapping table (see :ref:`parameter_HOCOMOCO_mapping`)
 
 
-Lastly, some metadata files are needed that specify diffTF-specific and Snakemake-specific parameters. They are explained in detail in the next sections. If this sounds complicated, don't worry, just take the example analysis, and you will understand within a few minutes what these files are:
+Lastly, some metadata files are needed that specify *diffTF*-specific and Snakemake-specific parameters. They are explained in detail in the next sections. If this sounds complicated, don't worry, just take the example analysis, and you will understand within a few minutes what these files are:
 
 - a general configuration file (:ref:`configurationFile`)
 - a metadata file for the samples (:ref:`section_metadata`)
@@ -106,7 +105,7 @@ SECTION ``par_general``
 .. _parameter_outdir:
 
 
-PARAMETER ``outdir``
+``outdir``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -117,7 +116,7 @@ Details
 
 
 
-PARAMETER ``maxCoresPerRule``
+``maxCoresPerRule``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -130,7 +129,7 @@ Details
 .. _parameter_regionExtension:
 
 
-PARAMETER ``regionExtension``
+``regionExtension``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -147,7 +146,7 @@ Details
 .. _parameter_comparisonType:
 
 
-PARAMETER ``comparisonType``
+``comparisonType``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -160,46 +159,46 @@ Details
 .. _parameter_conditionComparison:
 
 
-PARAMETER ``conditionComparison``
+``conditionComparison``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
   String. Default "". Specifies the two conditions you want to compare. Only relevant if *conditionSummary* is specified as a factor.
 
 Details
-  This parameter is only relevant if *conditionSummary* is specified as a factor, in which case it specifies the contrast you are making in *diffTF*. Otherwise, it is ignored. Exactly two conditions have to be specified, comma-separated. For example, if you want to compare GMP and MPP samples, the parameter should be "GMP,MPP". Both conditions have to be present in the column "conditionSummary" in the sample file table (see parameter ``summaryFile`` (:ref:`parameter_summaryFile`)).
+  This parameter is only relevant if *conditionSummary* is specified as a factor, in which case it specifies the contrast you are making in *diffTF*. Otherwise, it is ignored. Exactly two conditions have to be specified, comma-separated. For example, if you want to compare GMP and MPP samples, the parameter should be "GMP,MPP". Both conditions have to be present in the column "conditionSummary" in the sample file table (see ``summaryFile`` (:ref:`parameter_summaryFile`)).
 
-  .. note:: The order of the two conditions matters. The condition specified first is the reference condition. For the "GMP,MPP" example, all log2 fold-changes will be the log2fc of *MPP* as compared to *GMP*. That means that a positive log2 fold-change means it is higher in *MPP* as compared to *GMP*. This is particularly relevant for the *allMotifs* output file.
+  .. note:: The order of the two conditions matters. The condition specified first is the reference condition. For the "GMP,MPP" example, all log2 fold-changes will be the log2fc of *MPP* as compared to *GMP*. That means that a positive log2 fold-change means it is higher in *MPP* as compared to *GMP*. Consequently, the final TF activity (denoted *weighted mean difference* in the output tables) will have the same directionality. This is also particularly relevant for the *allMotifs* output file.
 
 .. _parameter_designContrast:
 
 
-PARAMETER ``designContrast``
+``designContrast``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
   String. Default  *conditionSummary*. Design formula for the differential accessibility analysis.
 
 Details
-  This important parameter defines the actual contrast that is done in the differential analysis. That is, which groups of samples are being compared? Examples include mutant vs wild type, mutated vs. unmutated, etc. The last element in the formula must always be *conditionSummary*, which defines the two groups that are being compared or the continuous variable that is used for inferring negative or positive changes, respectively (see parameter :ref:`parameter_designVariableTypes`). This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified. For example, for an analysis that also includes the batch number of the samples, you may specify this as "*~ Treatment + conditionSummary*".
+  This important parameter defines the actual contrast that is done in the differential accessibility analysis. That is, which groups of samples are being compared? Examples include mutant vs wild type, mutated vs. unmutated, etc. The last element in the formula must always be *conditionSummary*, which defines the two groups that are being compared or the continuous variable that is used for inferring negative or positive changes, respectively (see parameter :ref:`parameter_designVariableTypes`). This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified. For example, for an analysis that also includes the batch number of the samples, you may specify this as "*~ Treatment + conditionSummary*".
 
 
 .. _parameter_designContrastRNA:
 
 
-PARAMETER ``designContrastRNA``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``designContrastRNA``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
   String. Default  *conditionSummary*. Design formula for the RNA-Seq data. Only relevant and needed if parameter (:ref:`parameter_RNASeqIntegration`) is set to *true*. If missing (to increase compatibility with previous versions of *diffTF*), the default value will be taken.
 
 Details
-  This important parameter defines the actual contrast that is done in the differential analysis. That is, which groups of samples are being compared? Examples include mutant vs wild type, mutated vs. unmutated, etc. The last element in the formula must always be *conditionSummary*, which defines the two groups that are being compared or the continuous variable that is used for inferring negative or positive changes, respectively (see parameter :ref:`parameter_designVariableTypes`). This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified. For example, for an analysis that also includes the batch number of the samples, you may specify this as "*~ Treatment + conditionSummary*".
+  This important parameter defines the actual contrast that is done in the differential accessibility analysis. That is, which groups of samples are being compared? Examples include mutant vs wild type, mutated vs. unmutated, etc. The last element in the formula must always be *conditionSummary*, which defines the two groups that are being compared or the continuous variable that is used for inferring negative or positive changes, respectively (see parameter :ref:`parameter_designVariableTypes`). This name is currently hard-coded and required by the pipeline. Our pipeline allows including additional variables to model potential confounding variables, like gender, batches etc. For each additional variable that is part of the formula, a corresponding and identically named column in the sample summary file must be specified. For example, for an analysis that also includes the batch number of the samples, you may specify this as "*~ Treatment + conditionSummary*".
 
 .. _parameter_designVariableTypes:
 
 
-PARAMETER ``designVariableTypes``
+``designVariableTypes``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -214,7 +213,7 @@ Details
 .. _parameter_nPermutations:
 
 
-PARAMETER ``nPermutations``
+``nPermutations``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -227,9 +226,9 @@ Details
 
   If set to 0, an alternative way of computing significances that is not based on permutations is performed. First, in the CG normalization step, a Welch Two Sample t-test is performed for each bin and the overall significance by treating the T-statistics as z-scores is calculated, which allows to summarize them across the bins and convert them to one p-value per TF. For this conversion of z-scores per bin to p-value an estimate of the variance of the T-scores is approximated (see the publication for details). This procedure reduces the dependency of the p-value on the sample size (since the number of TFBS can range between a few dozen and multiple tens of thousands depending on the TF).
 
-  .. note:: If set to a value > 0, the parameter ``nBootstraps`` (:ref:`parameter_nBootstraps`) is ignored and can be set to any value.
+  .. note:: If set to a value > 0, the ``nBootstraps`` (:ref:`parameter_nBootstraps`) is ignored and can be set to any value.
 
-  .. note:: While using permutations is the recommended approach for assessing statistical significance, in some cases it might be useful to use the alternative approach: If the number of samples is small or the groups show a very uneven distributions, the number of possible permutations is very small and therefore also the permutation-based approach might not accurately assess significance.
+  .. note:: While using permutations is the recommended approach for assessing statistical significance, in some cases it might be more useful to use the analytical approach: (1) If the number of samples is small or the groups show a very uneven distributions, the total number of possible permutations is also very small and therefore also the permutation-based approach might not accurately assess significance. As a rough guideline, we do not recommend running less than 100 permutations. (2) This approach is usually more stringent than the analytical one. If you have only small differences between the two groups and despite the fact there is no strong signal to capture in the first place, you may want to run the analytical approach instead in such a case.
 
   .. note:: The permutation-based approach is computationally more expensive than the analytical approach. The running time of the pipeline increases with the number of permutations.
 
@@ -237,7 +236,7 @@ Details
 
 .. _parameter_nBootstraps:
 
-PARAMETER ``nBootstraps``
+``nBootstraps``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -246,7 +245,7 @@ Summary
 Details
   To properly estimate the variance of the T scores for each TF in the CG binning step, we employ a bootstrap approach using the boot library in R with a user-adjustable number of bootstrap replicates (default 1,000), with resampling the bin-specific data and then performing the t-test against the full sample as described above. We then calculate the variance of the bootstrapped T scores for each bin. For more details, see the methods of the publication.
 
-  .. note:: Only relevant if the parameter ``nPermutations`` (:ref:`parameter_nPermutations`) is set to 0. If both are set to 0, an error is thrown.
+  .. note:: Only relevant if the ``nPermutations`` (:ref:`parameter_nPermutations`) is set to 0. If both are set to 0, an error is thrown.
 
   .. warning:: If bootstraps are used, it is recommended to use a reasonable large number. We recommend a value 1,000 and found that higher numbers do not add much benefit but instead only increase running time unnecessarily.
 
@@ -254,7 +253,7 @@ Details
 .. _parameter_nGCBins:
 
 
-PARAMETER ``nGCBins``
+``nGCBins``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -269,7 +268,7 @@ Details
 .. _parameter_TFs:
 
 
-PARAMETER ``TFs``
+``TFs``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -280,12 +279,12 @@ Details
 
   .. note:: For each TF ``{TF}``, a corresponding file ``{TF}_TFBS.bed`` needs to be present in the directory that is specified by ``dir_TFBS`` (:ref:`parameter_dir_TFBS`).
 
-  .. warning:: We strongly recommending running diffTF with as many TF as possible due to our statistical model that we use that compares against a background model.
+  .. warning:: We strongly recommending running *diffTF* with as many TF as possible due to our statistical model that we use that compares against a background model.
 
 .. _parameter_dir_scripts:
 
 
-PARAMETER ``dir_scripts``
+``dir_scripts``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -297,7 +296,7 @@ Details
 .. _parameter_RNASeqIntegration:
 
 
-PARAMETER ``RNASeqIntegration``
+``RNASeqIntegration``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -315,7 +314,7 @@ SECTION ``samples``
 .. _parameter_summaryFile:
 
 
-PARAMETER ``summaryFile``
+``summaryFile``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Summary
   String. Default "samples.tsv". Path to the sample metadata file.
@@ -326,13 +325,13 @@ Details
 
 .. _parameter_pairedEnd:
 
-PARAMETER ``pairedEnd``
+``pairedEnd``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Summary
   Logical. true or false. Default true. Is the data paired-end? If single-end, set to false.
 
 Details
-  Both paired-end and single-end data can be run with diffTF.
+  Both paired-end and single-end data can be run with *diffTF*.
 
 
 SECTION ``peaks``
@@ -341,7 +340,7 @@ SECTION ``peaks``
 .. _parameter_consensusPeaks:
 
 
-PARAMETER ``consensusPeaks``
+``consensusPeaks``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Summary
   String. Default "" (empty). Path to the consensus peak file.
@@ -373,7 +372,7 @@ Details
 .. _parameter_peakType:
 
 
-PARAMETER ``peakType``
+``peakType``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Summary
   String. Default ``narrow``. File format of the individual, sample-specific peak files. Only relevant if no consensus peak file has been provided (i.e., the :ref:`parameter_consensusPeaks` is empty).
@@ -387,7 +386,7 @@ Details
 .. _parameter_minOverlap:
 
 
-PARAMETER ``minOverlap``
+``minOverlap``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -404,7 +403,7 @@ SECTION ``additionalInputFiles``
 .. _parameter_refGenome_fasta:
 
 
-PARAMETER ``refGenome_fasta``
+``refGenome_fasta``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -420,7 +419,7 @@ Details
 
 
 
-PARAMETER ``dir_TFBS``
+``dir_TFBS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -448,7 +447,7 @@ Details
 .. _parameter_RNASeqCounts:
 
 
-PARAMETER ``RNASeqCounts``
+``RNASeqCounts``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -462,7 +461,7 @@ Details
 .. _parameter_HOCOMOCO_mapping:
 
 
-PARAMETER ``HOCOMOCO_mapping``
+``HOCOMOCO_mapping``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
@@ -495,10 +494,10 @@ It must contain at least contain the following columns (the exact names do matte
 
 - ``bamReads``:  path to the *BAM* file corresponding to the sample.
 
-  .. warning:: All *BAM* files must meet *SAM* format specifications. You may use the program *ValidateSamFile* from the *Picard tools* to check and identify problems with your file. Chromosome names must have a "*chr*" as prefix, otherwise diffTF may crash.
+  .. warning:: All *BAM* files must meet *SAM* format specifications. You may use the program *ValidateSamFile* from the *Picard tools* to check and identify problems with your file. Chromosome names must have a "*chr*" as prefix, otherwise *diffTF* may crash.
 
 - ``peaks``: absolute path to the sample-specific peak file, in the format as given by ``peakType`` (:ref:`parameter_peakType`). Only needed if no consensus peak file is provided.
-- ``conditionSummary``: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., *mutated and unmutated*, *day0 and day10*, ...). In addition, the two conditions must match the ones specified in the parameter ``conditionComparison`` (:ref:`parameter_conditionComparison`).
+- ``conditionSummary``: String with an arbitrary condition name that defines which condition the sample belongs to. There must be only exactly two different conditions across all samples (e.g., *mutated and unmutated*, *day0 and day10*, ...). In addition, the two conditions must match the ones specified in the ``conditionComparison`` (:ref:`parameter_conditionComparison`).
 - if applicable, all additional variables from the design formula except ``conditionSummary`` must also be present as a separate column.
 
 
@@ -528,25 +527,119 @@ In this folder, the final output files are stored. Most users want to examine th
 Sub-folder ``extension{regionExtension}``
 ----------------------------------------------
 
-Stores results related to the user-specified extension size (``regionExtension``, :ref:`parameter_regionExtension`)
+Stores results related to the user-specified extension size (``regionExtension``, :ref:`parameter_regionExtension`). In the following, the files are ordered by significance or relevance for interpretation an downstream analyses.
 
 .. note:: In all output files, in the column ``permutation``, 0 always refers to the non-permuted, real data, while permutations > 0 reflect real permutations.
+
+
+FILES ``{comparisonType}.summary.volcano.pdf`` and ``{comparisonType}.summary.volcano.q*.pdf``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  A visual summary of the results in the form of a Volcano plot. If you run the classification mode, multiple files are created, as follows:
+
+    - ``{comparisonType}.summary.volcano.pdf``. This file intentionally empty, see the other files below
+    - ``{comparisonType}.summary.volcano.q{X}.pdf``, with {X} being 0.001, 0.01, 0.05, and 0.1, corresponding to different stringencies of the classification. Thus, only the classification (i.e, coloring of the data points) differs among the 4 PDF files.
+
+  If you run only the basic mode, only the file ``{comparisonType}.summary.volcano.pdf`` is created.
+
+  Each PDF contains multiple pages, essentially showing the same data but with different filters, and the structure is as follows:
+
+  - Basic mode (10 pages in total)
+    - Pages 1-5: Volcano plot for different values for the adjusted p-value, starting from the most stringent, 0.001, to 0.01, 0.05, 0.1 and finally the least stringent 0.2
+    - Pages 6-10: Same as pages 1-5, just with the raw p-value
+  - Classification mode (30 pages in total)
+    - Pages 1:15: Volcano plot for different values for the adjusted p-value, starting from the most stringent, 0.001, to 0.01, 0.05, 0.1 and finally the least stringent 0.2. For each of these values, 3 pages are shown: 1: all four classes, 2: excluding not-expressed TFs, 3: only showing activator and repressor TFs (see also the legend)
+    - Pages 16-30: Same as pages 1-15, just with the raw p-value
+
+  Generally, each page shows a Volcano plot of the differential TF activity (labeled as *weighted mean difference*) between the two conditions you run the analysis for (x-axis) and the corresponding significance (y-axis, adjusted for multiple testing and -log10 transformed). Each point is a TF. The significance threshold is indicated with a dotted line. TFBS is the number of predicted TF binding site that overlap the peak regions and upon which the weighted mean difference is based on. If the classification mode was run, the lgend also shows the TF classification, and points are colored accordingly. Note that different sets of classification classes are shown on each page, see above.
+
+
+FILE ``{comparisonType}.summary.tsv.gz``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  The final summary table with all *diffTF* results. This table is also used for the final Volcano plot visualization. The number of columns may vary and depends on the mode you run *diffTF* for (i.e., only basic mode or also classification mode, analytical or permutation-based approach).
+
+Details
+  The following columns are always present and relevant:
+
+  - *TF*: name of the TF
+  - *weighted_meanDifference*: This is the TF activity value that captures the difference in accessibility between the two conditions. More precisely, it is the difference of the real and background distribution, calculated as the weighted mean across all CG bins (see the publication or :ref:`workflow` for a graphical depiction of how this works put plot how this is calculated). In the Volcano plot, this is the x-axis. Higher values in either positive and negative direction indicate a larger TF activity in one of the two conditions (i.e., the predicted TF binding sites for this TFs are more accessible). Positive and negative values denote whether the value was bigger in one or the other condition, see the Volcano plot for easier interpretation as well as the notes for :ref:``conditionComparison``.
+  - *weighted_CD*: An alternative measure for the effect size that can be seen as alternative for the *weighted_meanDifference* but that we provide nevertheless. It is calculated in a similar fashion as the *weighted_meanDifference*, but instead of taking the difference in the means of the log2 fold-change values from foreground and background, it represents the Cohen's d measure of effect size (as calculated by the ``cohensD`` function from the *lsr* package), weighted by CG bin as for the *weighted_meanDifference*.
+  - *TFBS*: The number of predicted TF binding sites for the particular TF that overlap with the peaks and that the analysis was based on.
+  - *pvalue*: The p-value assesses the significance of the obtained *weighted_meanDifference*. The exact calculation depends on whether permutations are used (permutation-based approach) or not (analytical approach) and is fully described in the *STAR* methods of the publication, section "Estimation of significance for differential activity for each TF"
+  - *pvalueAdj*: adjusted p-values using Benjamini-Hochberg
+
+  The following columns are only relevant if you run the analytical mode:
+
+  - *weighted_Tstat* and *variance*: These columns are only relevant for the analytical version. See the section "Estimation of significance for differential activity for each TF" in the  *STAR* methods for details. The resulting p-value is based on these columns and we provide them for the sake of completeness.
+
+  The following columns are only relevant if you run the classification mode:
+
+  - *median.cor.tfs*: The median value for the RNA-ATAC correlations from the foreground (i.e., peaks with a predicted TFBS for the particular TF)
+  - *classification_\**: The columns are explained below, but for each of them, a TF is either classified as *activator*, *undetermined*, *repressor* or *not-expressed*). For details how TFs are classified, see the *STAR* methods, section "Classification of TFs into activator and repressors". Note that the current implementation uses a two-step process to classify TFs. We provide the classifications for both steps for clarity, and they are further subdivided into different classification stringencies (e.g., for more stringent classifications, i.e. smaller values, more TFs are classified as undetermined and only the strongest activators and repressors will be classified as such). These values denote the particular percentiles of the background distribution across the background values for all TF as a threshold for activators and repressors and are used to distinguish real correlations from noise (i.e., activator/repressor from undetermined). The classification stringency goes from 0.001 (most stringent), 0.01, 0.05 to 0.1 (least stringent).
+
+    - classification_q0.\* (without final): TF classifications after step 1
+    - classification_distr_rawP: The raw p-value of the one-sided Wilcoxon rank sum test for step 2. For TFs that were classified as either repressor or activator after step 1 but for which the raw p value of the Wilcoxon rank sum test was not significant, we changed their classification to undetermined, thereby removing TF classifications with weak support
+    - classification_q0.\*_final*: TF classifications after step 2 (final, this is what is shown in the Volcano plot)
+
+
+
+FILES ``{comparisonType}.diagnosticPlotsClassification1.pdf`` and ``{comparisonType}.diagnosticPlotsClassification2.pdf``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  Diagnostic plots related to the classification mode.
+
+  File ``{comparisonType}.diagnosticPlotsClassification1.pdf``:
+
+   - Pages 1-4: Median Pearson correlation for all TFs, ordered from bottom (lowest) to top (highest). Each dot is one TF, and the color of the dot indicates the TF classification (red: repressor, black/gray: undetermined, green: activator). Each page shows the stringency on which the classification is based for this particular threshold as annotated vertical lines, inside of which TFs are classified as undetermined and outside of it as either repressor (left) or activator (right). The more stringent (i.e., smaller values, see the title), the more the two lines move towards the outside, thereby increasing the width of the "undetermined" area.
+   - Page 5: Summary density heatmap for each TF and for all classifications across stringencies, sorted by the median Pearson correlation (from the most negative one at the bottom to the most positive one at the top). The heatmap visualizes the correlation across all TFBS, in an alternative representation as compared to the previous pages, summarized in one plot. Colors in or closer to red indicate higher densities and therefore an accumulation of values, while ble or close to blue colors indicate the opposite. Thus, repressors will typically have an enrichment of red colors for negative correlation values, while activators have an enrichment for positive values. TFs will low or conflicting signal will be placed in the middle, classified as undetermined. The left part shows the classification of the TFs for all classification stringencies, sorted from left to right by stringency. The first number refers to the stringency as in other plots and files, but here depicted as per cent (i.e., 0.1% refers to the 0.001 stringency as referred to elsewhere). For each stringency, there are two classifications, referring to the two-step procedure as explained above (columns *classification* for the file ``{comparisonType}.summary.tsv.gz``). If the signal is strong, the difference between the final and non-final column should be small, while for low-signal classifications, pseudo-significant results will not be significant for the *final* column.
+
+  File ``{comparisonType}.diagnosticPlotsClassification2.pdf``:
+
+    - Pages 1-12: Correlation plots of the TF activity (weighted mean differences, x-axis) from the ATAC-Seq for all TF and the log2 fold−changes of the corresponding TF genes from the RNA−seq data (y-axis). Each TF is a point, the size of the point reflects the normalized base mean of the TF gene according to the RNA-Seq data. In addition, the glm regression line is shown, colored by the classification. The correlation plots are shown for different classification stringencies
+
+    activator: R=0.9/0.77, p−value 0.000032/0.0029
+    (Pearson/Spearman, stringency: 0.1)
+
+    starting from the most stringent, 0.001, to 0.01, 0.05, 0.1 and finally the least stringent 0.2
+
+    - Page 13-14: Regular (13) and MA plot based shrunken log2 fold-changes (14) of the RNA-Seq counts based on the ``DESeq2`` analysis. Both show the log2 fold changes attributable to a given variable over the mean of normalized counts for all samples, while the latter removes the noise associated with log2 fold changes from low count genes without requiring arbitrary filtering thresholds. Points are colored red if the adjusted p-value is less than 0.1. Points which fall out of the window are plotted as open triangles pointing either up or down. For more information, see `here <http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#ma-plot>`_.
+    - Pages 15-18: Densities of non−normalized (15) and normalized (16) mean log counts for the different samples of the RNA-Seq data, as well their respective empircal cummulative distribution functions (ECDF, pages 17 and 18 for non−normalized and normalized mean log counts, respectively).  Since most of the genes are (heavily) affected by the experimental conditions, a successful normalization will lead to overlapping densities. The ECDFs can be thought of as integrals of the densities and give the probability of observing a certain number of counts equal to x or less given the data. For more information, see `here <https://www.huber.embl.de/users/klaus/Teaching/DESeq2Predoc2014.html/>`_.
+    -Page 19: Mean SD plot (row standard deviations versus row means)
+    - Page 20-end: Density plots for the TFs bla
+
+
+For the other plots, already documented? To further assess systematic differences between the samples, we can also plot pairwise mean–average plots: We plot the average of the log–transformed counts vs the fold change per gene for each of the sample pairs.
+
+FILE ``{comparisonType}.diagnosticPlots.pdf``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Summary
+  Various diagnostic plots for the final TF activity values, mostly related to the permutation-based approach.
+
+Details
+  If the permutation-based approach has been used, the structure is as follows:
+
+    - Page 1: Density plot of the weighted mean difference (TF activity) values from the permutations (black) and the real values (red) across all TF. Note that the number of points in the permuted data contains more values - if 1000 permutations have been used for 640 TF, it contains 640 * 1000 values, while the red distribution only contains 640 values. This plot summaries the overall signal: if the red and black curve show little difference, it generally indicates that the observed weighted mean difference (TF activity) values across all TF are very similar to permuted values and therefore, noise. Importantly, however, there might well be individual TFs that show a large signal, which should be visible also in the red line by having outlier values towards the more extreme values. Permuted values, however, usually cluster strongly around 0, which is the expected difference between the conditions if the data are permuted.
+    - Page 2 onward: Density plot for the weighted mean difference (TF activity) values from the permutations (one value per permutation, black) vs the single real value (red vertical line). The significance that is shown in the Volcano plot is based on the comparison of the permuted vs the real value (see methods for details). In brief, it is calculated as an empirical two-sided p-value per TF by comparing the real value with the distribution from the permutations and calculating the proportion of permutations for which the absolute differential TF activity is larger. For example, the p-value is small if the real value (i.e., the red line) is outside of the distribution or close to the corner of the permuted values. The p-value is consequently large, however, if the real value falls well within the distribution of the permuted values.
+    - Rest: Various summary plots for different variables
+
+  If the analytical mode has been run, the plots related to the permutations are missing from the PDF.
 
 FILE ``{comparisonType}.allMotifs.tsv.gz``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Summary
-  Summary table for each TFBS
+  Summary table for each TFBS. This file contains summary data for each TF and each TFBS and allows a more in-depth investigation.
 
 Details
   Columns are as follows:
 
-  - *permutation*: The number of the permutation. This will always be 0, so it can ignored essentially in this file.
+  - *permutation*: Permutation number. This is always 0 and can therefore be ignored
   - *TF*: name of the TF
   - *chr*, *MSS*, *MES*, *strand*, *TFBSID*: Genomic location and identifier of the (extended) TFBS
   - *peakID*:  Genomic location and annotation of the overlapping peak region
-  - *l2FC*, *pval*, *pval_adj*: Results from the *limma* or *DESeq2* analysis, see the respective documentation for details (see below for links and further explanation). These column names are shared between *limma* and *DESeq2*. l2FC are interpreted as described in the parameter ``conditionComparison`` ( :ref:`parameter_conditionComparison`)
-  - *DESeq_baseMean*, *DESeq_ldcSE*, *DESeq_stat*: Results from the *DESeq2* analysis, see the *DESeq2* documentation for details (e.g., *?DESeq2::results*). If *DESeq2* was not run for calculating log2 fold-changes (i.e., if the value for the parameter ``nPermutations`` ( :ref:`parameter_regionExtension`) is >0), these columns are set to NA.
-  - *limma_avgExpr*, *limma_B*, *limma_t_stat*: Results from the *limma* analysis, see the *limma* documentation for details (e.g., *??topTable*). If *limma* was not run (i.e., if the value for the parameter ``nPermutations`` ( :ref:`parameter_regionExtension`) is 0), these columns are set to NA.
+  - *l2FC*, *pval*, *pval_adj*: Results from the *limma* or *DESeq2* analysis, see the respective documentation for details (see below for links and further explanation). These column names are shared between *limma* and *DESeq2*. l2FC are interpreted as described in the ``conditionComparison`` ( :ref:`parameter_conditionComparison`)
+  - *DESeq_baseMean*, *DESeq_ldcSE*, *DESeq_stat*: Results from the *DESeq2* analysis, see the *DESeq2* documentation for details (e.g., *?DESeq2::results*). If *DESeq2* was not run for calculating log2 fold-changes (i.e., if the value for the ``nPermutations`` ( :ref:`parameter_regionExtension`) is >0), these columns are set to NA.
+  - *limma_avgExpr*, *limma_B*, *limma_t_stat*: Results from the *limma* analysis, see the *limma* documentation for details (e.g., *??topTable*). If *limma* was not run (i.e., if the value for the ``nPermutations`` ( :ref:`parameter_regionExtension`) is 0), these columns are set to NA.
 
 
 FILE ``{comparisonType}.TF_vs_peak_distribution.tsv.gz``
@@ -560,29 +653,6 @@ Details
   - *Diff_mean*, *Diff_median*, *Diff_mode*, *Diff_skew*: Difference of the mean, median, mode, and skewness between the log2 fold-change distribution across all TFBS and the peaks, respectively
 
 
-FILE ``{comparisonType}.summary.tsv.gz``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Summary
-  The final summary table that is also used for the final Volcano plot visualization.
-
-Details
-  The columns are as follows:
-
-  - *TF*: name of the TF
-  - *weighted_meanDifference*: the weighted mean difference of the real and background distribution across all CG bins. This value is the basis for the final calculation of the x-axis position for the Volcano plot.
-  - *TFBS*: The number of TF binding sites for the particular TF that overlap with the peaks
-  - *fdr*: the local FDR value that is derived from comparing the observed values against the permuted ones
-  - *classification*: RNA-Seq classification (either activator, undetermined, repressor or not-expressed)
-
-
-FILE ``{comparisonType}.diagnosticPlots.pdf``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Summary
-  Various diagnostic plots for the final TF activity values. TODO UPDATE
-
-Details
-  If the number of permutations is larger than 0, the first three pages show various versions of the permuted weighted_meanDifference values and how they relate to the real ones. Permutation 0, as used everywhere throughout the pipeline, contains the real values, while any permutation > 0 refers to an actual permutation. Page 1 shows real and permuted values, page 2 only permuted ones, page 3 a density plot of the real values with the permutation thresholds as dashed lines, inside of which TFs are not labeled as they fall within the permutation and therefore noise area. The next page shows various diagnostic plots from the *locfdr* package to estimate the distribution median, while the remaining plots show histograms of all relevant columns in the final output table for different sets of TFs depending on a specific FDR threshold.
-
 FOLDER ``PEAKS``
 =============================================
 
@@ -593,7 +663,7 @@ FILES ``{comparisonType}.consensusPeaks.filtered.sorted.bed``
 ----------------------------------------------------------------------------------------------
 
 Summary
-  Only present if no consensus peak file was provided (``consensusPeaks``, :ref:`parameter_consensusPeaks`). Produced in rule ``filterSexChromosomesAndSortPeaks``. Generated consensus peaks, before filtering (see below).
+  Produced in rule ``filterSexChromosomesAndSortPeaks``. Filtered and sorted consensus peaks (see below). the *diffTF* analysis is based on this set of peaks.
 
 Details
   Filtered consensus peaks (removal of peaks from one of the following chromosomes: chrX, chrY, chrM, chrUn\*, and all contig names that do not start with "chr" such as \*random* or \*hap|_gl\*
@@ -606,26 +676,26 @@ Summary
   Produced in rule ``intersectPeaksAndBAM``. Counts for each consensus peak with each of the input *BAM* files.
 
 Details
-  No details provided yet.
+  No further details provided yet. Please let us know if you need more details.
 
 FILE ``{comparisonType}.sampleMetadata.rds``
---------------------------------------------
+-----------------------------------------------
 
 Summary
   Produced in rule ``DiffPeaks``. Stores data for the input data (similar to the input sample table), for both the real data and the permutations.
 
 Details
-  No details provided yet.
+  No further details provided yet. Please let us know if you need more details.
 
 
 FILE ``{comparisonType}.peaks.rds``
 --------------------------------------------
 
 Summary
-  Produced in rule ``DiffPeaks``. Stores all peaks that will be used in the analysis.
+  Produced in rule ``DiffPeaks``. Internal file. Stores all peaks that will be used in the analysis in rds format.
 
 Details
-  No details provided yet.
+  No further details provided yet. Please let us know if you need more details.
 
 FILE ``{comparisonType}.peaks.tsv.gz``
 --------------------------------------------
@@ -634,7 +704,7 @@ Summary
   Produced in rule ``DiffPeaks``. Stores the results of the differential accessibility analysis for the peaks.
 
 Details
-  No details provided yet.
+  No further details provided yet. Please let us know if you need more details.
 
 FILE ``{comparisonType}.normFacs.rds``
 --------------------------------------------
@@ -649,15 +719,14 @@ Details
 FILES ``{comparisonType}.diagnosticPlots.peaks.pdf``
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Summary
-  Produced in rule ``DiffPeaks``. Various diagnostic plots for the differential accessibility peak analysis for the real data
+  Produced in rule ``DiffPeaks``. Various diagnostic plots for the differential accessibility peak analysis for the real data.
 
 Details
   The pages are as follows:
 
-  (1) MA plots
-  (2) density plots of normalized and non-normalized counts
-  (3) mean-average plots (average of the log-transformed counts vs the fold-change per peak) for each of the sample pairs
-  (4) mean SD plots (row standard deviations versus row means)
+  (1) Density plots of non-normalized (page 1) and normalized (page 2) mean log counts as well their respective empirical cumulative distribution functions (ECDF, pages 3 and 4 for non−normalized and normalized mean log counts, respectively)
+  (2) pairwise mean-average plots (average of the log-transformed counts vs the fold-change per peak) for each of the sample pairs. This can be useful to further assess systematic differences between the samples. Note that only a maximum of 20 different pairwise plots are shown for time and efficacy reasons.
+  (3) mean SD plots (row standard deviations versus row means, last page)
 
 
 FILE ``{comparisonType}.DESeq.object.rds``
@@ -667,7 +736,7 @@ Summary
   Produced in rule ``DiffPeaks``. The *DESeq2* object from the differential accessibility peak analysis.
 
 Details
-  If the number of permutations (parameter ``nPermutations`` (:ref:`parameter_nPermutations`) is set to 0, *DESeq* is fully run, otherwise the objects does only contain the counts and metadata but no *results* slot.
+  No further details provided yet. Please let us know if you need more details.
 
 FOLDER ``TF-SPECIFIC``
 =============================================
@@ -691,7 +760,7 @@ FILE ``{TF}.{comparisonType}.output.tsv.gz``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  Produced in rule ``analyzeTF``. A summary table for the *limma* analysis.
+  Produced in rule ``analyzeTF``. A summary table for the differential accessibility analysis.
 
 Details
   See the file ``{comparisonType}.allMotifs.tsv.gz`` in the ``FINAL_OUTPUT`` folder for a column description.
@@ -716,7 +785,7 @@ Summary
    Produced in rule ``analyzeTF``. A summary table for the log2 fold-changes across all TFBS *limma* results.
 
 Details
-  This file summarizes the TF-specific results for the differential analysis and has the following columns:
+  This file summarizes the TF-specific results for the differential accessibility analysis and has the following columns:
   - *TF*: name of the TF
   - *permutation*: The number of the permutation.
   - *Pos_l2FC*, *Mean_l2FC*, *Median_l2FC*, *sd_l2FC*, *Mode_l2FC*, *skewness_l2FC*: fraction of positive values, mean, median, standard deviation, mode value and Bickel's measure of skewness of the log2 fold change distribution across all TFBS
@@ -732,7 +801,7 @@ Summary
   Produced in rule ``analyzeTF``. Various diagnostic plots for the differential accessibility TFBS analysis for the real data.
 
 Details
-  See the description of the file ``{comparisonType}.diagnosticPlots.peaks.pdf`` in the ``PEAKS`` folder, which has an identical structure. Here, the second last page shows a density plot of the log2 fold-changes for the specific pairwise condition that the user selected, separately for the peaks only and across all TFBS from the specific TF. The last page shows the same but in a cumulative representation.
+  See the description of the file ``{comparisonType}.diagnosticPlots.peaks.pdf`` in the ``PEAKS`` folder, which has an identical structure. Here, the second last page shows two density plots of the log2 fold-changes for the specific pairwise comparson that *diffTF* run for, one for the peak log2 fold-changes (independent of any TF) and one for the TF-specific one (i.e., across all TFBS from the subset of peaks with a TFBS for this TF). The last page shows the same but in a cumulative representation.
 
 
 FILE ``{TF}.{comparisonType}.permutationResults.rds``
@@ -742,7 +811,7 @@ Summary
   Produced in rule ``binningTF``. Contains a data frame that stores the results of bin-specific results.
 
 Details
-  No details provided yet.
+  No further details provided yet. Please let us know if you need more details.
 
 FILE ``{TF}.{comparisonType}.permutationSummary.tsv.gz``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -802,7 +871,7 @@ Sub-folder ``extension{regionExtension}``
 Stores results related to the user-specified extension size (``regionExtension``, :ref:`parameter_regionExtension`)
 
 - ``{comparisonType}.allTFBS.peaks.bed.gz``: Produced in rule ``intersectPeaksAndTFBS``. *BED* file containing all TFBS from all TF that overlap with the peaks after motif extension
-- ``conditionComparison.rds``: Produced in rule ``DiffPeaks``. Stores the condition comparison as a string. Some steps in diffTF need this file as input.
+- ``conditionComparison.rds``: Produced in rule ``DiffPeaks``. Stores the condition comparison as a string. Some steps in *diffTF* need this file as input.
 - ``{comparisonType}.motifs.coord.permutation{perm}.bed.gz`` and ``{comparisonType}.motifs.coord.nucContent.permutation{perm}.bed.gz`` for each permutation ``{perm}``: Produced in rule ``calcNucleotideContent``, and needed subsequently for the binning. Temporary and result file of *bedtools nuc*, respectively. The latter contains the GC content for all TFBS.
 - ``{comparisonType}.checkParameterValidity.done``: temporary flag file
 - ``{TF}_TFBS.sorted.bed`` for each TF ``{TF}``: Produced in rule ``sortTFBSParallel``. Coordinate-sorted version of the input TFBS. Only "regular" chromosomes starting with "chr" are kept, while sex chromosomes (chrX, chrY), chrM and unassembled contigs such as chrUn are additionally removed.
@@ -810,19 +879,19 @@ Stores results related to the user-specified extension size (``regionExtension``
 
 .. _workingWithPipeline:
 
-Working with *diffTF* and FAQs
-************************************************************
+Running *diffTF*
+******************
 
 General remarks
 ==============================
 
-`diffTF` is programmed as a *Snakemake* pipeline. *Snakemake* is a bioinformatics workflow manager that uses workflows that are described via a human readable, Python based language. It offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and workflows can be seamlessly scaled to server, cluster, grid and cloud environments, without the need to modify the workflow definition or only minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no *Snakemake* experience. For a deeper understanding and troubleshooting errors, some knowledge of *Snakemake* is invaluable.
+*diffTF* is programmed as a *Snakemake* pipeline. *Snakemake* is a bioinformatics workflow manager that uses workflows that are described via a human readable, Python based language. It offers many advantages to the user because each step can easily be modified, parts of the pipeline can be rerun, and workflows can be seamlessly scaled to server, cluster, grid and cloud environments, without the need to modify the workflow definition or only minimal modifications. However, with great flexibility comes a price: the learning curve to work with the pipeline might be a bit higher, especially if you have no *Snakemake* experience. For a deeper understanding and troubleshooting errors, some knowledge of *Snakemake* is invaluable.
 
 Simply put, *Snakemake* executes various *rules*. Each *rule* can be thought of as a single *recipe* or task such as sorting a file, running an R script, etc. Each rule has, among other features, a name, an input, an output, and the command that is executed. You can see in the ``Snakefile`` what these rules are and what they do. During the execution, the rule name is displayed, so you know exactly at which step the pipeline is at the given moment. Different rules are connected through their input and output files, so that the output of one rule becomes the input for a subsequent rule, thereby creating *dependencies*, which ultimately leads to the directed acyclic graph (*DAG*) that describes the whole workflow. You have seen such a graph in Section :ref:`workflow`.
 
-In diffTF, a rule is typically executed separately for each TF. One example for a particular rule is sorting the TFBS list for the TF CTCF.
+In *diffTF*, a rule is typically executed separately for each TF. One example for a particular rule is sorting the TFBS list for the TF CTCF.
 
-In diffTF, the total number of *jobs* or rules to execute can roughly be approximated as 3 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, three sets of rules are executed:
+In *diffTF*, the total number of *jobs* or rules to execute can roughly be approximated as 3 * ``nTF``, where ``nTF`` stands for the number of TFs that are included in the analysis. For each TF, three sets of rules are executed:
 
 1. Calculating read counts for each TFBS within the peak regions (rule ``intersectTFBSAndBAM``)
 2. Differential accessibility analysis  (rule ``analyzeTF``)
@@ -833,12 +902,12 @@ In addition, one rule per permuation is executed, so an additional ``nPermutatio
 
 .. _timeMemoryRequirements:
 
-Executing diffTF - Running times and memory requirements
+Executing *diffTF* - Running times and memory requirements
 ===============================================================
 
 *diffTF* can be computationally demanding depending on the sample size and the number of peaks. In the following, we discuss various issues related to time and memory requirements and we provide some general guidelines that worked well for us.
 
-.. warning:: We generally advise to run diffTF in a cluster environment. For small analysis, a local analysis on your machine might work just fine (see the example analysis in the Git repository), but running time increases substantially due to limited amount of available cores.
+.. warning:: We generally advise to run *diffTF* in a cluster environment. For small analysis, a local analysis on your machine might work just fine (see the example analysis in the Git repository), but running time increases substantially due to limited amount of available cores.
 
 Analysis size
 ---------------
@@ -862,9 +931,9 @@ Number of cores
 
 Some notes regarding the number of available cores:
 
-- diffTF can be invoked in a highly parallelized manner, so the more CPUs are available, the better.
+- *diffTF* can be invoked in a highly parallelized manner, so the more CPUs are available, the better.
 - you can use the ``--cores`` option when invoking *Snakemake* to specify the number of cores that are available for the analysis. If you specify 4 cores, for example, up to 4 rules can be run in parallel (if each of them occupies only 1 core), or 1 rule can use up to 4 cores.
-- we strongly recommend running diffTF in a cluster environment due to the massive parallelization. With *Snakemake*, it is easy to run diffTF in a cluster setting. Simply do the following:
+- we strongly recommend running *diffTF* in a cluster environment due to the massive parallelization. With *Snakemake*, it is easy to run *diffTF* in a cluster setting. Simply do the following:
 
   - write a cluster configuration file that specifies which resources each rule needs. For guidance and user convenience, we provide different cluster configuration files for a small and large analysis. See the folder ``src/clusterConfigurationTemplates`` for examples. Note that these are rough estimates only. See the `*Snakemake* documentation <http://snakemake.readthedocs.io/en/latest/snakefiles/configuration.html#cluster-configuration>`__ for details for how to use cluster configuration files.
   - invoke *Snakemake* with one of the available cluster modes, which will depend on your cluster system. We used ``--cluster`` and tested the pipeline extensively with *LSF/BSUB* and *SLURM*. For more details, see the `*Snakemake* documentation <http://snakemake.readthedocs.io/en/latest/executable.html#cluster-execution>`__
@@ -967,9 +1036,10 @@ A few motes might help you to get started:
 - for more details, see the Snakemake documentation
 - .. note:: From a practical point of view, just try to mimic the parameters that you usually use for your cluster system, and modify the cluster configuration file accordingly. For example, if you need an additional argument such as ``-A`` (which stands for the *group* you are in for a SLURM-based system), simply add ``-A {cluster.group}``  to the command line call and add a ``group`` parameter to the ``__default__`` section (see also the note below).
 
+.. _FAQs:
 
-Frequently asked questions
-==============================
+Frequently asked questions (FAQs)
+****************************************
 
 Here a few typical use cases, which we will extend regularly in the future if the need arises:
 
@@ -996,11 +1066,22 @@ Here a few typical use cases, which we will extend regularly in the future if th
     - The two conditions are in fact very similar and there is no signal that surpasses the significance threshold. You could, for example, check in a PCA plot based on the peaks that are used as input for *diffTF* whether they show a clear signal and separation.
     - There is a confounding factor (like age) that dilutes the signal. One solution is to add the confounding variable into the design model, see above fo details. Again, check in a PCA plot whether samples cluster also according to another variable.
     - You have a small number of samples or one of the groups contains a small number of samples. In both cases, if you run the permutation-based approach, the number of permutations is small, and there might not be enough permutations to achieve significance. For example, if you run an analysis with only 10 permutations, you cannot surpass the 0.05 significance threshold. As a solution, you may switch to the analytical version. Be aware that this requires to rerun large parts of the pipeline from the *diffPeaks* step onwards.
-    - You have a very small number of peaks and therefore also a small number of TF binding sites within the peaks, resulting in many TFs to be skipped in the analysis due to an insufficient number of binding sites. As a solution, try increasing the number of peaks. We recommend having at least a few thousand peaks, but this can hardly be generalized and depends too much on the biology, the size of the peaks etc.
+    - You have a very small number of peaks and therefore also a small number of TF binding sites within the peaks, resulting in many TFs to be skipped in the analysis due to an insufficient number of binding sites. As a solution, try increasing the number of peaks or verify that the predicted binding sites are not too stringent (if done independently, therefore not using our TFBS collection that was produced with *PWMScan* and *HOCOMOCO*). We recommend having at least a few thousand peaks, but this can hardly be generalized and depends too much on the biology, the size of the peaks etc.
+    - You run the (usually more stringent) permutation-based approach. If the number of permutations is too low, p-values may not be able to reach significance. For more details, see :ref:`parameter_nPermutations`. You may want to rerun the analysis using the analytical approach or using more permutations (if the number of samples makes this possible at all); however, the problems raised above may still apply.
 
-6. I want to change the value of a parameter.
 
-  Coming soon
+6. *diffTF* finished successfully, but almost everything is significant.
+
+  This can also happen and is usually a good sign. The following list provides some potential reasons for this:
+
+    - If you run the analytical mode, consider running the permutation-based approach in addition. The permutation-based approach tends to be more stringent and usually results in fewer TFs being significant. However, as explained in the paper and here, it can only be used if the number of samples is sufficiently high.
+    - If too many TFs are significant, you have multiple choices that can of course also be combined: First, you may use a more stringent adjusted p-value threshold. Keep in mind that the Volcano plot PDF shows only a few selected thresholds, and you can always be even more stringent when working with the final result table that is also written to the  ``FINAL_OUTPUT`` folder. Second, you may further filter them by additional criteria such as the number of binding sites (e.g., filtering TFs with a very small number of binding sites, a TF activity that is not large enough, or by their predicted mode of action if you used the classification mode). Third, you may further subdivide them into families and subsequently focus, for example, only one particular TF family.  Alternatively, you can classify the TFs into "known" and "novel" for the particular comparison.
+
+
+7. I want to change the value of a parameter.
+
+  If you want to do this, please contact us, and we help and then update the FAQ here.
+
 
 **If you feel that a particular use case is missing, let us know and we will add it here!**
 
@@ -1091,7 +1172,7 @@ We here provide a list of some of the errors that can happen and that users repo
     Segmentation fault
     ...
 
-  .. note:: This particular message may also be related to an incompatibility of the *DiffBind* and *DESeq2* libraries. See the Changelog for details, as this has been addressed in version 1.1.5.
+  .. note:: This particular message may also be related to an incompatibility of the *DiffBind* and *DESeq2* libraries. See the :ref:`changelog` for details, as this has been addressed in version 1.1.5.
 
 
   More generally, however, such messages point to a problem with your R and R libraries installation and have per se nothing to do with *diffTF*. In such cases, we advise to reinstall the latest version of *Bioconductor* and ask someone who is experienced with this to help you. Unfortunately, this issue is so general that we cannot provide any specific solutions. To troubleshoot and identify exactly which library or function causes this, you may run the R script that failed in debug mode and go through it line by line. See the next section for more details.
@@ -1108,8 +1189,9 @@ We here provide a list of some of the errors that can happen and that users repo
 
     FATAL: Failed to get manifest from Shub: No response received from singularity hub
 
+  Another common error is related to not including paths for the ``bind`` option, resulting in "Directory not found" errors, see :ref:`docs-singularityNotes` for details!
 
-  Post an Issue in the Bitbucket tracker and we are hopefully able to help you.
+  If you do not know what the error is, post an Issue in the `Bitbucket Issue Tracker <https://bitbucket.org/chrarnold/diffTF>`_ tracker and we are hopefully able to help you quickly.
 
 3. Data-specific errors
 
@@ -1141,3 +1223,42 @@ Replace ``{outputFolder}`` by the folder you used for the analysis, and adjust t
 Rerunning *Snakemake*
 ----------------------
 After fixing the error, rerun *Snakemake*. *Snakemake* will continue at the point at which the error message occurred, without rerunning already successfully computed previous steps (unless specified otherwise).
+
+
+
+Understanding and interpreting results
+****************************************
+
+Having results is exciting; however, as with most software, now the maybe even harder part starts: Understanding and interpreting the results. Let's first remind ourselves: The main goal of *diffTF* is to aid in formulating testable hypotheses and ultimately improve the understanding of regulatory mechanisms that are driving the differences on a system-wide scale.
+
+General notes
+=================
+
+  - Irrespective of whether or not you also used the classification mode, we recommend that the first thing to check is the Volcano plot PDF.
+  - If a specific question is not addressed here, feel free to contact us. We ill then add it here.
+  - Note that *diffTF* captures differential accessibility, which does not necessarily imply a functional difference. See the publication for more discussion and details.
+  - the significance as calculated by the empirical or analytical approach should not be over-interpreted from our point of view. We find the TF activity to be the more important measure.
+
+
+Specifics for the basic mode
+=================================
+
+The following procedure may be useful as a rough guideline:
+  - Start with the most stringent adjusted p-value threshold (0.01)
+  - Categorize into one of the 3 following cases:
+    - (a) There are no or almost none TFs significant: You may simply use a less stringent adjusted p-value threshold. If the least stringent adjusted p-value threshold (0.2) does also not have any or only very few significant TFs,  see the :ref:`FAQs` for possible explanations. In such a (rare) case, it might be worthwhile then to check the raw p-values instead of the adjusted ones.
+    - (b) A few TFs are significant: You hit the sweet spot! Try to characterize and understand the TFs and whether they make biological sense for you. See also the notes for (c) below.
+    - (c) A lot or the majority of TFs are significant (say more than 50 to 100): See the :ref:`FAQs` for possible explanations and how to best proceed.
+
+
+
+Specifics for the classification mode
+==========================================
+
+- be aware of the limitations, see below
+
+Limitations
+-------------
+
+As written in the publication, we note that *diffTF* is prone to mis-classifying TFs that (1) act bifunctionally as activators and repressors in different genomic contexts or along with different co-factors, (2) are heavily regulated post-translationally, or (3) show little variation in RNA expression across the samples. Some of these mis-classifications may represent interesting subjects for future investigations.
+Furthermore, if two TFs have similar motifs, which makes it difficult to distinguish them, *diffTF* may have difficulties in classifying them correctly. Thus, for distinguishing the functional roles of TFs from the same motif-family, further biochemical experiments are needed.

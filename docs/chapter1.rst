@@ -9,7 +9,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
 1a. **The "easy" way**: Using ``Singularity`` and our preconfigured *diffTF* containers that contain all necessary tools, R, and R libraries
 
-  You only need to install Snakemake (see below for details) and ``Singularity``. Snakemake supports Singularity in Versions >=2.4. You can check whether you already have ``Singularity`` installed by simply typing
+  You only need to install Snakemake (see below for details) and ``Singularity``. *Snakemake* supports Singularity in Versions >=2.4. You can check whether you already have ``Singularity`` installed by simply typing
 
   .. code-block:: Bash
 
@@ -161,9 +161,11 @@ Adaptations and notes when running with Singularity
 ============================================================
  With ``Singularity``, each rule will be executed in pre-configured isolated containers that contain all necessary tools.  To enable it, you only have to add the following arguments when you execute Snakemake:
 
-1. ``--use-singularity``: Just type it like this, that's all!
+1. ``--use-singularity``: Just type it like this!
 
 2. ``--singularity-args``: You need to make all directories that contain files that are referenced in the *diffTF* configuration file available within the container also. By default, only the directory and subdirectories from which you start the analysis are automatically mounted inside the container. Since the *diffTF* source code is outside the ``input`` folder for the example analysis, however, at least the root directory of the Git repository has to be mounted. This is actually quite simple! Just use ``--singularity-args "--bind /your/diffTF/path"`` and replace ``/your/diffTF/path`` with the root path in which you cloned the *diffTF* Git repository (the one that has the subfolders ``example``, ``src`` etc.). If you reference additional files, simply add one or multiple directories to the bind path (use the comma to separate them). For example, if you reference the files ``/g/group1/user1/mm10.fa`` and ``/g/group2/user1/files/bla.txt`` in the configuration file file, you may add ``/g/group1/user1,/g/group2/user1/files`` or even just ``/g`` to the bind path (as all files you reference are within ``/g``).
+
+  .. note:: We note again that within a Singularity container, you cannot access paths outside of the directory from where you started executing Snakemake. If you receive errors in the ``checkParameterValidity`` rule that a directory does not exist even though you can cd into it, you most likely forgot to include the path this folder or a parent path as part of the ``bind`` option.
 
 3. ``--singularity-prefix /your/directory`` (optional): You do not have to, but you may want to add the ``--singularity-prefix`` argument to store all ``Singularity`` containers in a central place (here: ``/your/directory``) instead of the local ``.snakemake`` directory. If you intend to run multiple *diffTF* analyses in different folders, you can save space and time because the containers won't have to be downloaded each time and stored in multiple locations.
 

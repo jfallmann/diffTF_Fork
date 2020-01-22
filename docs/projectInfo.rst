@@ -63,6 +63,9 @@ Open Access. DOI: `https://doi.org/10.1016/j.celrep.2019.10.106 <https://doi.org
 
 Change log
 ============================
+Version 1.6 (2020-01-22)
+  - The documentation received a major update, in particular the section output files. In addition, a few new methodological figures have been added as well as an interpretation section.
+
 Version 1.5 (2019-12-03)
   - *diffTF* has been published in Cell Reports! See the section :ref:`citation` for details.
   - raw and adjusted p-values for the permutation-based approach can now not be 0 anymore. We now use the approach described `here <https://genomicsclass.github.io/book/pages/permutation_tests.html>`_. In a nutshell, the smallest p-value is now 1/(*nPermutations* + 1), with *nPermutations* denoting the number of permutations and thereby depends on the number of permutations - having more permutations makes the minimum p-value smaller.
