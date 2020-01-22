@@ -545,9 +545,12 @@ Summary
   Each PDF contains multiple pages, essentially showing the same data but with different filters, and the structure is as follows:
 
   - Basic mode (10 pages in total)
+
     - Pages 1-5: Volcano plot for different values for the adjusted p-value, starting from the most stringent, 0.001, to 0.01, 0.05, 0.1 and finally the least stringent 0.2
     - Pages 6-10: Same as pages 1-5, just with the raw p-value
+
   - Classification mode (30 pages in total)
+
     - Pages 1:15: Volcano plot for different values for the adjusted p-value, starting from the most stringent, 0.001, to 0.01, 0.05, 0.1 and finally the least stringent 0.2. For each of these values, 3 pages are shown: 1: all four classes, 2: excluding not-expressed TFs, 3: only showing activator and repressor TFs (see also the legend)
     - Pages 16-30: Same as pages 1-15, just with the raw p-value
 
@@ -560,7 +563,7 @@ Summary
   The final summary table with all *diffTF* results. This table is also used for the final Volcano plot visualization. The number of columns may vary and depends on the mode you run *diffTF* for (i.e., only basic mode or also classification mode, analytical or permutation-based approach).
 
 Details
-  The following columns are always present and relevant:
+  *The following columns are always present and relevant:*
 
   - *TF*: name of the TF
   - *weighted_meanDifference*: This is the TF activity value that captures the difference in accessibility between the two conditions. More precisely, it is the difference of the real and background distribution, calculated as the weighted mean across all CG bins (see the publication or :ref:`workflow` for a graphical depiction of how this works put plot how this is calculated). In the Volcano plot, this is the x-axis. Higher values in either positive and negative direction indicate a larger TF activity in one of the two conditions (i.e., the predicted TF binding sites for this TFs are more accessible). Positive and negative values denote whether the value was bigger in one or the other condition, see the Volcano plot for easier interpretation as well as the notes for :ref:``conditionComparison``.
@@ -569,11 +572,11 @@ Details
   - *pvalue*: The p-value assesses the significance of the obtained *weighted_meanDifference*. The exact calculation depends on whether permutations are used (permutation-based approach) or not (analytical approach) and is fully described in the *STAR* methods of the publication, section "Estimation of significance for differential activity for each TF"
   - *pvalueAdj*: adjusted p-values using Benjamini-Hochberg
 
-  The following columns are only relevant if you run the analytical mode:
+  *The following columns are only relevant if you run the analytical mode:*
 
   - *weighted_Tstat* and *variance*: These columns are only relevant for the analytical version. See the section "Estimation of significance for differential activity for each TF" in the  *STAR* methods for details. The resulting p-value is based on these columns and we provide them for the sake of completeness.
 
-  The following columns are only relevant if you run the classification mode:
+  *The following columns are only relevant if you run the classification mode:*
 
   - *median.cor.tfs*: The median value for the RNA-ATAC correlations from the foreground (i.e., peaks with a predicted TFBS for the particular TF)
   - *classification_\**: The columns are explained below, but for each of them, a TF is either classified as *activator*, *undetermined*, *repressor* or *not-expressed*). For details how TFs are classified, see the *STAR* methods, section "Classification of TFs into activator and repressors". Note that the current implementation uses a two-step process to classify TFs. We provide the classifications for both steps for clarity, and they are further subdivided into different classification stringencies (e.g., for more stringent classifications, i.e. smaller values, more TFs are classified as undetermined and only the strongest activators and repressors will be classified as such). These values denote the particular percentiles of the background distribution across the background values for all TF as a threshold for activators and repressors and are used to distinguish real correlations from noise (i.e., activator/repressor from undetermined). The classification stringency goes from 0.001 (most stringent), 0.01, 0.05 to 0.1 (least stringent).
@@ -596,17 +599,11 @@ Summary
 
   File ``{comparisonType}.diagnosticPlotsClassification2.pdf``:
 
-    - Pages 1-12: Correlation plots of the TF activity (weighted mean differences, x-axis) from the ATAC-Seq for all TF and the log2 fold−changes of the corresponding TF genes from the RNA−seq data (y-axis). Each TF is a point, the size of the point reflects the normalized base mean of the TF gene according to the RNA-Seq data. In addition, the glm regression line is shown, colored by the classification. The correlation plots are shown for different classification stringencies
-
-    activator: R=0.9/0.77, p−value 0.000032/0.0029
-    (Pearson/Spearman, stringency: 0.1)
-
-    starting from the most stringent, 0.001, to 0.01, 0.05, 0.1 and finally the least stringent 0.2
-
+    - Pages 1-12: Correlation plots of the TF activity (weighted mean differences, x-axis) from the ATAC-Seq for all TF and the log2 fold−changes of the corresponding TF genes from the RNA−seq data (y-axis). Each TF is a point, the size of the point reflects the normalized base mean of the TF gene according to the RNA-Seq data. In addition, the *glm* regression line is shown, colored by the classification. The correlation plots are shown for different classification stringencies. The title also gives the correlation value for both Pearson and Spearman correlation as well as the corresponding p-values along with the classification stringency
     - Page 13-14: Regular (13) and MA plot based shrunken log2 fold-changes (14) of the RNA-Seq counts based on the ``DESeq2`` analysis. Both show the log2 fold changes attributable to a given variable over the mean of normalized counts for all samples, while the latter removes the noise associated with log2 fold changes from low count genes without requiring arbitrary filtering thresholds. Points are colored red if the adjusted p-value is less than 0.1. Points which fall out of the window are plotted as open triangles pointing either up or down. For more information, see `here <http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#ma-plot>`__.
     - Pages 15-18: Densities of non−normalized (15) and normalized (16) mean log counts for the different samples of the RNA-Seq data, as well their respective empircal cummulative distribution functions (ECDF, pages 17 and 18 for non−normalized and normalized mean log counts, respectively).  Since most of the genes are (heavily) affected by the experimental conditions, a successful normalization will lead to overlapping densities. The ECDFs can be thought of as integrals of the densities and give the probability of observing a certain number of counts equal to x or less given the data. For more information, see `here <https://www.huber.embl.de/users/klaus/Teaching/DESeq2Predoc2014.html/>`__.
     - Page 19: Mean SD plot (row standard deviations versus row means)
-    - Page 20-end: Density plots for the TFs bla
+    - Page 20-end: Density plots for each TF, with one TF per page. The density plot shows the foreground (red, labeled as *Motif*) comprising of the log2 fold-changes of all predicted TF binding sites (TFBS, see title) for the particular TF only, while the background (gray, labeled as *Non-Motif*) shows the log2 fold-changes of all predicted TF binding sites for all other TF.
 
 
 For the other plots, already documented? To further assess systematic differences between the samples, we can also plot pairwise mean–average plots: We plot the average of the log–transformed counts vs the fold change per gene for each of the sample pairs.
