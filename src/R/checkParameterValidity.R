@@ -26,6 +26,7 @@ par.l = list()
 par.l$verbose = TRUE
 par.l$log_minlevel = "INFO"
 
+
 #####################
 # VERIFY PARAMETERS #
 #####################
@@ -73,6 +74,11 @@ checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$con
 par.l$plotRNASeqClassification = as.logical(snakemake@config$par_general$RNASeqIntegration)
 assertFlag(par.l$plotRNASeqClassification)
 
+par.l$debugMode = setDebugMode(snakemake@config$par_general$debugMode)
+
+### PARAMS ##
+par.l$TFBSPattern = snakemake@params$suffixTFBS
+
 ## LOG ##
 assertList(snakemake@log, min.len = 1)
 par.l$file_log = snakemake@log[[1]]
@@ -88,6 +94,61 @@ testExistanceAndCreateDirectoriesRecursively(allDirs)
 ######################
 startLogger(par.l$file_log, par.l$log_minlevel, removeOldLog = TRUE)
 printParametersLog(par.l)
+
+if (par.l$debugMode) {
+    
+    flog.info(paste0("Debug mode active. Reading it all files that this step requires and save it to ", snakemake@params$debugFile))
+    
+    
+    # Read all files already here and then save the session so as much as possible from the script can be executed without file dependencies
+    sampleData.df = read_tidyverse_wrapper(par.l$file_input_sampleData, type = "tsv", col_names = TRUE, col_types = cols())
+    
+    if (file_peaks != "") {
+        peaks.df = read_tidyverse_wrapper(snakemake@config$peaks$consensusPeaks, type = "tsv", col_names = FALSE)
+    }
+   
+    
+    
+    useAllTFs = FALSE 
+    if (length(allTFs) == 1) 
+        if (allTFs == "all") {
+            useAllTFs = TRUE
+        }
+    
+    if (useAllTFs) {
+        
+        TFs = createFileList(TFBS_dir, par.l$TFBSPattern, verbose = FALSE)
+        
+        if (length(TFs) == 0) {
+            message = paste0("No files with pattern ", par.l$TFBSPattern, " found in directory ", TFBS_dir, " as specified by the parameter \"dir_TFBS\"")
+            checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+        }
+        
+        allTFs = gsub(par.l$TFBSPattern, "", basename(TFs))
+        stopifnot(length(allTFs) > 0)
+        
+    }
+    
+    TFs.l = list()
+    for (TFCur in allTFs) {
+        
+        TFCur = gsub(pattern = " ",replacement = "",TFCur)
+        flog.info(paste0(" Checking TF ", TFCur, "..."))
+        fileCur = paste0(TFBS_dir, "/", TFCur, par.l$TFBSPattern)
+        if (!file.exists(fileCur)) {
+            message = paste0("File ", fileCur, " does not exist even though the TF ", TFCur, " has been specified")
+            checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+        }
+        
+        TFs.l[[TFCur]] = read_tidyverse_wrapper(fileCur, type = "tsv", ncolExpected = 6, col_names = FALSE, col_types = "ciicnc", minRows = 1)
+ 
+    }
+    
+    save(list = ls(), file = snakemake@params$debugFile)
+    flog.info(paste0("File ", snakemake@params$debugFile, " has been saved. You may use it for trouble-shooting and debugging, see the Documentation for more details."))
+    
+}
+
 
 
 ######################
@@ -315,10 +376,10 @@ if (length(allTFs) == 1)
 
 if (useAllTFs) {
   
-  TFs = createFileList(TFBS_dir, "_TFBS.bed", verbose = FALSE)
+  TFs = createFileList(TFBS_dir, par.l$TFBSPattern, verbose = FALSE)
   
   if (length(TFs) == 0) {
-    message = paste0("No files with pattern _TFBS.bed found in directory ", TFBS_dir, " as specified by the parameter \"dir_TFBS\"")
+    message = paste0("No files with pattern ", par.l$TFBSPattern, " found in directory ", TFBS_dir, " as specified by the parameter \"dir_TFBS\"")
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
   }
   
@@ -332,7 +393,7 @@ for (TFCur in allTFs) {
   
   TFCur = gsub(pattern = " ",replacement = "",TFCur)
   flog.info(paste0(" Checking TF ", TFCur, "..."))
-  fileCur = paste0(TFBS_dir, "/", TFCur, "_TFBS.bed")
+  fileCur = paste0(TFBS_dir, "/", TFCur, par.l$TFBSPattern)
   if (!file.exists(fileCur)) {
     message = paste0("File ", fileCur, " does not exist even though the TF ", TFCur, " has been specified")
     checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)

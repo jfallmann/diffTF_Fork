@@ -59,6 +59,8 @@ assertSubset(names(snakemake@output), c("", "outputTable"))
 #par.l$file_output_volcanoPlot = snakemake@output$volcanoPlot
 par.l$file_output_table       = snakemake@output$outputTable
 
+par.l$debugMode = setDebugMode(snakemake@config$par_general$debugMode)
+
 ## LOG ##
 assertList(snakemake@log, min.len = 1)
 par.l$file_log = snakemake@log[[1]]
@@ -78,6 +80,44 @@ testExistanceAndCreateDirectoriesRecursively(allDirs)
 
 startLogger(par.l$file_log, par.l$log_minlevel, removeOldLog = TRUE)
 printParametersLog(par.l)
+
+if (par.l$debugMode) {
+    
+    flog.info(paste0("Debug mode active. Reading it all files that this step requires and save it to ", snakemake@params$debugFile))
+    
+    
+    # Read all files already here and then save the session so as much as possible from the script can be executed without file dependencies
+    peaks.df = read_tidyverse_wrapper(par.l$file_input_peaks, type = "tsv", col_types = cols())
+
+    par.l$filesTransl.l = list()
+    nTF = length(par.l$files_input_TF_summary)
+    
+    # Create translation table
+    for (fileCur in par.l$files_input_TF_summary) {
+        elements = strsplit(fileCur, split = "/",  fixed = TRUE)[[1]]
+        hit =  which(grepl(pattern = "^extension", elements))
+        stopifnot(length(hit) == 1 & hit != 1)
+        par.l$filesTransl.l[[fileCur]] = elements[hit - 1]  
+    }
+    
+    stats.l = list()
+    for (fileCur in par.l$files_input_TF_summary) {
+        
+        TF = par.l$filesTransl.l[[fileCur]]
+        stopifnot(!is.null(TF))
+        if (file.exists(fileCur)) {
+            stats.l[[fileCur]] = readRDS(fileCur)
+        } else {
+            message = paste0("File missing: ", fileCur)
+            checkAndLogWarningsAndErrors(NULL,  message, isWarning = TRUE)
+        }
+    }
+    
+    save(list = ls(), file = snakemake@params$debugFile)
+    flog.info(paste0("File ", snakemake@params$debugFile, " has been saved. You may use it for trouble-shooting and debugging, see the Documentation for more details."))
+    
+}
+
 
 
 ################

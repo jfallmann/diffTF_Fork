@@ -141,8 +141,17 @@ for sectionCur in configDict:
 try:
   threadsMax = config["par_general"]["maxCoresPerRule"]
 except KeyError:
-  print("The parameter \"coresPerRule\" in section \"par_general\" has not been defined. Jobs/rules with multithreading support will use the default of 16 cores.")
-  threadsMax = 16
+  print("The parameter \"coresPerRule\" in section \"par_general\" has not been defined. Jobs/rules with multithreading support will use the default of 4 cores.")
+  threadsMax = 4
+
+try:
+  debugMode = config["par_general"]["debugMode"]
+except KeyError:
+  print("The parameter \"debugMode\" in section \"par_general\" has not been defined. The debug mode will not be available unless you add the parameter in the config file and set it to \"True\".")
+  debugMode = False
+
+
+
 
 # This has been disabled to catch reported edge cases from version 1.2.5 onwards
 # try:
@@ -198,8 +207,6 @@ else:
 
 allBamFilesBasename = []
 for fileCur in allBamFiles:
-    if fileCur.endswith(" ") or fileCur.startswith(" "):
-        raise IOError("File \"" + fileCur + "\" starts or ends with a white space, this should be corrected in the file " + config["samples"]["summaryFile"] + ".")
     if not os.path.isfile(fileCur):
         raise IOError("File \"" + fileCur + "\" (defined in " + config["samples"]["summaryFile"] + ") not found.")
     # Index is not needed for featureCounts
@@ -260,11 +267,7 @@ if config["peaks"]["consensusPeaks"]:
         raise IOError("File \"" + filenameCur + "\" not found.")
     # Check if it contains scientific notification
     # the || true in the end ensures the exit status of grep is 0, because this would raise an error otherwise
-
-    grep_variant = "grep"
-    if filenameCur.endswith("gz"):
-        grep_variant = "zgrep"
-    nHits = int(subprocess.check_output(grep_variant + ' -c "e+" ' + config["peaks"]["consensusPeaks"] + " || true", shell=True))
+    nHits = int(subprocess.check_output('grep -c "e+" ' + config["peaks"]["consensusPeaks"] + " || true", shell=True))
     if nHits > 0:
         raise AssertionError("File " + config["peaks"]["consensusPeaks"] + " contains at least one line with the scientific notation (e+). This will cause errors in subsequent steps. Check the file and transform all \"e+\" coordinates.")
 
@@ -328,7 +331,8 @@ rule checkParameterValidity:
     threads: 1
     priority: 1
     singularity: "shub://chrarnold/Singularity_images:difftf_r"
-    params:
+    params: debugFile = LOG_BENCHMARK_DIR + "/checkParameterValidity.R.debug.RData",
+            suffixTFBS = suffixTFBS
     script: dir_scripts + script_checkParValidity
 
 rule produceConsensusPeaks:
@@ -342,7 +346,7 @@ rule produceConsensusPeaks:
     message: "{ruleDisplayMessage}Calculate consensus peaks for all peak files with the script {script_createConsensusPeaks}..."
     threads: 1
     singularity: "shub://chrarnold/Singularity_images:difftf_r"
-    params:
+    params: debugFile = LOG_BENCHMARK_DIR + "/produceConsensusPeaks.R.debug.RData"
     script: dir_scripts + script_createConsensusPeaks
 
 # Forces the execution of the rule above just when the user did not provide a consensus peak file
@@ -546,7 +550,8 @@ rule DiffPeaks:
     threads: 1
     singularity: "shub://chrarnold/Singularity_images:difftf_r"
     params:
-        doCyclicLoess = "true"
+        doCyclicLoess = "true",
+        debugFile = LOG_BENCHMARK_DIR + "/DiffPeaks.R.debug.RData"
     script: dir_scripts + script_DiffPeaks
 
 
@@ -571,7 +576,8 @@ rule analyzeTF:
     singularity: "shub://chrarnold/Singularity_images:difftf_r"
     params:
         doCyclicLoess = "true",
-        allBAMS       = list(allBamFiles)
+        allBAMS       = list(allBamFiles),
+        debugFile     = lambda wc: LOG_BENCHMARK_DIR + "/analyzeTF." + wc.TF + ".R.debug.RData"
     script: dir_scripts + script_analyzeTF
 
 
@@ -584,6 +590,7 @@ rule summary1:
     log: expand('{dir}/summary1.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_summary1} ..."
     threads: 1
+    params: debugFile = LOG_BENCHMARK_DIR + "/summary1.R.debug.RData"
     singularity: "shub://chrarnold/Singularity_images:difftf_r"
     script: dir_scripts + script_summary1
 
@@ -640,6 +647,7 @@ rule binningTF:
     log: expand('{dir}/binningTF.{{TF}}.R.log', dir = LOG_BENCHMARK_DIR)
     message: "{ruleDisplayMessage}Run R script {script_binningTF} for TF {wildcards.TF}..."
     threads: 1
+    params: debugFile = lambda wc: LOG_BENCHMARK_DIR + "/binningTF." + wc.TF + ".R.debug.RData"
     singularity: "shub://chrarnold/Singularity_images:difftf_r"
     script: dir_scripts + script_binningTF
 
@@ -666,9 +674,9 @@ rule summaryFinal:
     message: "{ruleDisplayMessage}Run R script {script_summaryFinal} ..."
     threads: 1
     singularity: "shub://chrarnold/Singularity_images:difftf_r"
-    params: TFs = ",".join(allTF)
+    params: TFs       = ",".join(allTF),
+            debugFile = LOG_BENCHMARK_DIR + "/summaryFinal.R.debug.RData"
     script: dir_scripts + script_summaryFinal
-
 
 
 rule cleanUpLogFiles:

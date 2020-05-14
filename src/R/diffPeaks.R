@@ -86,9 +86,11 @@ checkAndLogWarningsAndErrors(par.l$nPermutations, checkIntegerish(par.l$nPermuta
 par.l$conditionComparison  = snakemake@config$par_general$conditionComparison
 checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$conditionComparison, len = 1))
 
+par.l$debugMode = setDebugMode(snakemake@config$par_general$debugMode)
+
 ## PARAMS ##
 checkAndLogWarningsAndErrors(snakemake@params,checkmate::checkList(snakemake@params, min.len = 1))
-checkAndLogWarningsAndErrors(names(snakemake@params), checkSubset(names(snakemake@params), c("", "doCyclicLoess")))
+checkAndLogWarningsAndErrors(names(snakemake@params), checkSubset(names(snakemake@params), c("", "doCyclicLoess", "debugFile")))
 
 par.l$doCyclicLoess = as.logical(snakemake@params$doCyclicLoess)
 checkAndLogWarningsAndErrors(par.l$doCyclicLoess, checkFlag(par.l$doCyclicLoess))
@@ -115,12 +117,27 @@ startLogger(par.l$file_log, par.l$log_minlevel,  removeOldLog = TRUE)
 printParametersLog(par.l)
 
 
+
+if (par.l$debugMode) {
+    
+    flog.info(paste0("Debug mode active. Reading it all files that this step requires and save it to ", snakemake@params$debugFile))
+    
+    
+    # Read all files already here and then save the session so as much as possible from the script can be executed without file dependencies
+    sampleData.df = read_tidyverse_wrapper(par.l$file_input_sampleData, type = "tsv", col_names = TRUE, col_types = cols())
+    coverageAll.df = read_tidyverse_wrapper(par.l$file_input_peakOverlaps, type = "tsv", col_names = TRUE, comment = "#", col_types = cols())
+    
+    save(list = ls(), file = snakemake@params$debugFile)
+    flog.info(paste0("File ", snakemake@params$debugFile, " has been saved. You may use it for trouble-shooting and debugging, see the Documentation for more details."))
+    
+}
+
+
 #################
 # READ METADATA #
 #################
 
-sampleData.df = read_tidyverse_wrapper(par.l$file_input_sampleData, type = "tsv",
-                                       col_names = TRUE, col_types = cols())
+sampleData.df = read_tidyverse_wrapper(par.l$file_input_sampleData, type = "tsv", col_names = TRUE, col_types = cols())
 
 checkAndLogWarningsAndErrors(colnames(sampleData.df), checkSubset(c("bamReads"), colnames(sampleData.df)))
 

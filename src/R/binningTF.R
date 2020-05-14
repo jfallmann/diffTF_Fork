@@ -83,6 +83,8 @@ assertIntegerish(par.l$nBins, lower = 1, upper = 100, len = 1)
 par.l$nBootstraps = as.integer(snakemake@config$par_general$nBootstraps)
 assertIntegerish(par.l$nBootstraps, len = 1)
 
+par.l$debugMode = setDebugMode(snakemake@config$par_general$debugMode)
+
 ## WILDCARDS ##
 assertList(snakemake@wildcards, min.len = 1)
 assertSubset(names(snakemake@wildcards), c("", "TF"))
@@ -124,6 +126,49 @@ summaryCov.df     = tribble(~permutation, ~bin1, ~bin2, ~weight1, ~weight2, ~cov
 ######################
 startLogger(par.l$file_log, par.l$log_minlevel, removeOldLog = TRUE)
 printParametersLog(par.l)
+
+if (par.l$debugMode) {
+    
+    flog.info(paste0("Debug mode active. Reading it all files that this step requires and save it to ", snakemake@params$debugFile))
+    
+    # Read all files already here and then save the session so as much as possible from the script can be executed without file dependencies
+    sampleData.l = readRDS(par.l$file_input_metadata)
+    TF.motifs.CG  = read_tidyverse_wrapper(par.l$file_input_nucContentGenome, type = "tsv", col_names = TRUE, 
+                                           col_types = list(
+                                               col_skip(), # "chr"
+                                               col_skip(), # "MSS"
+                                               col_skip(), # "MES"
+                                               col_character(), # "TFBSID"
+                                               col_character(), # "TF",
+                                               col_skip(), # "AT"
+                                               col_double(), # "CG"
+                                               col_skip(), # "A"
+                                               col_skip(), # "C"
+                                               col_skip(), # "G"
+                                               col_skip(), # "T"
+                                               col_skip(), # "N"
+                                               col_skip(), # "other_nucl"
+                                               col_skip() # "length"
+                                           ))
+    
+    TF.motifs.ori.l = list()
+    for (fileCur in par.l$files_input_TF_allMotives) {
+        
+        TF.motifs.ori.l[[fileCur]]  = read_tidyverse_wrapper(fileCur, type = "tsv", col_names = TRUE, 
+                                                col_types = list(
+                                                    col_character(), # "TF",
+                                                    col_character(), # "TFBSID"
+                                                    col_double() # "log2FoldChange", important to have double here as col_number would not parse numbers in scientific notation correctly
+                                                ))
+        
+    }
+    
+    save(list = ls(), file = snakemake@params$debugFile)
+    flog.info(paste0("File ", snakemake@params$debugFile, " has been saved. You may use it for trouble-shooting and debugging, see the Documentation for more details."))
+    
+}
+
+
 
 # Function for the bootstrap
 ttest <- function(x, d, all) {

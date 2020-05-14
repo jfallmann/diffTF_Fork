@@ -66,6 +66,9 @@ assertSubset(peakType, c("raw", "bed", "narrow", "macs", "swembl", "bayes", "pea
 minOverlap = snakemake@config$peaks$minOverlap
 assertIntegerish(minOverlap, lower = 0)
 
+par.l$debugMode = setDebugMode(snakemake@config$par_general$debugMode)
+
+
 ## LOG ##
 assertList(snakemake@log, min.len = 1)
 par.l$file_log = snakemake@log[[1]]
@@ -85,13 +88,27 @@ testExistanceAndCreateDirectoriesRecursively(allDirs)
 startLogger(par.l$file_log, par.l$log_minlevel, removeOldLog = TRUE)
 printParametersLog(par.l)
 
+
+if (par.l$debugMode) {
+    
+    flog.info(paste0("Debug mode active. Reading it all files that this step requires and save it to ", snakemake@params$debugFile))
+    
+    
+    # Read all files already here and then save the session so as much as possible from the script can be executed without file dependencies
+    sampleMetaData.df = read_tidyverse_wrapper(file_sampleData, type = "tsv", col_types = cols())
+  
+    save(list = ls(), file = snakemake@params$debugFile)
+    flog.info(paste0("File ", snakemake@params$debugFile, " has been saved. You may use it for trouble-shooting and debugging, see the Documentation for more details."))
+    
+}
+
+
 ##########################
 # Create consensus peaks #
 ##########################
 
 # Provide the metadata file and parse the CSV here
-sampleMetaData.df = read_tidyverse_wrapper(file_sampleData, type = "tsv",
-                                           col_types = cols())
+sampleMetaData.df = read_tidyverse_wrapper(file_sampleData, type = "tsv", col_types = cols())
 assertSubset(c("SampleID", "bamReads", "conditionSummary", "Peaks"), colnames(sampleMetaData.df))
 assertIntegerish(minOverlap, upper = nrow(sampleMetaData.df))
 

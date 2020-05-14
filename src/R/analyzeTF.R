@@ -69,6 +69,7 @@ assertFileExists(par.l$file_input_normFacs, access = "r")
 par.l$file_input_conditionComparison = snakemake@input$condComp
 assertFileExists(par.l$file_input_conditionComparison, access = "r")
 
+
 ## OUTPUT ##
 assertList(snakemake@output, min.len = 1)
 assertSubset(names(snakemake@output), c("", "outputTSV", "outputPermTSV", "outputRDS", "plot_diagnostic"))
@@ -102,9 +103,13 @@ assertIntegerish(par.l$nPermutations, lower = 0)
 par.l$conditionComparison  = snakemake@config$par_general$conditionComparison
 checkAndLogWarningsAndErrors(par.l$conditionComparison, checkCharacter(par.l$conditionComparison, len = 1))
 
+
+par.l$debugMode = setDebugMode(snakemake@config$par_general$debugMode)
+
+
 ## PARAMS ##
 assertList(snakemake@params, min.len = 1)
-assertSubset(names(snakemake@params), c("", "doCyclicLoess", "allBAMS"))
+assertSubset(names(snakemake@params), c("", "doCyclicLoess", "allBAMS", "debugFile"))
 
 par.l$doCyclicLoess = as.logical(snakemake@params$doCyclicLoess)
 assertFlag(par.l$doCyclicLoess)
@@ -133,6 +138,26 @@ testExistanceAndCreateDirectoriesRecursively(allDirs)
 ######################
 startLogger(par.l$file_log, par.l$log_minlevel, removeOldLog = TRUE)
 printParametersLog(par.l)
+
+if (par.l$debugMode) {
+    flog.info(paste0("Debug mode active. Reading it all files that this step requires and save it to ", snakemake@params$debugFile))
+    
+    # Read all files already here and then save the session so as much as possible from the script can be executed without file dependencies
+    sampleData.l = readRDS(par.l$file_input_metadata)
+    normFacs = readRDS(par.l$file_input_normFacs)
+    
+    nTFBS = length(readLines(par.l$file_input_peakTFOverlaps))
+    if (nTFBS > 0) {
+        overlapsAll.df = read_tidyverse_wrapper(par.l$file_input_peakTFOverlaps, type = "tsv", col_names = TRUE, col_types = cols(), comment = "#")
+    }
+    peaks.df = read_tidyverse_wrapper(par.l$file_input_peak2, type = "tsv", col_types = cols())
+    peaksFiltered.df = readRDS(par.l$file_input_peaks)
+    conditionComparison = readRDS(par.l$file_input_conditionComparison)
+    
+    save(list = ls(), file = snakemake@params$debugFile)
+    flog.info(paste0("File ", snakemake@params$debugFile, " has been saved. You may use it for trouble-shooting and debugging, see the Documentation for more details."))
+    
+}
 
 #################
 # READ METADATA #
@@ -189,39 +214,37 @@ outputSummary.df  = tribble(~permutation, ~TF, ~Pos_l2FC, ~Mean_l2FC, ~Median_l2
 # READ OVERLAP FILE #
 #####################
 
-overlapsAll.df = read_tidyverse_wrapper(par.l$file_input_peakTFOverlaps, type = "tsv",
-                                        col_names = TRUE, col_types = cols(), comment = "#")
-
-if (nrow(overlapsAll.df) > 0) {
-  
-  colnames(overlapsAll.df) = c("annotation", "chr","MSS","MES", "strand","length", colnamesNew)
-  
-  overlapsAll.df = overlapsAll.df %>%
-    dplyr::mutate(TFBSID = paste0(chr,":", MSS, "-",MES),
-                  mean = apply(dplyr::select(overlapsAll.df, one_of(colnamesNew)), 1, mean), 
-                  peakID = sapply(strsplit(overlapsAll.df$annotation, split = "_", fixed = TRUE),"[[", 1)) %>%
-    dplyr::distinct(TFBSID, .keep_all = TRUE) %>%
-    dplyr::select(-one_of("length"))
-  
+# Check number of lines. If file is empty, the TF has to be skipped
+nTFBS = length(readLines(par.l$file_input_peakTFOverlaps))
+if (nTFBS > 0) {
+    
+    overlapsAll.df = read_tidyverse_wrapper(par.l$file_input_peakTFOverlaps, type = "tsv",
+                                            col_names = TRUE, col_types = cols(), comment = "#")
+    nTFBS = nrow(overlapsAll.df)
+    
+    colnames(overlapsAll.df) = c("annotation", "chr","MSS","MES", "strand","length", colnamesNew)
+    
+    overlapsAll.df = overlapsAll.df %>%
+        dplyr::mutate(TFBSID = paste0(chr,":", MSS, "-",MES),
+                      mean = apply(dplyr::select(overlapsAll.df, one_of(colnamesNew)), 1, mean), 
+                      peakID = sapply(strsplit(overlapsAll.df$annotation, split = "_", fixed = TRUE),"[[", 1)) %>%
+        dplyr::distinct(TFBSID, .keep_all = TRUE) %>%
+        dplyr::select(-one_of("length"))
+    
     skipTF = FALSE
-  
 } else {
   skipTF = TRUE
 }
 
-nTFBS = nrow(overlapsAll.df)
-
-
-# Create formula based on user-defined design
-designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
-formulaVariables = attr(terms(designFormula), "term.labels")
-# Extract the variable that defines the contrast. Always the last element in the formula
-variableToPermute = formulaVariables[length(formulaVariables)]
-
 
 if (nTFBS >= par.l$minNoDatapoints) {
 
-  
+    # Create formula based on user-defined design
+    designFormula = convertToFormula(par.l$designFormula, colnames(sampleData.df))
+    formulaVariables = attr(terms(designFormula), "term.labels")
+    # Extract the variable that defines the contrast. Always the last element in the formula
+    variableToPermute = formulaVariables[length(formulaVariables)]
+    
   # Group by peak ID: To avoid biases and dependencies based on TFBS clustering within peaks, we then select the TFBS per TF per peak with the highest average read count across all samples.
   coverageAll_grouped.df = overlapsAll.df %>%
     dplyr::group_by(peakID) %>%
@@ -325,6 +348,7 @@ if (skipTF) {
   
   peaksFiltered.df = readRDS(par.l$file_input_peaks)
   
+  # READ FILE HERE
   conditionComparison = readRDS(par.l$file_input_conditionComparison)
   
   ################################

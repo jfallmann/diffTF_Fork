@@ -101,6 +101,8 @@ assertIntegerish(par.l$nPermutations, lower = 0)
 
 par.l$outdir = snakemake@config$par_general$outdir
 
+par.l$debugMode = setDebugMode(snakemake@config$par_general$debugMode)
+
 if (par.l$plotRNASeqClassification) {
     
     par.l$file_input_HOCOMOCO_mapping    = snakemake@config$additionalInputFiles$HOCOMOCO_mapping
@@ -125,6 +127,57 @@ assertCharacter(par.l$colorConditions, len = 2)
 ######################
 startLogger(par.l$file_log, par.l$log_minlevel,  removeOldLog = TRUE)
 printParametersLog(par.l)
+
+if (par.l$debugMode) {
+    
+    flog.info(paste0("Debug mode active. Reading it all files that this step requires and save it to ", snakemake@params$debugFile))
+    
+    # Read all files already here and then save the session so as much as possible from the script can be executed without file dependencies
+    conditionComparison = readRDS(par.l$file_input_condCompDeSeq)
+    
+    results.l = list()
+    for (fileCur in par.l$files_input_permResults) {
+        results.l[[fileCur]] =  read_tidyverse_wrapper(fileCur, type = "tsv", col_names = TRUE, col_types = cols())
+    }
+    output.global.TFs.orig = do.call(rbind.data.frame, results.l)
+
+    # Remove rows with NA
+    TF_NA = which(is.na(output.global.TFs.orig$weighted_meanDifference))
+    if (length(TF_NA) > 0) {
+        output.global.TFs.orig = output.global.TFs.orig[-TF_NA,]
+    }
+    
+    sampleData.l = readRDS(par.l$file_input_metadata)
+    
+    
+    if (par.l$plotRNASeqClassification) {
+        
+        rootOutdir = snakemake@config$par_general$outdir
+        assertCharacter(rootOutdir)
+        
+        comparisonType = snakemake@config$par_general$comparisonType
+        assertCharacter(comparisonType)
+        
+        if (nchar(comparisonType) > 0) {
+            comparisonType = paste0(comparisonType, ".")
+        }
+        
+        extensionSize = as.integer(snakemake@config$par_general$regionExtension)
+        assertIntegerish(extensionSize)
+
+        countsRNA.all.df = read_tidyverse_wrapper(par.l$file_input_geneCountsPerSample, type = "tsv", col_names = TRUE)
+        HOCOMOCO_mapping.df = readHOCOMOCOTable(par.l$file_input_HOCOMOCO_mapping)
+        countsATAC.norm.df = read_tidyverse_wrapper(par.l$file_input_countsNorm, type = "tsv", col_types = cols())
+
+        HOCOMOCO_mapping.df.overlap = filterHOCOMOCOTable(HOCOMOCO_mapping.df, unique(output.global.TFs.orig$TF))
+        
+        TF.peakMatrix.df = createBindingMatrixFromFiles(HOCOMOCO_mapping.df.overlap, countsATAC.norm.df, rootOutdir, extensionSize, comparisonType)
+    }
+    
+    
+    save(list = ls(), file = snakemake@params$debugFile)
+    flog.info(paste0("File ", snakemake@params$debugFile, " has been saved. You may use it for trouble-shooting and debugging, see the Documentation for more details."))
+}
 
 
 ################
@@ -153,7 +206,7 @@ for (fileCur in par.l$files_input_permResults) {
 }
 
 # Convert columns to numeric if they are not already
-output.global.TFs.orig = dplyr::mutate(output.global.TFs.orig,
+output.global.TFs.orig = mutate(output.global.TFs.orig,
                                 weighted_meanDifference = as.numeric(weighted_meanDifference),
                                 variance                = as.numeric(variance),
                                 weighted_CD             = as.numeric(weighted_CD),
@@ -177,6 +230,7 @@ if (length(TF_NA) > 0) {
         checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
     }
     
+    flog.info(paste0("Removing the following TFs from the output table due to missing data: ", paste0(output.global.TFs.orig$TF[TF_NA], collapse = ",")))
     output.global.TFs.orig = output.global.TFs.orig[-TF_NA,]
     
     
@@ -405,11 +459,11 @@ if (par.l$plotRNASeqClassification) {
     # Subset data to retain only samples that appear in both RNA and ATAC
     data.l = intersectData(countsRNA.norm.df, countsATAC.norm.df)
     
-    countsRNA.norm.filt.df  = data.l[["RNA"]]
-    countsATAC.norm.filt.df = data.l[["ATAC"]] 
-    
+    countsRNA.norm.df  = data.l[["RNA"]]
+    countsATAC.norm.df = data.l[["ATAC"]] 
+  
     # Filter genes that might not be in the output.global.TFs$TF list 
-    HOCOMOCO_mapping.df.overlap = filterHOCOMOCOTable(HOCOMOCO_mapping.df, output.global.TFs)
+    HOCOMOCO_mapping.df.overlap = filterHOCOMOCOTable(HOCOMOCO_mapping.df, output.global.TFs$TF)
    
     TF.peakMatrix.df = createBindingMatrixFromFiles(HOCOMOCO_mapping.df.overlap, countsATAC.norm.df, rootOutdir, extensionSize, comparisonType)
     
@@ -418,7 +472,7 @@ if (par.l$plotRNASeqClassification) {
     countsATAC.norm.filt.df = res.l[["peakCounts"]]  
     
 
-    sort.cor.m = correlateATAC_RNA(countsRNA.norm.filt.df, countsATAC.norm.filt.df, HOCOMOCO_mapping.df.overlap, corMethod = "pearson")
+    sort.cor.m = correlateATAC_RNA(countsRNA.norm.df, countsATAC.norm.filt.df, HOCOMOCO_mapping.df.overlap, corMethod = "pearson")
     
     res.l = computeForegroundAndBackgroundMatrices(TF.peakMatrix.df, sort.cor.m)
     median.cor.tfs       = res.l[["median_foreground"]]
@@ -436,7 +490,7 @@ if (par.l$plotRNASeqClassification) {
     # DIAGNOSTIC PLOTS #
     ####################
     ####################
-    HOCOMOCO_mapping.df.overlap.exp = dplyr::filter(HOCOMOCO_mapping.df.overlap, ENSEMBL %in% countsRNA.norm.filt.df$ENSEMBL)
+    HOCOMOCO_mapping.df.overlap.exp = dplyr::filter(HOCOMOCO_mapping.df.overlap, ENSEMBL %in% countsRNA.norm.df$ENSEMBL)
     
     pdf(file = par.l$files_plotDiagnostic[2], width = 4, height = 8)
     plot_AR_thresholds(median.cor.tfs, median.cor.tfs.non, par.l, act.rep.thres.l, file = NULL)

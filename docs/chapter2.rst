@@ -116,11 +116,11 @@ Details
 
 
 
-``maxCoresPerRule``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``maxCoresPerRule`` (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Summary
-  Integer > 0. Default 16. Maximum number of cores to use for rules that support multithreading.
+  Integer > 0. Default 16. Maximum number of cores to use for rules that support multithreading. Optional parameter, if missing, set to a default of 4.
 
 Details
   This affects currently only rules involving *featureCounts* - that is, *intersectPeaksAndBAM* while for rule *intersectTFBSAndBAM*, the number of cores is hard-coded to 4. When running *Snakemake* locally, each rule will use at most this number of cores, while in a cluster setting, this value refers to the maximum number of CPUs an individual job / rule will occupy. If the node the job is executed on has fewer nodes, then the maximum number of cores on the node will be taken.
@@ -277,7 +277,7 @@ Summary
 Details
   If the analysis should be restricted to a subset of TFs, list the names of the TF to include in a comma-separated manner here.
 
-  .. note:: For each TF ``{TF}``, a corresponding file ``{TF}_TFBS.bed`` needs to be present in the directory that is specified by ``dir_TFBS`` (:ref:`parameter_dir_TFBS`).
+  .. note:: For each TF ``{TF}``, a corresponding file ``{TF}_TFBS.bed`` needs to be present in the directory that is specified by ``dir_TFBS`` (:ref:`parameter_dir_TFBS`). The name of the TF can be anything, and from version 1.7 onwards may also contain additional underscores. See the changelog for details. If you run an older version of diffTF, please update the version.
 
   .. warning:: We strongly recommending running *diffTF* with as many TF as possible due to our statistical model that we use that compares against a background model.
 
@@ -306,6 +306,20 @@ Details
   If set to true, RNA-Seq counts as specified in ``RNASeqCounts`` (:ref:`parameter_RNASeqCounts`) will be used to classify each TF into either “activator”, “repressor”, “unknown”, or “not-expressed” for the final Volcano plot visualization and the summary table.
 
   .. note::RNA-Seq integration is only included in the very last step of the pipeline, so it can also be easily integrated later.
+
+
+.. _parameter_debugMode:
+
+``debugMode`` (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  Logical. true or false. Default false. Enable debug mode for R scripts? Only available and supported for diffTF v1.7 or higher (added in May 2020). So far, only R scripts are supported by the debug mode.
+
+Details
+  If set to true, the debug mode for R scripts is enabled. The typical usage is as follows: If you receive errors when running one of the R scripts, set it to ``true``, restart Snakemake, and you will see a printed message that the debug mode is enabled and a corresponding R session file (``.RData``) is saved in the ``LOGS_AND_BENCHMARKS`` folder. The script then continues running and the error will appear again. Use this file to sent to us for troubleshooting if being asked for. It contains all information necessary to rerun the step on a different PC, and all input files are read in so they are available within R for others.
+
+  .. note::The debug mode should only be used for the step that fails as it may produce large session files.
 
 
 SECTION ``samples``
@@ -426,7 +440,7 @@ Summary
   String. Path to the directory where the TF-specific files for TFBS results are stored.
 
 Details
-  Each TF *{TF}* has to have one *BED* file, in the format *{TF}.bed*.  Each file must be a valid *BED6* file with 6 columns, as follows:
+  Each TF *{TF}* has to have one *BED* file, in the format *{TF}.bed*.  Each file must be a valid *BED6* file with exactly 6 columns, as follows:
 
   1. chromosome
   2. start
@@ -441,7 +455,7 @@ Details
   - hg38: For a pre-compiled list of 767 human TF with in-silico predicted TFBS based on the *HOCOMOCO 11* database and *FIMO* from the MEME suite for hg38, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_FIMO_HOCOMOCOv11.tar.gz>`_. For a pre-compiled list of 768 human TF with in-silico predicted TFBS based on the *HOCOMOCO 11* database and *PWMScan* for hg38, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_PWMScan_HOCOMOCOv11.tar.gz>`__
   - mm10: For a pre-compiled list of 422 mouse TF with in-silico predicted TFBS based on the *HOCOMOCO 10* database and *PWMScan* for mm10, `download this file: <https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz>`__
 
-  However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as *FIMO* or *MOODS*.
+  However, you may also manually create these files to include additional TF of your choice or to be more or less stringent with the predicted TFBS. For this, you only need PWMs for the TF of interest and then a motif prediction tool such as *FIMO* or *MOODS*. *Note that postprocessing of the BED files may be required to make sure the files to use with *diffTF* have exactly 6 columns.*
 
 
 .. _parameter_RNASeqCounts:
@@ -722,8 +736,9 @@ Details
   The pages are as follows:
 
   (1) Density plots of non-normalized (page 1) and normalized (page 2) mean log counts as well their respective empirical cumulative distribution functions (ECDF, pages 3 and 4 for non−normalized and normalized mean log counts, respectively)
-  (2) pairwise mean-average plots (average of the log-transformed counts vs the fold-change per peak) for each of the sample pairs. This can be useful to further assess systematic differences between the samples. Note that only a maximum of 20 different pairwise plots are shown for time and efficacy reasons.
-  (3) mean SD plots (row standard deviations versus row means, last page)
+  - Page 5-6: Regular (5) and MA plot based shrunken log2 fold-changes (6) of the RNA-Seq counts based on the ``DESeq2`` analysis for the peaks (not the TF binding sites). Both show the log2 fold changes attributable to a given variable over the mean of normalized counts for all samples, while the latter removes the noise associated with log2 fold changes from low count genes without requiring arbitrary filtering thresholds. Points are colored red if the adjusted p-value is less than 0.1. Points which fall out of the window are plotted as open triangles pointing either up or down. For more information, see `here <http://bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#ma-plot>`__.
+  (2) Page 7 onward: pairwise mean-average plots (average of the log-transformed counts vs the fold-change per peak) for each of the sample pairs. This can be useful to further assess systematic differences between the samples. Note that only a maximum of 20 different pairwise plots are shown for time and efficacy reasons.
+  (3) Last page: mean SD plots (row standard deviations versus row means)
 
 
 FILE ``{comparisonType}.DESeq.object.rds``

@@ -63,6 +63,14 @@ Open Access. DOI: `https://doi.org/10.1016/j.celrep.2019.10.106 <https://doi.org
 
 Change log
 ============================
+
+Version 1.7 (2020-05-14)
+  - Multiple small fixes, thanks to Guandong Shang and Jiang Kan for reporting them:
+    - The TF name may now contain underscores. Before, that caused an error and is fixed now. We also cleared up the documentation about this.
+    - TFs with zero TFBS overlapping with the peaks (and therefore, overlap files with 0 lines) do not cause an error anymore and are skipped in subsequent steps, in analogy to TFs that had between 1 and 10 TFBS.
+    - Fixed a bug that caused an error when running the last ``summaryFinal`` step that related to duplicated TFs in the HOCOMOCO table.
+  - Implemented a debug mode via the new optional parameter ``debugMode``. This mode may be used to store the R session in a file and can be used to send to us for easier troubleshooting. See the documentation for more details.
+
 Version 1.6 (2020-01-22)
   - The documentation received a major update, in particular the section output files. In addition, a few new methodological figures have been added as well as an interpretation section.
 

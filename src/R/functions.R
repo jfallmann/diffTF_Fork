@@ -80,6 +80,15 @@ startLogger <- function(logfile, level, removeOldLog = TRUE, appenderName = "con
     
 }
 
+stopifnot_custom <- function(testForTruth, directory) {
+    
+    assert_flag(testForTruth)
+    if (!testForTruth) {
+        
+        flog.error()
+    }
+}
+
 printParametersLog <- function(par.l, verbose = FALSE) {
     
     checkAndLoadPackages(c("futile.logger"), verbose = verbose)  
@@ -92,12 +101,12 @@ printParametersLog <- function(par.l, verbose = FALSE) {
     }
 }
 
-read_tidyverse_wrapper <- function(file, type = "tsv", ncolExpected = NULL,  ...) {
+read_tidyverse_wrapper <- function(file, type = "tsv", ncolExpected = NULL, minRows = 0, ...) {
   
   assertSubset(type, c("csv", "csv2", "tsv", "delim"))
   
   start = Sys.time()
-  flog.info(paste0(" Reading file ", file))
+  flog.info(paste0("Reading file ", file))
   
   
   if (type == "tsv") {
@@ -123,10 +132,17 @@ read_tidyverse_wrapper <- function(file, type = "tsv", ncolExpected = NULL,  ...
   }
   
   if (!is.null(ncolExpected)) {
-    if (ncol(tbl) != ncolExpected) {
+    if (! ncol(tbl) %in% ncolExpected) {
       message = paste0("The file ", file, " does not have the expected number of ", ncolExpected, " columns, but instead ", ncol(tbl), ".")
       checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
     }
+  }
+  
+  if (minRows > 0) {
+      if (nrow(tbl) < minRows) {
+          message = paste0("The file ", file, " does not have the expected minimum number of rows. Expected at least ", minRows, ", but found only ",nrow(tbl), ".")
+          checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+      }
   }
   
   
@@ -955,8 +971,14 @@ chooseTFLabelSize <- function(nTF_label) {
     flog.info(paste0(" Finished sucessfully. Execution time: ", round(endTime - startTime, 1), " ", units(endTime - startTime)))
 }
 
+testFunction <- function(matrix) {
+    
+    matrix2 = matrix(data = 1, nrow = 10, ncol = 10)
+    checkAndLogWarningsAndErrors(NULL, FALSE, isWarning = FALSE, dumpfile = paste0(getwd(), "/diffTF_error_dump.RData")) 
+}
 
-checkAndLogWarningsAndErrors <- function(object, checkResult, isWarning = FALSE) {
+
+checkAndLogWarningsAndErrors <- function(object, checkResult, isWarning = FALSE, dumpfile = paste0(getwd(), "/diffTF_error_dump.RData")) {
     
     assert(checkCharacter(checkResult, len = 1), checkLogical(checkResult))
     
@@ -982,6 +1004,10 @@ checkAndLogWarningsAndErrors <- function(object, checkResult, isWarning = FALSE)
             flog.warn(messageWarning)
             warning(messageWarning)
         } else {
+            
+            flog.info(paste0("Saving a dump file to ", dumpfile, ". You may use this file to trouble-shoot or send to others."))
+            save.image(file = dumpfile)
+            
             flog.error(messageError)
             stop(messageError)
         }
@@ -1005,11 +1031,11 @@ filterLowlyExpressedGenes <- function(dd, comparisonMode, minMeanGroup, minMedia
   
   assertIntegerish(minMeanGroup)
   assertIntegerish(minMedianAll) 
-  
-  dd_counts = DESeq2::counts(dd, normalize = FALSE)
     
   if (comparisonMode == "pairwise") {
-
+      
+    dd_counts = DESeq2::counts(dd, normalize = FALSE)
+    
     samples_cond1 = colData(dd)$SampleID[which(colData(dd)$conditionSummary == levels(colData(dd)$conditionSummary)[1])]
     samples_cond2 = colData(dd)$SampleID[which(colData(dd)$conditionSummary == levels(colData(dd)$conditionSummary)[2])]
     
@@ -1210,10 +1236,10 @@ filterPeaksByRowMeans <- function(peakCounts, TF.peakMatrix = NULL, minMean = 1,
   start = Sys.time()
   flog.info(paste0("Filter peaks with a mean across samples of smaller than ", minMean))
   
-  index_IDColumn = which(colnames(peakCounts) == idColumn)
-  stopifnot(length(index_IDColumn) == 1)
+  index_lastColumn = which(colnames(peakCounts) == idColumn)
+  stopifnot(length(index_lastColumn) == 1)
   
-  rowMeans2 = rowMeans(peakCounts[,-index_IDColumn])
+  rowMeans2 = rowMeans(peakCounts[,-index_lastColumn])
   rowsToDelete = which(rowMeans2 < minMean)
   if (length(rowsToDelete) > 0) {
     flog.info(paste0("Removed ", length(rowsToDelete), " peaks out of ", nrow(peakCounts), 
@@ -1239,10 +1265,12 @@ filterPeaksByRowMeans <- function(peakCounts, TF.peakMatrix = NULL, minMean = 1,
 }
 
 
+
+
 normalizeCounts <- function(rawCounts, method = "quantile", idColumn, removeCols = c()) {
     
     start = Sys.time()
-    checkAndLoadPackages(c("tidyverse", "DESeq2", "futile.logger", "checkmate", "preprocessCore"), verbose = FALSE)
+    checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "preprocessCore"), verbose = FALSE)
     
     flog.info(paste0("Normalize counts. Method: ", method, ", ID column: ", idColumn))
     
@@ -1343,9 +1371,6 @@ intersectData <- function(countsRNA, countsATAC, idColumn_RNA = "ENSEMBL", idCol
     flog.info(paste0(" Number of samples for RNA before filtering: " , ncol(countsRNA) - 1))
     flog.info(paste0(" Number of samples for ATAC before filtering: ", ncol(countsATAC) - 1))
     
-    # Clean ENSEMBL IDs
-    countsRNA = dplyr::mutate(countsRNA, ENSEMBL = gsub("\\..+", "", ENSEMBL, perl = TRUE))
-    
     # Subset ATAC and RNA to the same set of samples
     sharedColumns = intersect(colnames(countsRNA), colnames(countsATAC))
     
@@ -1376,9 +1401,11 @@ intersectData <- function(countsRNA, countsATAC, idColumn_RNA = "ENSEMBL", idCol
     list(RNA = countsRNA.df, ATAC = countsATAC.df)
 }
 
-filterHOCOMOCOTable <- function(HOCOMOCO_table, output.global.TFs) {
+filterHOCOMOCOTable <- function(HOCOMOCO_table, TFs) {
     
-    HOCOMOCO_mapping.df.overlap <- dplyr::filter(HOCOMOCO_table, HOCOID %in% output.global.TFs$TF)
+    HOCOMOCO_mapping.df.overlap <- HOCOMOCO_table  %>%
+        dplyr::filter(HOCOID %in% TFs) %>%
+        dplyr::distinct(ENSEMBL, HOCOID)
     
     if (nrow(HOCOMOCO_mapping.df.overlap) == 0) {
         message = paste0("Number of rows of HOCOMOCO_mapping.df.overlap is 0. Something is wrong with the mapping table or the filtering")
@@ -1463,16 +1490,6 @@ correlateATAC_RNA <- function(countsRNA, countsATAC, HOCOMOCO_mapping, corMethod
     sort.cor.m = cor.m[,names(sort(colMeans(cor.m)))] 
     # Change the column names from ENSEMBL ID to TF names. 
     # Reorder to make sure the order is the same. Due to the duplication ID issue, the number of columns may increase after the column selection
-     
-    colnamesIntegrity = as.character(HOCOMOCO_mapping.exp$ENSEMBL) %in% colnames(sort.cor.m)
-    if (!all(colnamesIntegrity)) {
-        missing = which(!colnamesIntegrity)
-        message = paste0(length(missing), " ENSEMBL ID(s) missing in the correlation matrix (", paste0(missing, collapse = ","), "). This should not happen, please report it to the Bitbucket Issue Tracker. To avoid downstream errors, subset the TFs accordingly.")
-        checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
-        
-        # Subset to those that overlap with the columns
-        HOCOMOCO_mapping.exp = dplyr::filter(HOCOMOCO_mapping.exp, ENSEMBL %in% colnames(sort.cor.m))
-    } 
     sort.cor.m = sort.cor.m[,as.character(HOCOMOCO_mapping.exp$ENSEMBL)] 
     colnames(sort.cor.m) = as.character(HOCOMOCO_mapping.exp$HOCOID)
 
@@ -1487,7 +1504,8 @@ computeForegroundAndBackgroundMatrices <- function(peakMatrix, sort.cor.m) {
     # TODO: Extend with a few steps before even
     
     # This binary matrix has peaks as rows and TFs as columns of whether or not a particular peak has a TFBS from this TF or not
-    sel.TF.peakMatrix.df = peakMatrix[,colnames(sort.cor.m)]
+    # The unique prevents colnames from changeing, with ".1" being added to it automatically in case of duplicate column names
+    sel.TF.peakMatrix.df = peakMatrix[,unique(colnames(sort.cor.m))]
     
     
     # 1. Focus on peaks with TFBS overlaps
@@ -1587,6 +1605,17 @@ finalizeClassificationAndAppend <- function(output.global.TFs, median.cor.tfs, a
         for (TFCur in colnames(t.cor.sel.matrix)) {
             
             rowNo = which(output.global.TFs$TF == TFCur)
+            
+            # Should normally not happen
+            if (length(rowNo) != 1) {
+                
+                save(list = ls(),                 file = paste0(getwd(), "/diffTF_error_dump_local.RData") )
+                save(list = ls(all.names = TRUE), file = paste0(getwd(), "/diffTF_error_dump_global.RData") )
+                
+                message = paste0("Mismatch detected between TF names in the correlation matrix and the output table. Error occured for the TF ", TFCur, ". This should not happen. Contact the authors.")
+                checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+                
+            }
             
             # Removing NAs actually makes a difference, as these are "artifical" anyway here due to the two matrices let's remove them
             dataMotif      = na.omit(t.cor.sel.matrix[,TFCur])
@@ -1860,15 +1889,12 @@ plot_AR_thresholds  <- function(median.cor.tfs, median.cor.tfs.non, par.l, act.r
 plot_heatmapAR <- function(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, sort.cor.m, par.l, median.cor.tfs, median.cor.tfs.non, act.rep.thres.l, finalClassification = NULL,  file = NULL, ...) {
     
     start = Sys.time()
-    checkAndLoadPackages(c("pheatmap"), verbose = FALSE)
     flog.info(paste0("Plotting AR heatmap", if_else(is.null(file), "", paste0(" to file ", file))))
     
     
     missingGenes = which(!HOCOMOCO_mapping.df.exp$HOCOID %in% colnames(sort.cor.m))
     if (length(missingGenes) > 0) {
-        # This was before: 
-        # HOCOMOCO_mapping.df.exp = dplyr::filter(HOCOMOCO_mapping.df.exp, ENSEMBL %in% colnames(sort.cor.m))
-        HOCOMOCO_mapping.df.exp = dplyr::filter(HOCOMOCO_mapping.df.exp, HOCOID %in% colnames(sort.cor.m))
+        HOCOMOCO_mapping.df.exp = dplyr::filter(HOCOMOCO_mapping.df.exp, ENSEMBL %in% colnames(sort.cor.m))
     }
     
     if (!is.null(file)) {
@@ -2196,4 +2222,23 @@ plotDiagnosticPlots <- function(dd, conditionComparison, contrast = NULL, file =
         dev.off()
     }
 }
+
+setDebugMode <- function(debugMode) {
+    
+    #assertSubset(debugMode, c("TRUE", "FALSE", "True", "False", "true", "false", "", TRUE, FALSE), empty.ok = TRUE)
+    if (is.null(debugMode)) {
+        return(FALSE)
+    } else {
+        if (as.logical(debugMode) == TRUE) {
+            flog.info(paste0("diffTF debug mode is enabled. R session files will be stored for this script. Use them to troubleshoot errors you get or send them to the authors for investigation upon being asked to do so."))
+            return(TRUE)
+        } else {
+            return(FALSE)
+        }
+    }
+   
+}
+
+
+
 
