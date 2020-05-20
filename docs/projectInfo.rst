@@ -63,6 +63,8 @@ Open Access. DOI: `https://doi.org/10.1016/j.celrep.2019.10.106 <https://doi.org
 
 Change log
 ============================
+Version 1.7.1 (2020-05-20)
+  - Fixed one typo in the file ``TF_Gene_TranslationTables/HOCOMOCO_v10/translationTable_mm10.csv``. For the TF PAX5.S, the wrong Ensembl ID was provided (the one for PAX2 and not PAX5). This may have caused differences in the classification for PAX5.S when integrating RNA-seq data. Only this TF is affected, and this was also only an issue forthe combination of mm10 and HOCOMOCO v10. Thanks to Jiang Kan for letting us know!
 
 Version 1.7 (2020-05-14)
   - Multiple small fixes, thanks to Guandong Shang and Jiang Kan for reporting them:
