@@ -154,7 +154,7 @@ if (par.l$debugMode) {
     TF.motifs.ori.l = list()
     for (fileCur in par.l$files_input_TF_allMotives) {
         
-        TF.motifs.ori.l[[fileCur]]  = read_tidyverse_wrapper(fileCur, type = "tsv", col_names = TRUE, 
+        TF.motifs.ori.l[[fileCur]]  = read_tidyverse_wrapper(fileCur, type = "tsv", col_names = FALSE, 
                                                 col_types = list(
                                                     col_character(), # "TF",
                                                     col_character(), # "TFBSID"
@@ -402,11 +402,11 @@ for (fileCur in par.l$files_input_TF_allMotives) {
     
   } # end for each bin
   
- 
-  if (nBinsWithData == 0) {
+  # Changed from requiring at least 1 to at least 2
+  if (nBinsWithData <= 2) {
     
     nPermutationsSkipped = nPermutationsSkipped + 1
-    flog.info(paste0(" Not enough (non-NA) data for any of the ", nBinsAll, " bins. This may happen for individual permutations, see warning at the end."))
+    flog.info(paste0(" Not enough (non-NA) data for the bins. Data from at least 2 bins is required. This may happen for TFs with an overall small number of TFBS or for individual permutations, see warning at the end."))
     calculateVariance  = FALSE
     
   } else {
@@ -450,7 +450,7 @@ for (fileCur in par.l$files_input_TF_allMotives) {
       }
       
     }
-    
+
     # Estimate the variance
     
     # Filter for bins for which we actually have data for

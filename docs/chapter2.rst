@@ -210,6 +210,17 @@ Details
   .. note:: Importantly, *conditionSummary* can either be specified as "factor" or "numeric"/"integer", which changes the way the results are interpreted and what the log2 fold-changes represent. *conditionSummary* is usually specified as factor because you want to make a pairwise comparison of exactly two conditions. If *conditionSummary* is specified as "integer" or "numeric" (i.e., continuous-valued), however, the variable is treated as continuously-scaled, which changes the interpretation of the results: the reported log2 fold change is then per unit of change of that variable. That is, in the final Volcano plot, TFs displayed in the left side have a negative slope per unit of change of that variable, while TFs at the right side have a positive one.
 
 
+
+``filterChromosomes`` (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Summary
+  TODO
+
+Details
+  TODO
+
+
 .. _parameter_nPermutations:
 
 
@@ -468,9 +479,18 @@ Summary
   String. Default “”. Path to the file with RNA-Seq counts.
 
 Details
-  If no RNA-Seq data is included, set to the empty string “”. Otherwise, if ``RNASeqIntegration`` (:ref:`parameter_RNASeqIntegration`) is set to true,  specify the path to a tab-separated file with *raw* RNA-Seq counts. We apply some basic filtering for lowly expressed genes and exclude genes with small counts, so there is principally no need for manual filtering unless you want to do so. For guidance, you may want to read `Question 4 here <https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/faq.html>`__.
+  If no RNA-Seq data is included, set to the empty string “”. Otherwise, if ``RNASeqIntegration`` (:ref:`parameter_RNASeqIntegration`) is set to true,  specify the path to a tab-separated file with *raw* RNA-Seq counts (i.e., non-negative integer values, see Figure below). We apply some basic filtering for lowly expressed genes and exclude genes with small counts, so there is principally no need for manual filtering unless you want to do so. For guidance, you may want to read `Question 4 here <https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/faq.html>`__.
 
-  The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (``summaryFile``, :ref:`parameter_summaryFile`). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then naturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., *ENSG00000028277*) without dots. The IDs are then matched to the IDs from the file as specified in ``HOCOMOCO_mapping`` (:ref:`parameter_HOCOMOCO_mapping`).
+  The first line must be used for labeling the samples, with column names being identical to the sample names as specific in the sample summary table (``summaryFile``, :ref:`parameter_summaryFile`). If you have RNA-Seq data for only a subset of the input samples, this is no problem - the classification will then naturally only be based on the subset. The first column must be named ENSEMBL and it must contain ENSEMBL IDs (e.g., *ENSG00000028277*) without dots. The IDs are then matched to the IDs from the file as specified in ``HOCOMOCO_mapping`` (:ref:`parameter_HOCOMOCO_mapping`). For an example of how the count table should look like, check this image:
+
+
+   .. figure:: Figures/rawCounts_RNA.png
+         :scale: 40 %
+         :alt: raw RNA-seq counts
+         :align: center
+
+         Example of how the RNA-Seq raw count table has to look like. Thanks to Phoebe Valdes for the image and the permission to use it here. Click on the image for better quality.
+
 
 .. _parameter_HOCOMOCO_mapping:
 

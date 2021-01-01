@@ -63,16 +63,23 @@ Open Access. DOI: `https://doi.org/10.1016/j.celrep.2019.10.106 <https://doi.org
 
 Change log
 ============================
+Version 1.8 (2020-07-15)
+  - more stringent criteria for when to include a TF in the binning step. Previously, one bin with data was enough to include the TF. We identified that in rare edge cases, this may not be enough to reliably estimate the TF activity, and now at least 2 distinct bins with enough data are required
+  - added a parameter *filterChr* to specify whether or not the sex chromosomes (or any other chromosomes) should be filtered from the peaks. Until now, chrX, chrY and chrM were filtered by default. If the parameter is not set explicitly, the previous behavior will be executed.
+  - the summaryFinal step now outputs also the DESeq object as an rds file for the RNA-Seq data. This allows to extract gene counts etc.
+  - other minor changes
+  - updated TFBS predictions for hg38
+
 Version 1.7.1 (2020-05-20)
   - Fixed one typo in the file ``TF_Gene_TranslationTables/HOCOMOCO_v10/translationTable_mm10.csv``. For the TF PAX5.S, the wrong Ensembl ID was provided (the one for PAX2 and not PAX5). This may have caused differences in the classification for PAX5.S when integrating RNA-seq data. Only this TF is affected, and this was also only an issue forthe combination of mm10 and HOCOMOCO v10. Thanks to Jiang Kan for letting us know!
 
 Version 1.7 (2020-05-14)
   - Multiple small fixes, thanks to Guandong Shang and Jiang Kan for reporting them:
-  
+
     - The TF name may now contain underscores. Before, that caused an error and is fixed now. We also cleared up the documentation about this.
     - TFs with zero TFBS overlapping with the peaks (and therefore, overlap files with 0 lines) do not cause an error anymore and are skipped in subsequent steps, in analogy to TFs that had between 1 and 10 TFBS.
     - Fixed a bug that caused an error when running the last ``summaryFinal`` step that related to duplicated TFs in the HOCOMOCO table.
-    
+
   - Implemented a debug mode via the new optional parameter ``debugMode``. This mode may be used to store the R session in a file and can be used to send to us for easier troubleshooting. See the documentation for more details.
 
 Version 1.6 (2020-01-22)

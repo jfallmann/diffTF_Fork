@@ -178,7 +178,7 @@ read_tidyverse_wrapper <- function(file, type = "tsv", ncolExpected = NULL, minR
                 install.packages("BiocManager")
             
             for (packageCur in packagesToInstall) {
-                BiocManager::install(packageCur)
+                BiocManager::install(packageCur, update = FALSE, ask = FALSE)
             }
         }
         
@@ -885,7 +885,7 @@ createDebugFile <- function(snakemake) {
         nWorkers = multicoreWorkers()
     }
     
-    MulticoreParam(workers = nWorkers, progressBar = TRUE, stop.on.error = TRUE)
+    MulticoreParam(workers = nWorkers, stop.on.error = TRUE)
     
 }
 
@@ -1207,7 +1207,7 @@ createBindingMatrixFromFiles <- function(mapping, peakCounts, rootOutdir, extens
 
 readHOCOMOCOTable <- function(file, delim = " ") {
 
-  HOCOMOCO_mapping.df = read_tidyverse_wrapper(file, type = "delim", delim = delim) %>%
+  HOCOMOCO_mapping.df = read_tidyverse_wrapper(file, type = "delim", delim = delim, col_types = cols()) %>%
     mutate(ENSEMBL = gsub("\\..+", "", ENSEMBL, perl = TRUE)) # Clean ENSEMBL IDs
   
   assertSubset(c("ENSEMBL", "HOCOID"), colnames(HOCOMOCO_mapping.df))
@@ -1267,7 +1267,7 @@ filterPeaksByRowMeans <- function(peakCounts, TF.peakMatrix = NULL, minMean = 1,
 
 
 
-normalizeCounts <- function(rawCounts, method = "quantile", idColumn, removeCols = c()) {
+normalizeCounts <- function(rawCounts, method = "quantile", idColumn, removeCols = c(), returnDESeqObj = FALSE) {
     
     start = Sys.time()
     checkAndLoadPackages(c("tidyverse", "futile.logger", "checkmate", "preprocessCore"), verbose = FALSE)
@@ -1332,6 +1332,10 @@ normalizeCounts <- function(rawCounts, method = "quantile", idColumn, removeCols
         
         dd = estimateSizeFactors(dd)
         counts.norm = DESeq2::counts(dd, normalized = TRUE)
+        
+        if (returnDESeqObj) {
+            return(dd)
+        }
         
         
     } else if (method == "none") {
@@ -1467,8 +1471,8 @@ correlateATAC_RNA <- function(countsRNA, countsATAC, HOCOMOCO_mapping, corMethod
     }
     
     HOCOMOCO_mapping.exp = dplyr::filter(HOCOMOCO_mapping, ENSEMBL %in% countsRNA.norm.TFs.df$ENSEMBL)
-    flog.info(paste0(" Correlate RNA-Seq and ATAC-Seq counts for ", nrow(countsATAC), " peaks and ", nrow(countsRNA.norm.TFs.df), " TF genes"))
-    
+    flog.info(paste0(" Correlate RNA-Seq and ATAC-Seq counts for ", nrow(countsATAC), " peaks and ", nrow(countsRNA.norm.TFs.df), " unique TF genes."))
+    flog.info(paste0(" Note: For subsequent steps, the same gene may be associated with multiple TF, depending on the translation table."))
     # Correlate TF gene counts with ATAC-Seq counts 
     # countsRNA:  rows: all TF genes, columns: all samples
     # countsATAC: rows: peak IDs, columns: samples
@@ -1571,6 +1575,8 @@ calculate_classificationThresholds <- function(background, par.l) {
 
 finalizeClassificationAndAppend <- function(output.global.TFs, median.cor.tfs, act.rep.thres.l, par.l, t.cor.sel.matrix, t.cor.sel.matrix.non, significanceThreshold_Wilcoxon = 0.05) {
     
+   checkAndLoadPackages(c("progress"), verbose = FALSE)
+  
     start = Sys.time()
     flog.info(paste0("Finalize classification"))
     colnameMedianCor         = paste0("median.cor.tfs")
@@ -1581,7 +1587,16 @@ finalizeClassificationAndAppend <- function(output.global.TFs, median.cor.tfs, a
     colnames(AR.data)[1] = colnameMedianCor
     
     output.global.TFs[,colnameMedianCor] = NULL
-    output.global.TFs = merge(output.global.TFs, AR.data, by = "TF",all.x = TRUE)
+    
+    if ("TF" %in% colnames(output.global.TFs)) {
+      output.global.TFs = merge(output.global.TFs, AR.data, by = "TF",all.x = TRUE)
+    } else if ("TF.name" %in% colnames(output.global.TFs)) {
+      output.global.TFs = merge(output.global.TFs, AR.data, by = "TF.name",all.x = TRUE)
+    } else {
+      message = paste0("Could npt find column for merging.")
+      checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+    }
+    
     
     
     # Define classes, tidyverse style
@@ -1599,11 +1614,15 @@ finalizeClassificationAndAppend <- function(output.global.TFs, median.cor.tfs, a
     if (!is.null(significanceThreshold_Wilcoxon)) {
         
         assertNumber(significanceThreshold_Wilcoxon, lower = 0, upper = 1)
-        flog.info(paste0(" Perform Wilcoxon test."))
+        flog.info(paste0(" Perform Wilcoxon test for each TF. This may take a few minutes."))
         output.global.TFs[,colnameClassificationPVal] = NULL
         # Do a Wilcoxon test for each TF as a 2nd filtering criterion
+        
+        pb <- progress_bar$new(total = ncol(t.cor.sel.matrix))
+   
         for (TFCur in colnames(t.cor.sel.matrix)) {
             
+            pb$tick()
             rowNo = which(output.global.TFs$TF == TFCur)
             
             # Should normally not happen
@@ -1676,6 +1695,15 @@ finalizeClassificationAndAppend <- function(output.global.TFs, median.cor.tfs, a
         
     } # end if doWilcoxon
     
+    # Print a summary of the classification
+    flog.info(" Summary of classification:")
+    colnamesIndex = which(grepl("final", colnames(output.global.TFs)))
+    for (colnameCur in colnamesIndex) {
+        flog.info(paste0("  Column ", colnames(output.global.TFs)[colnameCur]))
+        tbl = table(output.global.TFs %>% pull(colnameCur))
+        flog.info(paste0("   ", paste0(names(tbl), ": ", tbl), collapse = ", "))
+    }
+    
     .printExecutionTime(start)
     output.global.TFs
     
@@ -1693,11 +1721,16 @@ plot_density <- function(foreground.m, background.m, file = NULL, ...) {
     # 1. Determine maximum y-values across all TFs
     yMax = 2
     for (colCur in seq_len(ncol(foreground.m))) {
-        yMaxCur = max(c(density(foreground.m[,colCur], na.rm = TRUE)$y, density(background.m[,colCur], na.rm = T)$y))
-        
-        if (yMaxCur > yMax) {
-            yMax = yMaxCur + 0.1
-        }
+      
+       n_notNA = length(which(!is.na(foreground.m[,colCur])))
+       if (n_notNA > 1){
+         yMaxCur = max(c(density(foreground.m[,colCur], na.rm = TRUE)$y, density(background.m[,colCur], na.rm = T)$y))
+         
+         if (yMaxCur > yMax) {
+           yMax = yMaxCur + 0.1
+         }
+       }
+       
     }
     
     if (!is.null(file)) {
@@ -1711,14 +1744,23 @@ plot_density <- function(foreground.m, background.m, file = NULL, ...) {
         dataBackground = background.m[,colCur]
         mainLabel = paste0(TFCur," (#TFBS = ",length(which(!is.na(dataMotif)))," )")
         
-        plot(density(dataMotif, na.rm = TRUE), xlim = c(-1,1), ylim = c(0,yMax),
-             main= mainLabel, lwd=2.5, col="red", axes = FALSE, xlab = "Pearson correlation")
-        abline(v=0, col="black", lty=2)
-        legend("topleft",box.col = adjustcolor("white",alpha.f = 0), legend = c("Motif","Non-motif"), lwd = c(2,2),cex = 0.8, col = c("red","darkgrey"), lty = c(1,1) )
-        axis(side = 1, lwd = 1, line = 0)
-        axis(side = 2, lwd = 1, line = 0, las = 1)
+        n_notNA1 = length(which(!is.na(dataMotif)))
+        n_notNA2 = length(which(!is.na(dataBackground)))
+        if (n_notNA1 > 1 & n_notNA2 > 1 ){
+          
+          plot(density(dataMotif, na.rm = TRUE), xlim = c(-1,1), ylim = c(0,yMax),
+               main= mainLabel, lwd=2.5, col="red", axes = FALSE, xlab = "Pearson correlation")
+          abline(v=0, col="black", lty=2)
+          legend("topleft",box.col = adjustcolor("white",alpha.f = 0), legend = c("Motif","Non-motif"), lwd = c(2,2),cex = 0.8, col = c("red","darkgrey"), lty = c(1,1) )
+          axis(side = 1, lwd = 1, line = 0)
+          axis(side = 2, lwd = 1, line = 0, las = 1)
+          
+          lines(density(dataBackground, na.rm = T), lwd = 2.5, col = "darkgrey")
+          
+        } else {
+          flog.warn(paste0(" Not enough data for estimating densities for TF ", TFCur, ", skip for plotting."))
+        }
         
-        lines(density(dataBackground, na.rm = T), lwd = 2.5, col = "darkgrey")
         
     } 
     
@@ -1881,12 +1923,10 @@ plot_AR_thresholds  <- function(median.cor.tfs, median.cor.tfs.non, par.l, act.r
     
 }
 
-# plot_heatmapAR(peak_TF_overlapCur.df, HOCOMOCO_mapping.df.exp, sort.cor.m.l[[index]], par.l, 
-#                median.cor.tfs, median.cor.tfs.non, act.rep.thres.l, finalClassification = output.global.TFs,
-#                file = paste0(file_output_plot_densityClass, "_perm", permutationCur, ".pdf"), width = 5, height = 8)
 
 # Code from Armando Reyes
-plot_heatmapAR <- function(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, sort.cor.m, par.l, median.cor.tfs, median.cor.tfs.non, act.rep.thres.l, finalClassification = NULL,  file = NULL, ...) {
+plot_heatmapAR <- function(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, sort.cor.m, par.l, 
+                           median.cor.tfs, median.cor.tfs.non, act.rep.thres.l, finalClassification = NULL,  file = NULL, ...) {
     
     start = Sys.time()
     flog.info(paste0("Plotting AR heatmap", if_else(is.null(file), "", paste0(" to file ", file))))
@@ -1894,7 +1934,7 @@ plot_heatmapAR <- function(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, sort.cor.m
     
     missingGenes = which(!HOCOMOCO_mapping.df.exp$HOCOID %in% colnames(sort.cor.m))
     if (length(missingGenes) > 0) {
-        HOCOMOCO_mapping.df.exp = dplyr::filter(HOCOMOCO_mapping.df.exp, ENSEMBL %in% colnames(sort.cor.m))
+        HOCOMOCO_mapping.df.exp = dplyr::filter(HOCOMOCO_mapping.df.exp, HOCOID %in% colnames(sort.cor.m))
     }
     
     if (!is.null(file)) {
@@ -1903,9 +1943,6 @@ plot_heatmapAR <- function(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, sort.cor.m
     
     cor.r.pearson.m <- sort.cor.m[,as.character(HOCOMOCO_mapping.df.exp$HOCOID)]
     
-    # Filter to only expressed genes
-    TF.peakMatrix.filt.df = TF.peakMatrix.df[, which(colnames(TF.peakMatrix.df) %in% HOCOMOCO_mapping.df.exp$HOCOID)]
-    stopifnot(identical(colnames(TF.peakMatrix.filt.df), as.character(HOCOMOCO_mapping.df.exp$HOCOID)))
     stopifnot(identical(colnames(cor.r.pearson.m), as.character(HOCOMOCO_mapping.df.exp$HOCOID)))
     
     BREAKS = seq(-1,1,0.05)
@@ -1917,13 +1954,12 @@ plot_heatmapAR <- function(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, sort.cor.m
     
     for (i in 1:ncol(cor.r.pearson.m)) {
         TF = colnames(cor.r.pearson.m)[i]
-        TF_name = TF #as.character(HOCOMOCO_mapping.df.exp$HOCOID[HOCOMOCO_mapping.df.exp$HOCOID==TF])
         ## for the background, use all peaks
         h_noMotif = hist(cor.r.pearson.m[,TF][TF_Peak_all.m[,TF] == 0], breaks = BREAKS, plot = FALSE)
         ## for the foreground use only peaks with less than min_mot_n different TF motifs
-        h_Motif = hist(cor.r.pearson.m[,TF][TF_Peak.m[,TF] != 0], breaks = BREAKS, plot = FALSE)
+        h_Motif   = hist(cor.r.pearson.m[,TF][TF_Peak.m[,TF]     != 0], breaks = BREAKS, plot = FALSE)
         diff_density = h_Motif$density - h_noMotif$density
-        diffDensityMat[rownames(diffDensityMat) == TF_name[1], ] <- diff_density
+        diffDensityMat[rownames(diffDensityMat) == TF, ] <- diff_density
     }
     diffDensityMat = diffDensityMat[!is.na(diffDensityMat[,1]),]
     colnames(diffDensityMat) = signif(h_Motif$mids,1)
@@ -1933,7 +1969,10 @@ plot_heatmapAR <- function(TF.peakMatrix.df, HOCOMOCO_mapping.df.exp, sort.cor.m
     n_min = if_else(colSums(TF_Peak.m) < nrow(TF_Peak.m),colSums(TF_Peak.m), nrow(TF_Peak.m) - colSums(TF_Peak.m))
     names(n_min) = HOCOMOCO_mapping.df.exp$HOCOID#[match(names(n_min), as.character(tf2ensg$ENSEMBL))]
     n_min <- sapply(split(n_min,names(n_min)),sum)
-    quantile(n_min)
+    
+    # Make sure n_min and diffDenityMat are compatible because some NA rows may have been filtered out for diffDensityMat
+    n_min <- n_min[rownames(diffDensityMat)]
+    #quantile(n_min)
     remove_smallN = which(n_min < par.l$threshold_minNoTFBS_heatmap)
     cor(n_min[-remove_smallN], rowMax(diffDensityMat)[-remove_smallN], method = 'pearson')
     
