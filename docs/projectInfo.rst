@@ -63,6 +63,9 @@ Open Access. DOI: `https://doi.org/10.1016/j.celrep.2019.10.106 <https://doi.org
 
 Change log
 ============================
+Version 1.9 (2024-02-02)
+  - changes to the rule *intersectPeaksAndTFBS* to make it more stable. THis rule sometimes fails due to reasons outside of the scope of diffTF related to a maximum character limit allowed for commands. The shell command has been modified to circumvent this from happening. If you received cryptic error for this rule such as ``/bin/bash: /usr/bin/bash: No such file or directory``, you may have been affected by this - this either happened when the path to the output folder was long or when a large number (usually > 1000) of TFs is used, as with newer HOCOMOCO versions.
+
 Version 1.8 (2020-07-15)
   - more stringent criteria for when to include a TF in the binning step. Previously, one bin with data was enough to include the TF. We identified that in rare edge cases, this may not be enough to reliably estimate the TF activity, and now at least 2 distinct bins with enough data are required
   - added a parameter *filterChr* to specify whether or not the sex chromosomes (or any other chromosomes) should be filtered from the peaks. Until now, chrX, chrY and chrM were filtered by default. If the parameter is not set explicitly, the previous behavior will be executed.

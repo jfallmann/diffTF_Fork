@@ -92,7 +92,7 @@ Principally, there are two ways of installing *diffTF* and the proper tools:
 
         .. code-block:: Bash
 
-          snakemake --snakefile ../../src/Snakefile --cores 2 --configfile config.json \
+          snakemake --snakefile ../../../src/Snakefile --cores 2 --configfile config.json \
            --use-singularity --singularity-args "--bind /your/diffTF/path"
 
     Read in section :ref:`docs-singularityNotes` about the ``--bind`` option and what ``/your/diffTF/path`` means here , it is actually very easy!
