@@ -267,7 +267,10 @@ if config["peaks"]["consensusPeaks"]:
         raise IOError("File \"" + filenameCur + "\" not found.")
     # Check if it contains scientific notification
     # the || true in the end ensures the exit status of grep is 0, because this would raise an error otherwise
-    nHits = int(subprocess.check_output('grep -c "e+" ' + config["peaks"]["consensusPeaks"] + " || true", shell=True))
+    grepStr = "grep"
+    if filenameCur.endswith(".gz"):
+        grepStr = "zgrep"
+    nHits = int(subprocess.check_output(grepStr + ' -c "e+" ' + config["peaks"]["consensusPeaks"] + " || true", shell=True))
     if nHits > 0:
         raise AssertionError("File " + config["peaks"]["consensusPeaks"] + " contains at least one line with the scientific notation (e+). This will cause errors in subsequent steps. Check the file and transform all \"e+\" coordinates.")
 
@@ -476,12 +479,13 @@ rule intersectPeaksAndTFBS:
     singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     params:
         extension = config["par_general"]["regionExtension"],
-        ulimitMax = ulimitMax
+        ulimitMax = ulimitMax,
+        allBeds = expand('{dir}/{compType}*_TFBS.sorted.bed', dir = TEMP_DIR, compType = compType)
     shell:
         """ ulimit -n {params.ulimitMax} &&
             bedtools intersect \
                 -a {input.consensusPeaks} \
-                -b {input.allTFBS} \
+                -b {params.allBeds} \
                 -wa -wb \
                 -sorted \
                 -filenames \
