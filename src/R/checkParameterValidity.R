@@ -268,21 +268,21 @@ for (bamCur in sampleData.df$bamReads) {
   
   # Check whether BAM file contains chromosomes with the "chr" notation
   if (length(which(grepl("^chr", chrBAM.df$seqnames))) == 0) {
-      message = paste0("File ", bamCur, " does not have the correct chromosome names. The \"chr\" prefix is required for proper chromosome names, but they were not found. Check your BAM files and use samtools and sed to add \"chr\" to each chromosome name") 
-      checkAndLogWarningsAndErrors(NULL, message, isWarning = FALSE)
+      message = paste0("File ", bamCur, " does not have the correct chromosome names. The \"chr\" prefix may be required for proper chromosome names, but they were not found. Check your BAM files and use samtools and sed to add \"chr\" to each chromosome name") 
+      checkAndLogWarningsAndErrors(NULL, message, isWarning = TRUE)
   }
   
   merged.df = full_join(chrBAM.df, indexes.df, by = "seqnames")
   
   # Filter chromosomes and retain only those we keep in the pipeline
-  discardMatches = grepl("^chrX|^chrY|^chrM|^chrUn|random|hap|_gl|^GL", merged.df$seqnames, perl = TRUE)
-  
+  discardMatches = grepl("^chrX|^chrY|^chrM|^chrUn|^chrKN|^Kn|^tag^X|^Y|^M|^Un|random|hap|_gl|^GL", merged.df$seqnames, perl = TRUE)
+
   if (length(discardMatches) > 0) {
     chrNamesDiscarded = paste0(merged.df$seqnames[discardMatches], collapse = " ", sep = "\n")
     flog.info(paste0("Discard the following chromosomes for compatibility comparisons because they are filtered in later steps anyway:\n ", chrNamesDiscarded))
     merged.df =  merged.df[!discardMatches,]
   }
-  
+
   
   mismatches = merged.df$seqnames[which(merged.df$width.x != merged.df$width.y)]
   if (length(mismatches) > 0) {

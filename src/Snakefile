@@ -230,11 +230,18 @@ allTF = []
 
 if config["par_general"]["TFs"] == "all":
     TFBS_FILES = os.popen("ls " + config["additionalInputFiles"]["dir_TFBS"]).readlines()
-    for TFCur in TFBS_FILES:
+    for TFCur in TFBS_FILES:        
         if not os.path.basename(TFCur.replace('\n', '')).endswith(suffixTFBS):
             continue
         TFCurBasename = os.path.basename(TFCur.replace('\n', '').replace(suffixTFBS, ''))
         allTF.append(TFCurBasename)
+    if len(allTF) == 0:
+        suffixTFBS = "_TFBS.bed.gz"
+        for TFCur in TFBS_FILES:            
+            if not os.path.basename(TFCur.replace('\n', '')).endswith(suffixTFBS):
+                continue
+            TFCurBasename = os.path.basename(TFCur.replace('\n', '').replace(suffixTFBS, ''))
+            allTF.append(TFCurBasename)
 else:
     TFArray = config["par_general"]["TFs"].replace(" ", "").split(',')
     for TFCur in TFArray:
@@ -371,8 +378,11 @@ rule filterSexChromosomesAndSortPeaks:
     threads: 1
     singularity: "shub://chrarnold/Singularity_images:difftf_conda"
     shell: """
-            grep ^chr {input.consensusPeaks} | grep -v "^chrX\|^chrY\|^chrM\|^chrUn"  | sort -k1,1 -k2,2n > {output.consensusPeaks_sorted}
+            cat {input.consensusPeaks} | grep -P '^\d+|^chr\d+'| sed 's/^chr//g'| sort -k1,1 -k2,2n > {output.consensusPeaks_sorted}
            """
+    #shell: """
+    #        cat {input.consensusPeaks} | grep -v "^chrX\|^chrY\|^chrM\|^chrUn\|^chrKN\|^Kn\|^tag\|^X\|^Y\|^M\|^Un\|^GFP\|decoy\|^KI\|^GL\|^HLA"  | sed 's/^chr//g'| sort -k1,1 -k2,2n > {output.consensusPeaks_sorted}
+    #       """
 
 
 overlapPattern = "overlaps.bed.gz"
@@ -387,7 +397,10 @@ rule sortTFBSParallel:
     threads: 1
     run:
         for fi,fo in zip(input.allBed, output.allBedSorted):
-          shell("grep ^chr {fi} | grep -v \"^chrX\|^chrY\|^chrM\|^chrUn\" | sort -k1,1 -k2,2n > {fo}")
+            if fi.endswith(".gz"):
+                shell("zcat {fi} | grep -P '^chr\d+|^\d+' | grep -v \"^chrX\|^chrY\|^chrM\|^chrUn\|^chrKN\|^Kn\|^tag^X\|^Y\|^M\|^Un\" | sed 's/^chr//g' | sort -k1,1 -k2,2n > {fo}")
+            else:
+                shell("grep -P '^chr\d+|^\d+' {fi} | grep -v \"^chrX\|^chrY\|^chrM\|^chrUn\|^chrKN\|^Kn\|^tag^X\|^Y\|^M\|^Un\" | sed 's/^chr//g' | sort -k1,1 -k2,2n > {fo}")
 
 
 def getBamFileFromBasename(basename):

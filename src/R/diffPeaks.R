@@ -435,7 +435,7 @@ final.peaks.df = tibble(
     "peakID"    = rownames(cds.peaks.df), 
     "DESeq_baseMean" = cds.peaks.df$baseMean,
     "l2FC"     = cds.peaks.df$log2FoldChange,
-    "DESeq_ldcSE"    = cds.peaks.df$lfcSE,
+    "DESeq_lfcSE"    = cds.peaks.df$lfcSE,
     "DESeq_stat"     = cds.peaks.df$stat,
     "pval"     =  cds.peaks.df$pvalue, 
     "pval_adj" =  cds.peaks.df$padj
@@ -483,7 +483,7 @@ saveRDS(sampleData.l, par.l$file_output_metadata)
 # Do it separately for each column because different rounding schemes might be needed
 final.peaks.df = final.peaks.df %>% 
     mutate(permutation = as.integer(permutation)) %>%
-    mutate_at(c("DESeq_baseMean", "l2FC", "DESeq_ldcSE", "DESeq_stat"), signif, 3) %>%
+    mutate_at(c("DESeq_baseMean", "l2FC", "DESeq_lfcSE", "DESeq_stat"), signif, 3) %>%
     mutate_at(c("pval", "pval_adj"), formatC, format = "g", digits = 3)
 
 
