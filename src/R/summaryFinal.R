@@ -430,6 +430,46 @@ if (par.l$plotRNASeqClassification) {
     ########################
     # Process RNA-Seq data #
     ########################
+    # Enforce column types in sampleData according to designVariableTypes
+    designVarTypesStr = snakemake@config$par_general$designVariableTypes
+    if (!is.null(designVarTypesStr)) {
+        designVarTypesStr = gsub(" ", "", designVarTypesStr)
+        designVarPairs = strsplit(designVarTypesStr, split = ",")[[1]]
+        for (pairCur in designVarPairs) {
+            splitCur = strsplit(pairCur, split = ":")[[1]]
+            if (length(splitCur) != 2) {
+                flog.warn(paste0("Invalid designVariableTypes entry: ", pairCur))
+                next
+            }
+            varName = splitCur[1]
+            varType = tolower(splitCur[2])
+            if (!varName %in% colnames(sampleData.df)) {
+                flog.warn(paste0("designVariableTypes specified variable not found in sampleData: ", varName))
+                next
+            }
+            origVec = sampleData.df[[varName]]
+            origNA = sum(is.na(origVec))
+            if (varType == "factor") {
+                coerced = factor(origVec)
+            } else if (varType == "numeric") {
+                coerced = suppressWarnings(as.numeric(as.character(origVec)))
+            } else if (varType == "integer") {
+                coerced = suppressWarnings(as.integer(as.character(origVec)))
+            } else if (varType == "logical") {
+                coerced = suppressWarnings(as.logical(as.character(origVec)))
+            } else {
+                flog.warn(paste0("Unsupported type in designVariableTypes for ", varName, ": ", varType))
+                next
+            }
+            addedNA = sum(is.na(coerced)) - origNA
+            if (addedNA > 0) {
+                flog.warn(paste0("Type coercion for ", varName, " (", varType, ") introduced ", addedNA, " additional NA values; please check input encoding"))
+            }
+            sampleData.df[[varName]] = coerced
+        }
+        flog.info("summaryFinal: coerced sampleData columns per designVariableTypes for RNA design")
+    }
+    
     countsRNA.all.df = read_tidyverse_wrapper(par.l$file_input_geneCountsPerSample, type = "tsv", col_names = TRUE)
     flog.info("summaryFinal: RNA-Seq counts loaded")
  
