@@ -127,8 +127,10 @@ assertCharacter(par.l$colorConditions, len = 2)
 ######################
 startLogger(par.l$file_log, par.l$log_minlevel,  removeOldLog = TRUE)
 printParametersLog(par.l)
+flog.info("summaryFinal: logger started and parameters validated")
 
 if (par.l$debugMode) {
+    flog.info("summaryFinal: debug mode active - caching inputs for offline reruns")
     
     flog.info(paste0("Debug mode active. Reading it all files that this step requires and save it to ", snakemake@params$debugFile))
     
@@ -184,6 +186,7 @@ if (par.l$debugMode) {
 # COLLECT DATA #
 ################
 
+flog.info("summaryFinal: collecting permutation results and condition comparison")
 conditionComparison = readRDS(par.l$file_input_condCompDeSeq)
 assertVector(conditionComparison, len = 2)
 
@@ -204,6 +207,8 @@ for (fileCur in par.l$files_input_permResults) {
     }
     
 }
+
+flog.info(paste0("summaryFinal: assembled permutation table for ", nTF, " TFs (", nrow(output.global.TFs.orig), " rows)"))
 
 # Convert columns to numeric if they are not already
 output.global.TFs.orig = mutate(output.global.TFs.orig,
@@ -236,15 +241,20 @@ if (length(TF_NA) > 0) {
     
 }
 
+flog.info(paste0("summaryFinal: NA filtering complete; remaining rows: ", nrow(output.global.TFs.orig)))
+
 
 # Make sure to only use as many permutations as actually could be done, independent of what the user specified before
 par.l$nPermutations = max(output.global.TFs.orig$permutation)
+flog.info(paste0("summaryFinal: effective permutation count set to ", par.l$nPermutations))
 
 ########################################################
 # FILTER BY PERMUTATIONS AND COMPARE, DIAGNOSTIC PLOTS #
 ########################################################
 # Compare the distributions from the real and random permutations
 diagPlots.l = list()
+
+flog.info("summaryFinal: computing permutation-based p-values and diagnostic plots")
 
 pdf(par.l$files_plotDiagnostic[1])
 output.global.TFs.orig$pvalue = NA
@@ -315,6 +325,8 @@ if (par.l$nPermutations > 0) {
     }
 }
 
+flog.info("summaryFinal: p-value computation complete")
+
 output.global.TFs.permutations = dplyr::filter(output.global.TFs.orig, permutation > 0)
 output.global.TFs              = dplyr::filter(output.global.TFs.orig, permutation == 0)
 
@@ -364,11 +376,14 @@ ggplot(stats.df, aes(max)) + geom_density()
 
 dev.off()
 
+flog.info("summaryFinal: permutation diagnostics finished and written")
+
 
 #################################
 # mode of change quantification #
 #################################
 
+flog.info("summaryFinal: determining comparison mode and design integrity")
 sampleData.l = readRDS(par.l$file_input_metadata)
 sampleData.df = sampleData.l[["permutation0"]]
 designComponents.l = checkDesignIntegrity(snakemake, par.l, sampleData.df)
@@ -381,11 +396,14 @@ if (components3types["conditionSummary"] == "logical" | components3types["condit
     comparisonMode = "pairwise"
 }
 
+flog.info(paste0("summaryFinal: comparison mode set to ", comparisonMode))
+
 
 ##########################
 # INTEGRATE RNA-Seq DATA #
 ##########################
 if (par.l$plotRNASeqClassification) {
+    flog.info("summaryFinal: RNA-Seq integration enabled - starting workflow")
     
     # Require some more packages here
     checkAndLoadPackages(c( "lsr", "DESeq2",  "matrixStats",  "pheatmap", "preprocessCore"), verbose = FALSE)
@@ -413,6 +431,7 @@ if (par.l$plotRNASeqClassification) {
     # Process RNA-Seq data #
     ########################
     countsRNA.all.df = read_tidyverse_wrapper(par.l$file_input_geneCountsPerSample, type = "tsv", col_names = TRUE)
+    flog.info("summaryFinal: RNA-Seq counts loaded")
  
     # The design formula for RNA-Seq is different from the one we used before for ATAC-Seq
     # Either take the one that the user provided or, if he did not, use a general one with only the condition
@@ -423,6 +442,7 @@ if (par.l$plotRNASeqClassification) {
         flog.warn(paste0("Could not find the parameter designContrastRNA in the configuration file. The default of \"~conditionSummary\" will be taken as formula. If you know about confounding variables, rerun this step and add the parameter (see the Documentation for details)"))
     }
     designFormulaRNA = convertToFormula(par.l$designFormulaRNA, colnames(sampleData.df))
+    flog.info(paste0("summaryFinal: RNA design formula resolved to ", format(designFormulaRNA)))
     
     countsRNA.all.mod.df = as.data.frame(countsRNA.all.df[,sampleData.df$SampleID])
     rownames(countsRNA.all.mod.df) = gsub("\\..+", "", countsRNA.all.df$ENSEMBL, perl = TRUE)
@@ -432,25 +452,30 @@ if (par.l$plotRNASeqClassification) {
                                  design = designFormulaRNA)
     
     dd = estimateSizeFactors(dd)
+    flog.info("summaryFinal: RNA DESeq2 object created and size factors estimated")
     
     ######################################
     # Filtering of lowly expressed genes #
     ######################################
     dd.filt = filterLowlyExpressedGenes(dd, comparisonMode, par.l$filter_minCountsPerCondition, par.l$filter_minMedianAll)
+    flog.info(paste0("summaryFinal: filtered lowly expressed genes; retained ", nrow(DESeq2::counts(dd.filt)), " genes"))
     
     # Raw counts, used for other types of normalization thereafter
     dd.filt.rawCounts =  DESeq2::counts(dd.filt, normalized=FALSE)
 
     countsRNA.norm.df  = normalizeCounts(dd.filt.rawCounts, method = par.l$normMethodRNA, idColumn = NULL)
+    flog.info("summaryFinal: normalized RNA counts")
     
     # Loading TF gene translation table
     HOCOMOCO_mapping.df = readHOCOMOCOTable(par.l$file_input_HOCOMOCO_mapping)
+    flog.info("summaryFinal: HOCOMOCO mapping table loaded")
     
     ####################
     # READ ATAC counts #
     ####################
     # Already normalized, coming from previous steps
     countsATAC.norm.df = read_tidyverse_wrapper(par.l$file_input_countsNorm, type = "tsv", col_types = cols())
+    flog.info("summaryFinal: ATAC counts loaded")
 
     ##########################
     # Intersect RNA and ATAC #
@@ -461,29 +486,36 @@ if (par.l$plotRNASeqClassification) {
     
     countsRNA.norm.df  = data.l[["RNA"]]
     countsATAC.norm.df = data.l[["ATAC"]] 
+    flog.info(paste0("summaryFinal: intersected RNA/ATAC samples; retained ", ncol(countsRNA.norm.df), " samples"))
   
     # Filter genes that might not be in the output.global.TFs$TF list 
     HOCOMOCO_mapping.df.overlap = filterHOCOMOCOTable(HOCOMOCO_mapping.df, output.global.TFs$TF)
    
     TF.peakMatrix.df = createBindingMatrixFromFiles(HOCOMOCO_mapping.df.overlap, countsATAC.norm.df, rootOutdir, extensionSize, comparisonType)
+    flog.info(paste0("summaryFinal: binding matrix created with ", nrow(TF.peakMatrix.df), " TF rows and ", ncol(TF.peakMatrix.df), " peaks"))
     
     res.l = filterPeaksByRowMeans(countsATAC.norm.df, TF.peakMatrix.df, minMean = 1)
     TF.peakMatrix.df        = res.l[["bindingMatrix"]]  
     countsATAC.norm.filt.df = res.l[["peakCounts"]]  
+    flog.info(paste0("summaryFinal: filtered peaks by mean; remaining peaks: ", ncol(countsATAC.norm.filt.df)))
     
 
     sort.cor.m = correlateATAC_RNA(countsRNA.norm.df, countsATAC.norm.filt.df, HOCOMOCO_mapping.df.overlap, corMethod = "pearson")
+    flog.info("summaryFinal: computed ATAC/RNA correlations")
     
     res.l = computeForegroundAndBackgroundMatrices(TF.peakMatrix.df, sort.cor.m)
     median.cor.tfs       = res.l[["median_foreground"]]
     median.cor.tfs.non   = res.l[["median_background"]]
     t.cor.sel.matrix     = res.l[["foreground"]]
     t.cor.sel.matrix.non = res.l[["background"]]
+    flog.info("summaryFinal: constructed foreground and background correlation matrices")
     
     # 3. Final classification: Calculate thresholds by calculating the quantiles of the background anhd compare the real values to the background
     act.rep.thres.l = calculate_classificationThresholds(t.cor.sel.matrix.non, par.l)
+    flog.info("summaryFinal: calculated activator/repressor thresholds")
     
     output.global.TFs = finalizeClassificationAndAppend(output.global.TFs, median.cor.tfs, act.rep.thres.l, par.l, t.cor.sel.matrix, t.cor.sel.matrix.non, significanceThreshold_Wilcoxon = par.l$thresholds_pvalue_Wilcoxon)
+    flog.info("summaryFinal: finalized TF classification with RNA integration")
     
     ####################
     ####################
@@ -493,9 +525,11 @@ if (par.l$plotRNASeqClassification) {
     HOCOMOCO_mapping.df.overlap.exp = dplyr::filter(HOCOMOCO_mapping.df.overlap, ENSEMBL %in% countsRNA.norm.df$ENSEMBL)
     
     pdf(file = par.l$files_plotDiagnostic[2], width = 4, height = 8)
+    flog.info("summaryFinal: generating RNA/ATAC classification diagnostic plots")
     plot_AR_thresholds(median.cor.tfs, median.cor.tfs.non, par.l, act.rep.thres.l, file = NULL)
     plot_heatmapAR(TF.peakMatrix.df, HOCOMOCO_mapping.df.overlap.exp, sort.cor.m, par.l, median.cor.tfs, median.cor.tfs.non, act.rep.thres.l, finalClassification = output.global.TFs, file = NULL)
     dev.off()
+    flog.info("summaryFinal: RNA/ATAC classification diagnostic plots saved")
 
     
     ###############################
@@ -503,8 +537,10 @@ if (par.l$plotRNASeqClassification) {
     ###############################  
     # Run DESeq and valculate log2fc for genes, only needed here
     dd.filt <- DESeq(dd.filt)
+    flog.info("summaryFinal: DESeq2 differential expression completed for RNA branch")
     
     pdf(par.l$files_plotDiagnostic[3])
+    flog.info("summaryFinal: generating DESeq2 correlation and diagnostic plots")
 
     #######################################
     # Correlation plots for the 3 classes #
@@ -524,18 +560,22 @@ if (par.l$plotRNASeqClassification) {
     plot_density(t.cor.sel.matrix, t.cor.sel.matrix.non, file = NULL)
     
     dev.off()
+    flog.info("summaryFinal: RNA-related diagnostic plots saved")
     
 } else {
     classesList.l = list(c())
+    flog.info("summaryFinal: RNA-Seq integration disabled - skipping related steps")
 }
 
 output.global.TFs$yValue = transform_yValues(output.global.TFs$pvalueAdj, addPseudoCount = TRUE, nPermutations = par.l$nPermutations)
 output.global.TFs.origReal = output.global.TFs
+flog.info("summaryFinal: prepared transformed p-values for plotting")
 
 #########################################
 # PLOT FOR DIFFERENT P VALUE THRESHOLDS #
 #########################################
 
+flog.info("summaryFinal: preparing volcano plot inputs")
 # Set the page dimensions to the maximum across all plotted variants
 output.global.TFs.filteredSummary = dplyr::filter(output.global.TFs, pvalue <= max(par.l$significanceThresholds))
 
@@ -731,6 +771,7 @@ for (thresholdCur in thresholds) {
         } # end for each threshold
     } # end for both raw and adjusted p-values
     dev.off()
+    flog.info(paste0("summaryFinal: volcano plots generated for stringency threshold ", thresholdCur))
     
     
     
@@ -747,8 +788,11 @@ output.global.TFs.origReal = dplyr::select(output.global.TFs.origReal, -one_of("
  #   mutate_at(c("pvalue_raw", "adj_pvalue"), formatC, format = "g", digits = 3)
 
 output.global.TFs.origReal.transf = dplyr::mutate_if(output.global.TFs.origReal, is.numeric, as.character)
+flog.info("summaryFinal: writing summary table and plot objects to disk")
 write_tsv(output.global.TFs.origReal.transf, path = par.l$file_output_summary, col_names = TRUE)
 saveRDS(allPlots.l, file = par.l$file_output_plots)
+flog.info("summaryFinal: outputs written successfully")
 
 .printExecutionTime(start.time)
 flog.info("Session info: ", sessionInfo(), capture = TRUE)
+flog.info("summaryFinal: completed all steps")
